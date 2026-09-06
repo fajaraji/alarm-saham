@@ -1,0 +1,210 @@
+{
+  "_catatan": "Universe uji kecil untuk tes mesin uji-ke-masa-lalu (tiket 06). Bentuk per emiten mengikuti respons Sectors v2 (docs/data-proof.md). Tanggal suspensi dan daftar kuartal SRIL/TELE/GOLL mengikuti data nyata tiket 04; angka keuangan, rasio rights issue, dan filing bersifat ILUSTRATIF (bukan angka resmi; nama pemegang saham tidak dimuat). Filing sebelum 2024 sengaja ada untuk menguji logika, walau feed Sectors nyata baru mulai 2024. Kontrol UNVR sengaja memuat penjualan institusi > 1 poin persen agar blok insider_jual ketat menghasilkan alarm palsu.",
+  "universe": [
+    { "symbol": "SRIL", "group": "delisting", "targetEventDate": "2024-11-01" },
+    { "symbol": "TELE", "group": "delisting", "targetEventDate": "2025-06-06" },
+    { "symbol": "GOLL", "group": "delisting", "targetEventDate": "2019-01-30" },
+    { "symbol": "WIKA", "group": "watchlist", "targetEventDate": "2025-02-18" },
+    { "symbol": "BBCA", "group": "control" },
+    { "symbol": "TLKM", "group": "control" },
+    { "symbol": "ASII", "group": "control" },
+    { "symbol": "UNVR", "group": "control" }
+  ],
+  "emiten": {
+    "SRIL": {
+      "suspensions": [
+        { "suspension_date": "2021-05-18", "reason": "Suspend more than 6 month" },
+        { "suspension_date": "2024-11-01", "reason": "Putusan pailit" }
+      ],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [
+        { "date": "2023-09-30", "total_equity": -13900000000000 },
+        { "date": "2024-06-30", "total_equity": -14200000000000 },
+        { "date": "2024-09-30", "total_equity": -15460000000000 }
+      ],
+      "filings": [
+        {
+          "timestamp": "2021-01-14T00:00:00",
+          "holder_type": "insider",
+          "transaction_type": "sell",
+          "share_percentage_before": 0.74,
+          "share_percentage_after": 0.59
+        },
+        {
+          "timestamp": "2021-03-22T00:00:00",
+          "holder_type": "insider",
+          "transaction_type": "sell",
+          "share_percentage_before": 0.48,
+          "share_percentage_after": 0.29
+        }
+      ]
+    },
+    "TELE": {
+      "suspensions": [{ "suspension_date": "2024-12-27", "reason": "Belum menyampaikan laporan keuangan" }],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+        "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [
+        { "date": "2024-06-30", "total_equity": 1200000000000 },
+        { "date": "2025-03-31", "total_equity": 900000000000 },
+        { "date": "2025-06-30", "total_equity": 400000000000 }
+      ],
+      "filings": []
+    },
+    "GOLL": {
+      "suspensions": [{ "suspension_date": "2019-01-30", "reason": "Belum menyampaikan laporan keuangan" }],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [],
+      "filings": []
+    },
+    "WIKA": {
+      "suspensions": [{ "suspension_date": "2025-02-18", "reason": "Papan pemantauan khusus" }],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+        "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+        "2026": [["2026-03-31", "q1"]]
+      },
+      "right_issue": [
+        { "ex_date": "2016-11-11", "price": 2180, "new_ratio": 3, "old_ratio": 10 },
+        { "ex_date": "2024-04-17", "price": 197, "new_ratio": 521982000, "old_ratio": 100000000 }
+      ],
+      "quarterly_financials": [
+        { "date": "2024-03-31", "total_equity": 5000000000000 },
+        { "date": "2025-03-31", "total_equity": 2000000000000 }
+      ],
+      "filings": [
+        {
+          "timestamp": "2026-01-09T00:00:00",
+          "holder_type": "insider",
+          "transaction_type": "others",
+          "share_percentage_before": 0.91,
+          "share_percentage_after": 0.91
+        }
+      ]
+    },
+    "BBCA": {
+      "suspensions": [],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+        "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+        "2026": [["2026-03-31", "q1"], ["2026-06-30", "q2"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [
+        { "date": "2025-06-30", "total_equity": 255000000000000 },
+        { "date": "2026-06-30", "total_equity": 270000000000000 }
+      ],
+      "filings": [
+        {
+          "timestamp": "2025-04-10T00:00:00",
+          "holder_type": "insider",
+          "transaction_type": "buy",
+          "share_percentage_before": 0.02,
+          "share_percentage_after": 0.03
+        }
+      ]
+    },
+    "TLKM": {
+      "suspensions": [],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+        "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+        "2026": [["2026-03-31", "q1"], ["2026-06-30", "q2"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [
+        { "date": "2025-06-30", "total_equity": 130000000000000 },
+        { "date": "2026-06-30", "total_equity": 134000000000000 }
+      ],
+      "filings": [
+        {
+          "timestamp": "2025-08-05T00:00:00",
+          "holder_type": "institution",
+          "transaction_type": "sell",
+          "share_percentage_before": 5.3,
+          "share_percentage_after": 5.0
+        }
+      ]
+    },
+    "ASII": {
+      "suspensions": [],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+        "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+        "2026": [["2026-03-31", "q1"], ["2026-06-30", "q2"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [
+        { "date": "2025-06-30", "total_equity": 210000000000000 },
+        { "date": "2026-06-30", "total_equity": 218000000000000 }
+      ],
+      "filings": []
+    },
+    "UNVR": {
+      "suspensions": [],
+      "quarterly_financial_dates": {
+        "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+        "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+        "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+        "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+        "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+        "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+        "2026": [["2026-03-31", "q1"], ["2026-06-30", "q2"]]
+      },
+      "right_issue": [],
+      "quarterly_financials": [
+        { "date": "2025-06-30", "total_equity": 3500000000000 },
+        { "date": "2026-06-30", "total_equity": 3000000000000 }
+      ],
+      "filings": [
+        {
+          "timestamp": "2025-03-10T00:00:00",
+          "holder_type": "institution",
+          "transaction_type": "sell",
+          "share_percentage_before": 2.1,
+          "share_percentage_after": 1.3
+        },
+        {
+          "timestamp": "2025-05-20T00:00:00",
+          "holder_type": "institution",
+          "transaction_type": "sell",
+          "share_percentage_before": 1.3,
+          "share_percentage_after": 0.9
+        }
+      ]
+    }
+  }
+}
