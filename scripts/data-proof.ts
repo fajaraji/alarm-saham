@@ -30,6 +30,8 @@ import {
   TTL_404_MS,
   sectorsProviderDariEnv,
   type BarisLedger,
+  type PenyimpanCache,
+  type PenyimpanLedger,
   type SectorsProvider,
 } from "../src/lib/data";
 
@@ -392,13 +394,13 @@ async function jalankanLangkah(p: SectorsProvider, l: Langkah): Promise<HasilLan
 }
 
 /** Kredit lintas run yang dapat diatribusikan ke rencana ini (dari ledger). */
-async function kreditRencana(ledger: Ledger, kunci: Set<string>): Promise<number> {
+async function kreditRencana(ledger: PenyimpanLedger, kunci: Set<string>): Promise<number> {
   const semua = await ledger.semua();
   return semua.filter((b) => kunci.has(kunciBaris(b))).reduce((a, b) => a + b.credits, 0);
 }
 
 /** Kredit yang terbuang karena 404 yang sama dibayar lebih dari sekali. */
-async function kreditTerbuang404(ledger: Ledger, kunci: Set<string>): Promise<number> {
+async function kreditTerbuang404(ledger: PenyimpanLedger, kunci: Set<string>): Promise<number> {
   const hitung = new Map<string, number>();
   for (const b of await ledger.semua()) {
     const k = kunciBaris(b);
@@ -413,7 +415,7 @@ async function kreditTerbuang404(ledger: Ledger, kunci: Set<string>): Promise<nu
  * 404 yang tercatat di ledger sebelum cache-404 diaktifkan (tiket 04) tidak punya
  * entri cache; semai entri sintetis agar tidak pernah dibayar ulang.
  */
-async function semaiCache404DariLedger(cache: CacheRespons, ledger: Ledger, rencana: Langkah[]): Promise<number> {
+async function semaiCache404DariLedger(cache: PenyimpanCache, ledger: PenyimpanLedger, rencana: Langkah[]): Promise<number> {
   const semua = await ledger.semua();
   let n = 0;
   for (const l of rencana) {
@@ -561,7 +563,7 @@ async function tulisLaporan(isiBaru: string): Promise<void> {
 // ---------- Main ----------
 
 /** Pra-terbang tanpa API: status cache & ledger tiap langkah, perkiraan biaya run berikutnya. */
-async function praTerbang(rencana: Langkah[], cache: CacheRespons, ledger: Ledger): Promise<{ belumCache: Langkah[]; terpakai: number }> {
+async function praTerbang(rencana: Langkah[], cache: PenyimpanCache, ledger: PenyimpanLedger): Promise<{ belumCache: Langkah[]; terpakai: number }> {
   const kunci = new Set(rencana.map(kunciLangkah));
   const terpakai = await kreditRencana(ledger, kunci);
   const belumCache: Langkah[] = [];
@@ -647,8 +649,9 @@ async function main(): Promise<number> {
   };
 
   await tulisLaporan(susunLaporan(hasil, ringkasan));
+  await mkdir(dirCache, { recursive: true });
   await writeFile(
-    path.join(provider.cache.dir, "data-proof-hasil.json"),
+    path.join(dirCache, "data-proof-hasil.json"),
     JSON.stringify({ ringkasan, hasil }, null, 2),
     "utf8",
   );

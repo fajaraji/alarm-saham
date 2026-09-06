@@ -1,12 +1,14 @@
 import type { z } from "zod";
-import { CacheRespons, TTL_SEHARI_MS } from "./cache";
+import { getDb } from "../db/client";
+import { CacheRespons, TTL_SEHARI_MS, type PenyimpanCache } from "./cache";
 import {
   ANGGARAN_KREDIT_DEFAULT,
   CADANGAN_KREDIT_DEFAULT,
   hitungKredit,
   type AturanKredit,
 } from "./credits";
-import { Ledger } from "./ledger";
+import { CacheDb, LedgerDb } from "./db-store";
+import { Ledger, type PenyimpanLedger } from "./ledger";
 import {
   BATAS_HARI,
   CreditReserveError,
@@ -21,6 +23,7 @@ import {
 } from "./provider";
 import {
   BrokerSummarySchema,
+  CompaniesPageSchema,
   CorporateActionsSchema,
   DailySchema,
   FilingsPageSchema,
@@ -29,6 +32,7 @@ import {
   QuarterlyFinancialDatesSchema,
   QuarterlyFinancialsSchema,
   SuspensionsPageSchema,
+  type CompaniesQuery,
   type FilingsFilter,
   type SuspensionsQuery,
 } from "./types";
@@ -43,8 +47,12 @@ export const TTL_404_MS = 30 * TTL_SEHARI_MS;
 
 export interface OpsiSectorsProvider {
   apiKey: string;
-  /** Folder cache & ledger. Default `.cache/sectors` relatif cwd. */
+  /** Folder cache & ledger berkas. Default `.cache/sectors` relatif cwd. Diabaikan bila `ledger`/`cache` disuntik. */
   cacheDir?: string;
+  /** Penyimpan buku kredit kustom (mis. `LedgerDb`). Default: berkas JSONL di `cacheDir`. */
+  ledger?: PenyimpanLedger;
+  /** Penyimpan cache respons kustom (mis. `CacheDb`). Default: berkas JSON di `cacheDir`. */
+  cache?: PenyimpanCache;
   /** Total kredit tim. Default 1000. */
   anggaran?: number;
   /** Sisa minimum yang dijaga. Default 250 (SECTORS_CREDIT_RESERVE). */
@@ -86,8 +94,10 @@ const tidur = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
  */
 export class SectorsProvider implements DataProvider {
   readonly name = "sectors" as const;
-  readonly ledger: Ledger;
-  readonly cache: CacheRespons;
+  readonly ledger: PenyimpanLedger;
+  readonly cache: PenyimpanCache;
+  /** "db" bila ledger & cache disuntik (DATABASE_URL), "file" bila berkas lokal. */
+  readonly penyimpan: "db" | "file";
   readonly anggaran: number;
   readonly cadangan: number;
   readonly izinkanCadangan: boolean;
@@ -103,8 +113,9 @@ export class SectorsProvider implements DataProvider {
     this.apiKey = opsi.apiKey;
     const dir = opsi.cacheDir ?? DIR_CACHE_DEFAULT;
     this.now = opsi.now ?? (() => new Date());
-    this.ledger = new Ledger(dir);
-    this.cache = new CacheRespons(dir, this.now);
+    this.ledger = opsi.ledger ?? new Ledger(dir);
+    this.cache = opsi.cache ?? new CacheRespons(dir, this.now);
+    this.penyimpan = opsi.ledger || opsi.cache ? "db" : "file";
     this.anggaran = opsi.anggaran ?? ANGGARAN_KREDIT_DEFAULT;
     this.cadangan = opsi.cadangan ?? CADANGAN_KREDIT_DEFAULT;
     this.izinkanCadangan = opsi.izinkanCadangan ?? false;
@@ -188,6 +199,27 @@ export class SectorsProvider implements DataProvider {
       aturan: "per-kuartal",
       ttlMs: null,
       schema: QuarterlyFinancialsSchema,
+    });
+    return r.data;
+  }
+
+  /**
+   * Screener `/v2/companies/` (bukan bagian DataProvider; hanya Sectors).
+   * `where`/`order_by` = 1 kredit per halaman. Dipakai tiket 07 untuk memilih kontrol LQ45.
+   */
+  async companies(query: CompaniesQuery) {
+    const params: Record<string, string> = {};
+    if (query.where) params.where = query.where;
+    if (query.order_by) params.order_by = query.order_by;
+    if (query.limit !== undefined) params.limit = String(query.limit);
+    if (query.offset !== undefined) params.offset = String(query.offset);
+    const r = await this.panggil({
+      endpoint: "/v2/companies/",
+      params,
+      aturan: "per-request",
+      // Keanggotaan indeks & market cap berubah; simpan 30 hari agar run ulang tiket 07 gratis.
+      ttlMs: 30 * TTL_SEHARI_MS,
+      schema: CompaniesPageSchema,
     });
     return r.data;
   }
@@ -403,7 +435,11 @@ function pesanError(body: unknown): string {
 /** Sumber variabel lingkungan (process.env atau objek uji). */
 export type EnvSumber = Record<string, string | undefined>;
 
-/** Bangun provider dari variabel lingkungan. `undefined` bila SECTORS_API_KEY kosong. */
+/**
+ * Bangun provider dari variabel lingkungan. `undefined` bila SECTORS_API_KEY kosong.
+ * Bila DATABASE_URL terisi (dan `tambahan` tidak menyuntik penyimpan sendiri),
+ * ledger & cache memakai tabel api_ledger/api_cache lewat `getDb()`; selain itu berkas.
+ */
 export function sectorsProviderDariEnv(
   env: EnvSumber = process.env,
   tambahan: Partial<OpsiSectorsProvider> = {},
@@ -412,8 +448,15 @@ export function sectorsProviderDariEnv(
   if (!apiKey) return undefined;
   const cadangan = Number(env.SECTORS_CREDIT_RESERVE);
   const anggaran = Number(env.SECTORS_CREDIT_BUDGET);
+  let penyimpanDb: Pick<OpsiSectorsProvider, "ledger" | "cache"> = {};
+  if (env.DATABASE_URL?.trim() && !tambahan.ledger && !tambahan.cache) {
+    const db = getDb();
+    const now = tambahan.now ?? (() => new Date());
+    penyimpanDb = { ledger: new LedgerDb(db), cache: new CacheDb(db, now) };
+  }
   return new SectorsProvider({
     apiKey,
+    ...penyimpanDb,
     cadangan: Number.isFinite(cadangan) && env.SECTORS_CREDIT_RESERVE ? cadangan : undefined,
     anggaran: Number.isFinite(anggaran) && env.SECTORS_CREDIT_BUDGET ? anggaran : undefined,
     izinkanCadangan: env.ALLOW_RESERVE === "1" || env.ALLOW_RESERVE === "true",

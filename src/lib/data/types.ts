@@ -187,6 +187,27 @@ export const QuarterlyFinancialsSchema = z
   .array(QuarterlyFinancialSchema)
   .transform((arr) => [...arr].sort((a, b) => a.report_date.localeCompare(b.report_date)));
 
+// ---------- Screener perusahaan (/v2/companies/) ----------
+
+/** Baris screener; hanya field yang kita andalkan, sisanya lewat (looseObject). */
+export const CompanySchema = z.looseObject({
+  symbol: SimbolSchema,
+  company_name: teks,
+  sector: teks,
+  sub_sector: teks,
+  listing_board: teks,
+  market_cap: angka,
+  indices: z.array(z.string()).nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+});
+export type Company = z.infer<typeof CompanySchema>;
+/** Respons boleh envelope `{results, pagination}` atau array polos; dinormalisasi ke envelope. */
+export const CompaniesPageSchema = z.preprocess(
+  (raw) => (Array.isArray(raw) ? { results: raw } : raw),
+  pageOf(CompanySchema),
+);
+export type CompaniesPage = z.infer<typeof CompaniesPageSchema>;
+
 // ---------- Kelas B: hanya mode pasang ----------
 
 export const FreeFloatEntrySchema = z.looseObject({
@@ -258,6 +279,15 @@ export interface SuspensionsQuery {
   start?: string; // YYYY-MM-DD
   end?: string; // YYYY-MM-DD
   limit?: number; // maks 30
+  offset?: number;
+}
+
+export interface CompaniesQuery {
+  /** Filter mirip SQL, mis. `indices in ['LQ45']`. 1 kredit. */
+  where?: string;
+  /** Mis. `market_cap desc`. */
+  order_by?: string;
+  limit?: number;
   offset?: number;
 }
 

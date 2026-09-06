@@ -224,6 +224,8 @@ export const apiLedger = pgTable(
     credits: integer("credits").notNull().default(0),
     // 1 = dilayani dari cache (tanpa panggilan HTTP), 0 = panggilan sungguhan.
     cacheHit: integer("cache_hit").notNull().default(0),
+    // Kode error Sectors / catatan gagal jaringan (paritas dengan ledger file tiket 03).
+    note: text("note"),
   },
   (t) => [index("api_ledger_at_idx").on(t.at)],
 );
