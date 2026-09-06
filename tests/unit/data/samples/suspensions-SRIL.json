@@ -1,0 +1,23 @@
+{
+  "_catatan": "Respons nyata /v2/suspensions/?symbol=SRIL (7 Sep 2026), utuh.",
+  "body": {
+    "results": [
+      {
+        "symbol": "SRIL.JK",
+        "suspension_date": "2021-05-18",
+        "reason": "Suspend more than 6 month",
+        "pdf_url": "https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_EREP/202510/fed47be7bc_96225a718f.pdf"
+      }
+    ],
+    "pagination": {
+      "total_count": 1,
+      "showing": 1,
+      "limit": 20,
+      "offset": 0,
+      "has_next": false,
+      "has_previous": false,
+      "next_offset": null,
+      "previous_offset": null
+    }
+  }
+}

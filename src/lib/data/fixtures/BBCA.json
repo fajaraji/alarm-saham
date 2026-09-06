@@ -1,16 +1,19 @@
 {
-  "_catatan": "BBCA (Bank Central Asia): contoh emiten bersih/kontrol sehat. Tidak ada suspensi, laporan tepat waktu, tidak ada penjualan insider. Angka keuangan dalam IDR dan ilustratif (perkiraan). listing_performance tidak tersedia karena listing sebelum Mei 2005.",
+  "_catatan": "BBCA (Bank Central Asia): contoh emiten bersih/kontrol sehat. Bentuk mengikuti respons nyata Sectors v2 (tiket 04). Tidak ada suspensi, laporan lengkap sampai 2026 q2, tidak ada penjualan insider. Angka keuangan dalam IDR dan ilustratif (perkiraan). listing_performance tidak tersedia (404 di API). Persentase saham dalam PERSEN.",
   "quarterly_financial_dates": {
-    "2019": ["2020-02-06", "2019-04-25", "2019-07-25", "2019-10-24", "2020-02-06"],
-    "2020": ["2021-02-08", "2020-04-30", "2020-07-30", "2020-10-22", "2021-02-08"],
-    "2021": ["2022-01-27", "2021-04-22", "2021-07-22", "2021-10-21", "2022-01-27"],
-    "2022": ["2023-01-26", "2022-04-21", "2022-07-21", "2022-10-20", "2023-01-26"],
-    "2023": ["2024-01-25", "2023-04-24", "2023-07-24", "2023-10-19", "2024-01-25"],
-    "2024": ["2025-01-23", "2024-04-22", "2024-07-24", "2024-10-23", "2025-01-23"]
+    "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+    "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+    "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+    "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+    "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+    "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+    "2026": [["2026-03-31", "q1"], ["2026-06-30", "q2"]]
   },
   "filings": [
     {
       "symbol": "BBCA",
+      "title": "Perubahan kepemilikan Institusi Dana Pensiun C (disamarkan) di Bank Central Asia",
+      "body": "Institusi Dana Pensiun C (disamarkan) membeli 60.000.000 saham.",
       "holder_name": "Institusi Dana Pensiun C (disamarkan)",
       "holder_type": "institution",
       "transaction_type": "buy",
@@ -19,8 +22,10 @@
       "amount_transaction": 60000000,
       "price": 9650,
       "transaction_value": 579000000000,
-      "share_percentage_before": 0.0097,
-      "share_percentage_after": 0.0102,
+      "share_percentage_before": 0.97,
+      "share_percentage_after": 1.02,
+      "share_percentage_transaction": 0.05,
+      "tags": ["share-transfer"],
       "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-bbca-2023-08.pdf",
       "timestamp": "2023-08-15T00:00:00"
     }
@@ -28,8 +33,8 @@
   "corporate_actions": {
     "symbol": "BBCA",
     "dividend": [
-      { "date": "2024-03-27", "cum_date": "2024-03-27", "ex_date": "2024-03-28", "payment_date": "2024-04-17", "dividend_amount": 227.5, "type": "final" },
-      { "date": "2023-12-08", "cum_date": "2023-12-08", "ex_date": "2023-12-11", "payment_date": "2023-12-20", "dividend_amount": 42.5, "type": "interim" }
+      { "ex_date": "2024-03-28", "payment_date": "2024-04-17", "dividend_amount": 227.5, "dividend_yield": 0.0231 },
+      { "ex_date": "2023-12-11", "payment_date": "2023-12-20", "dividend_amount": 42.5, "dividend_yield": 0.0046 }
     ],
     "upcoming_dividend": [],
     "stock_split": [
@@ -39,12 +44,13 @@
     "warrant": [],
     "bonus": [],
     "agm": [
-      { "date": "2024-03-14", "type": "AGM" }
+      { "agm_date": "2024-03-14", "agm_time": "10:00:00", "agm_place": "Jakarta", "agm_result": null }
     ]
   },
   "quarterly_financials": [
     {
       "symbol": "BBCA",
+      "date": "2023-12-31",
       "report_date": "2023-12-31",
       "revenue": 99900000000000,
       "earnings": 48600000000000,
@@ -60,6 +66,7 @@
     },
     {
       "symbol": "BBCA",
+      "date": "2024-03-31",
       "report_date": "2024-03-31",
       "revenue": 25400000000000,
       "earnings": 12900000000000,
@@ -76,9 +83,16 @@
   ],
   "broker_summary": {
     "symbol": "BBCA",
-    "results": [
-      { "date": "2024-03-27", "broker": "AK", "bfreq": 3120, "blot": 142000, "bval": 1394000000000, "sfreq": 2890, "slot": 128000, "sval": 1256000000000, "nlot": 14000, "nval": 138000000000 },
-      { "date": "2024-03-27", "broker": "BK", "bfreq": 2450, "blot": 98000, "bval": 962000000000, "sfreq": 2610, "slot": 105000, "sval": 1030000000000, "nlot": -7000, "nval": -68000000000 }
+    "start": "2024-03-20",
+    "end": "2024-03-27",
+    "data": [
+      {
+        "date": "2024-03-27",
+        "summary": [
+          { "broker_code": "AK", "bfreq": 3120, "blot": 142000, "bval": 1394000000000, "bavg_per_share": 9816.9, "sfreq": 2890, "slot": 128000, "sval": 1256000000000, "savg_per_share": 9812.5, "nlot": 14000, "nval": 138000000000, "navg_per_share": 9816.9 },
+          { "broker_code": "BK", "bfreq": 2450, "blot": 98000, "bval": 962000000000, "bavg_per_share": 9816.3, "sfreq": 2610, "slot": 105000, "sval": 1030000000000, "savg_per_share": 9809.5, "nlot": -7000, "nval": -68000000000, "navg_per_share": 9809.5 }
+        ]
+      }
     ]
   },
   "listing_performance": null,

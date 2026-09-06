@@ -1,0 +1,15 @@
+{
+  "_catatan": "Respons nyata corporate-actions/INAF dengan agm dikosongkan: semua daftar null.",
+  "body": {
+    "symbol": "INAF.JK",
+    "corporate_actions": {
+      "agm": [],
+      "bonus": null,
+      "warrant": null,
+      "dividend": null,
+      "right_issue": null,
+      "stock_split": null,
+      "upcoming_dividend": null
+    }
+  }
+}

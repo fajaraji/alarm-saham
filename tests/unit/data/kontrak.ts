@@ -47,14 +47,24 @@ export function ujiKontrakDataProvider(nama: string, buat: () => Promise<DataPro
       expect(page.results).toEqual([]);
     });
 
-    it("quarterlyFinancialDates: dict tahun -> 5 tanggal (nullable)", async () => {
+    it("quarterlyFinancialDates: dict tahun -> [[akhir periode, q], ...], hanya kuartal tersedia", async () => {
       const p = await buat();
       const sril = await p.quarterlyFinancialDates("SRIL");
-      expect(Object.keys(sril)).toEqual(expect.arrayContaining(["2019", "2024"]));
-      expect(sril["2019"]).toHaveLength(5);
-      expect(sril["2024"].every((d) => d === null)).toBe(true);
+      expect(Object.keys(sril)).toEqual(expect.arrayContaining(["2020", "2024"]));
+      expect(sril["2020"]).toHaveLength(4);
+      // SRIL berhenti melapor setelah 2024 q3
+      expect(sril["2024"]).toEqual([
+        ["2024-03-31", "q1"],
+        ["2024-06-30", "q2"],
+        ["2024-09-30", "q3"],
+      ]);
+      expect(sril["2025"]).toBeUndefined();
       const bbca = await p.quarterlyFinancialDates("bbca.jk"); // normalisasi simbol
-      expect(bbca["2024"].every((d) => typeof d === "string")).toBe(true);
+      expect(bbca["2026"].map(([, q]) => q)).toEqual(["q1", "q2"]);
+      for (const [tanggal, q] of Object.values(bbca).flat()) {
+        expect(tanggal).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(q).toMatch(/^q[1-4]$/);
+      }
     });
 
     it("filings: SRIL punya 2 penjualan insider; BBCA tidak ada penjualan", async () => {
@@ -95,17 +105,21 @@ export function ujiKontrakDataProvider(nama: string, buat: () => Promise<DataPro
     it("brokerSummary: rentang <= 14 hari; lebih dari itu ditolak sebelum fetch", async () => {
       const p = await buat();
       const r = await p.brokerSummary("SRIL", "2021-05-10", "2021-05-20");
-      const baris = Array.isArray(r) ? r : (r.results ?? []);
-      expect(baris.length).toBe(3);
+      expect(r.data).toHaveLength(1); // satu hari bursa dalam rentang
+      expect(r.data[0].date).toBe("2021-05-17");
+      expect(r.data[0].summary).toHaveLength(3);
+      expect(r.data[0].summary.map((b) => b.broker_code)).toEqual(["YP", "PD", "CC"]);
+      const kosong = await p.brokerSummary("SRIL", "2021-06-01", "2021-06-10");
+      expect(kosong.data).toEqual([]);
       await expect(p.brokerSummary("SRIL", "2021-05-01", "2021-05-20")).rejects.toBeInstanceOf(
         InvalidQueryError,
       );
     });
 
-    it("listingPerformance: SRIL ada; BBCA (listing < Mei 2005) -> NotFoundError", async () => {
+    it("listingPerformance: SRIL ada (hanya chg_*); BBCA -> NotFoundError", async () => {
       const p = await buat();
       const lp = await p.listingPerformance("SRIL");
-      expect(lp.listing_date).toBe("2013-06-17");
+      expect(lp.chg_365d).toBeCloseTo(-0.2083);
       await expect(p.listingPerformance("BBCA")).rejects.toBeInstanceOf(NotFoundError);
     });
 
