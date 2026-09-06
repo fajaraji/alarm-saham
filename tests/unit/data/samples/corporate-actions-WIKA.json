@@ -1,0 +1,52 @@
+{
+  "_catatan": "Respons nyata corporate-actions/WIKA; agm dipotong 2 entri dan alamat dihapus. Perhatikan right_issue 2016 & 2024, daftar lain null.",
+  "body": {
+    "symbol": "WIKA.JK",
+    "corporate_actions": {
+      "agm": [
+        {
+          "agm_date": "2022-02-04",
+          "agm_time": "14:00:00",
+          "agm_place": "(alamat dihapus)",
+          "agm_result": null
+        },
+        {
+          "agm_date": "2023-09-22",
+          "agm_time": "14:00:00",
+          "agm_place": "(alamat dihapus)",
+          "agm_result": null
+        }
+      ],
+      "bonus": null,
+      "warrant": null,
+      "dividend": [
+        {
+          "ex_date": "2020-06-17",
+          "payment_date": "2020-07-09",
+          "dividend_yield": 0.0368395,
+          "dividend_amount": 50.955
+        }
+      ],
+      "right_issue": [
+        {
+          "price": 2180,
+          "ex_date": "2016-11-11",
+          "new_ratio": 36697,
+          "old_ratio": 80000,
+          "trading_period_end": "2016-11-23",
+          "trading_period_start": "2016-11-17"
+        },
+        {
+          "price": 197,
+          "ex_date": "2024-04-17",
+          "new_ratio": 521982000,
+          "old_ratio": 100000000,
+          "trading_period_end": "2024-04-26",
+          "trading_period_start": "2024-04-22"
+        }
+      ],
+      "stock_split": null,
+      "upcoming_dividend": null
+    }
+  }
+}

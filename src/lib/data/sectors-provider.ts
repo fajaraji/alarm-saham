@@ -35,6 +35,11 @@ import {
 
 export const SECTORS_BASE_URL = "https://api.sectors.app";
 export const DIR_CACHE_DEFAULT = ".cache/sectors";
+/**
+ * 404 (simbol tidak punya data) DITAGIH 1 kredit dan deterministik, maka di-cache
+ * 30 hari agar run ulang tidak membayar lagi (pelajaran tiket 04: 6 kredit hilang).
+ */
+export const TTL_404_MS = 30 * TTL_SEHARI_MS;
 
 export interface OpsiSectorsProvider {
   apiKey: string;
@@ -283,6 +288,9 @@ export class SectorsProvider implements DataProvider {
         credits: 0,
         cacheHit: true,
       });
+      if (tersimpan.status === 404) {
+        throw new NotFoundError(endpoint, this.redaksi(pesanError(tersimpan.body)));
+      }
       return { data: this.validasi(spec, tersimpan.body), cacheHit: true, credits: 0 };
     }
 
@@ -341,14 +349,18 @@ export class SectorsProvider implements DataProvider {
         return { data: this.validasi(spec, body), cacheHit: false, credits };
       }
 
+      const detail = this.redaksi(pesanError(body));
+      if (status === 404) {
+        await this.cache.tulis(endpoint, params, status, body, TTL_404_MS);
+        throw new NotFoundError(endpoint, detail);
+      }
+
       const bolehUlang = status === 503 || kode === "service_unavailable";
       if (bolehUlang && percobaan <= this.retry) {
         await tidur(this.retryBaseMs * 2 ** (percobaan - 1));
         continue;
       }
 
-      const detail = this.redaksi(pesanError(body));
-      if (status === 404) throw new NotFoundError(endpoint, detail);
       throw new SectorsApiError(status, endpoint, kode, detail);
     }
   }

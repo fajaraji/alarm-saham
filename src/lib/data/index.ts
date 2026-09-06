@@ -15,6 +15,7 @@ export {
   sectorsProviderDariEnv,
   SECTORS_BASE_URL,
   DIR_CACHE_DEFAULT,
+  TTL_404_MS,
   type OpsiSectorsProvider,
   type EnvSumber,
 } from "./sectors-provider";

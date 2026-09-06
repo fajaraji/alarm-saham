@@ -1,16 +1,17 @@
 {
-  "_catatan": "SRIL (Sri Rejeki Isman): contoh emiten bermasalah. Laporan 2019-2020 lengkap; 2021 tertunda; 2022-2024 sebagian kosong. Angka keuangan dalam USD dan bersifat ilustratif (perkiraan, bukan angka resmi). Nama pemegang saham disamarkan.",
+  "_catatan": "SRIL (Sri Rejeki Isman): contoh emiten bermasalah. Bentuk mengikuti respons nyata Sectors v2 (tiket 04): kuartal tersedia 2020 q1-2024 q3 (sesuai API), sesudahnya tidak ada laporan. Angka keuangan ilustratif (perkiraan, bukan angka resmi). Nama pemegang saham disamarkan. Persentase saham dalam PERSEN.",
   "quarterly_financial_dates": {
-    "2019": ["2020-03-30", "2019-04-30", "2019-07-31", "2019-10-31", "2020-03-30"],
-    "2020": ["2021-03-31", "2020-05-29", "2020-08-31", "2020-11-30", "2021-03-31"],
-    "2021": ["2021-09-30", "2021-06-30", "2021-09-30", null, null],
-    "2022": ["2023-05-31", null, null, "2022-12-30", "2023-05-31"],
-    "2023": ["2024-06-28", "2023-07-31", null, null, "2024-06-28"],
-    "2024": [null, null, null, null, null]
+    "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+    "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+    "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+    "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+    "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"]]
   },
   "filings": [
     {
       "symbol": "SRIL",
+      "title": "Perubahan kepemilikan Direktur A (disamarkan) di Sri Rejeki Isman",
+      "body": "Direktur A (disamarkan) menjual 30.000.000 saham.",
       "holder_name": "Direktur A (disamarkan)",
       "holder_type": "insider",
       "transaction_type": "sell",
@@ -19,13 +20,17 @@
       "amount_transaction": 30000000,
       "price": 176,
       "transaction_value": 5280000000,
-      "share_percentage_before": 0.0074,
-      "share_percentage_after": 0.0059,
+      "share_percentage_before": 0.74,
+      "share_percentage_after": 0.59,
+      "share_percentage_transaction": 0.15,
+      "tags": ["insider-trading"],
       "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-sril-2021-01.pdf",
       "timestamp": "2021-01-14T00:00:00"
     },
     {
       "symbol": "SRIL",
+      "title": "Perubahan kepemilikan Komisaris B (disamarkan) di Sri Rejeki Isman",
+      "body": "Komisaris B (disamarkan) menjual 38.000.000 saham.",
       "holder_name": "Komisaris B (disamarkan)",
       "holder_type": "insider",
       "transaction_type": "sell",
@@ -34,8 +39,10 @@
       "amount_transaction": 38000000,
       "price": 158,
       "transaction_value": 6004000000,
-      "share_percentage_before": 0.0048,
-      "share_percentage_after": 0.0029,
+      "share_percentage_before": 0.48,
+      "share_percentage_after": 0.29,
+      "share_percentage_transaction": 0.19,
+      "tags": ["insider-trading"],
       "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-sril-2021-03.pdf",
       "timestamp": "2021-03-22T00:00:00"
     }
@@ -53,6 +60,7 @@
   "quarterly_financials": [
     {
       "symbol": "SRIL",
+      "date": "2020-12-31",
       "report_date": "2020-12-31",
       "revenue": 1284000000,
       "earnings": 85000000,
@@ -68,6 +76,7 @@
     },
     {
       "symbol": "SRIL",
+      "date": "2021-03-31",
       "report_date": "2021-03-31",
       "revenue": 290000000,
       "earnings": 14000000,
@@ -83,6 +92,7 @@
     },
     {
       "symbol": "SRIL",
+      "date": "2021-06-30",
       "report_date": "2021-06-30",
       "revenue": 410000000,
       "earnings": -1080000000,
@@ -98,6 +108,7 @@
     },
     {
       "symbol": "SRIL",
+      "date": "2021-09-30",
       "report_date": "2021-09-30",
       "revenue": 520000000,
       "earnings": -1120000000,
@@ -114,16 +125,21 @@
   ],
   "broker_summary": {
     "symbol": "SRIL",
-    "results": [
-      { "date": "2021-05-17", "broker": "YP", "bfreq": 1210, "blot": 45200, "bval": 7960000000, "sfreq": 980, "slot": 38100, "sval": 6710000000, "nlot": 7100, "nval": 1250000000 },
-      { "date": "2021-05-17", "broker": "PD", "bfreq": 640, "blot": 21500, "bval": 3790000000, "sfreq": 1130, "slot": 40200, "sval": 7080000000, "nlot": -18700, "nval": -3290000000 },
-      { "date": "2021-05-17", "broker": "CC", "bfreq": 210, "blot": 8800, "bval": 1550000000, "sfreq": 340, "slot": 15600, "sval": 2750000000, "nlot": -6800, "nval": -1200000000 }
+    "start": "2021-05-10",
+    "end": "2021-05-20",
+    "data": [
+      {
+        "date": "2021-05-17",
+        "summary": [
+          { "broker_code": "YP", "bfreq": 1210, "blot": 45200, "bval": 7960000000, "bavg_per_share": 176.1, "sfreq": 980, "slot": 38100, "sval": 6710000000, "savg_per_share": 176.1, "nlot": 7100, "nval": 1250000000, "navg_per_share": 176.1 },
+          { "broker_code": "PD", "bfreq": 640, "blot": 21500, "bval": 3790000000, "bavg_per_share": 176.3, "sfreq": 1130, "slot": 40200, "sval": 7080000000, "savg_per_share": 176.1, "nlot": -18700, "nval": -3290000000, "navg_per_share": 176.1 },
+          { "broker_code": "CC", "bfreq": 210, "blot": 8800, "bval": 1550000000, "bavg_per_share": 176.1, "sfreq": 340, "slot": 15600, "sval": 2750000000, "savg_per_share": 176.3, "nlot": -6800, "nval": -1200000000, "navg_per_share": 176.3 }
+        ]
+      }
     ]
   },
   "listing_performance": {
     "symbol": "SRIL",
-    "listing_date": "2013-06-17",
-    "offering_price": 240,
     "chg_7d": -0.0417,
     "chg_30d": -0.0833,
     "chg_90d": -0.125,
@@ -132,6 +148,6 @@
   "daily": [
     { "symbol": "SRIL", "date": "2021-05-12", "close": 148, "open": 150, "high": 152, "low": 146, "volume": 285400000, "market_cap": 3030000000000 },
     { "symbol": "SRIL", "date": "2021-05-17", "close": 146, "open": 148, "high": 150, "low": 144, "volume": 312800000, "market_cap": 2990000000000 },
-    { "symbol": "SRIL", "date": "2021-05-18", "close": 146, "open": null, "high": null, "low": null, "volume": 0, "market_cap": 2990000000000 }
+    { "symbol": "SRIL", "date": "2021-05-18", "close": 146, "open": null, "high": 0, "low": 0, "volume": 0, "market_cap": 2990000000000 }
   ]
 }

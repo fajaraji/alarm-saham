@@ -1,0 +1,35 @@
+{
+  "_catatan": "Respons nyata daily/WIKA dipotong 3 hari (tersuspensi: open null, volume 0).",
+  "body": [
+    {
+      "symbol": "WIKA.JK",
+      "date": "2026-06-09",
+      "close": 204,
+      "open": null,
+      "high": 0,
+      "low": 0,
+      "volume": 0,
+      "market_cap": 8134105027032
+    },
+    {
+      "symbol": "WIKA.JK",
+      "date": "2026-06-10",
+      "close": 204,
+      "open": null,
+      "high": 0,
+      "low": 0,
+      "volume": 0,
+      "market_cap": 8134105027032
+    },
+    {
+      "symbol": "WIKA.JK",
+      "date": "2026-06-11",
+      "close": 204,
+      "open": null,
+      "high": 0,
+      "low": 0,
+      "volume": 0,
+      "market_cap": 8134105027032
+    }
+  ]
+}

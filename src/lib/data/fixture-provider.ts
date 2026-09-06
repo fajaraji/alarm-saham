@@ -151,10 +151,12 @@ export class FixtureProvider implements DataProvider {
   async brokerSummary(symbol: string, start: string, end: string): Promise<BrokerSummary> {
     pastikanRentang(start, end, BATAS_HARI.brokerSummary, "broker-summary");
     const ringkas = this.emiten(symbol, "broker-summary").broker_summary;
-    const dalamRentang = (r: { date?: string | null }) =>
-      !r.date || (r.date >= start && r.date <= end);
-    if (Array.isArray(ringkas)) return ringkas.filter(dalamRentang);
-    return { ...ringkas, results: (ringkas.results ?? []).filter(dalamRentang) };
+    return {
+      ...ringkas,
+      start,
+      end,
+      data: ringkas.data.filter((h) => h.date >= start && h.date <= end),
+    };
   }
 
   async listingPerformance(symbol: string): Promise<ListingPerformance> {

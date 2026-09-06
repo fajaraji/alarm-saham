@@ -123,6 +123,24 @@ describe("SectorsProvider: buku kredit & cache", () => {
     expect(baris[0]).toMatchObject({ status: 404, credits: 1, cacheHit: false });
   });
 
+  it("404 di-cache: panggilan identik kedua tidak fetch lagi, 0 kredit, tetap NotFoundError", async () => {
+    const f = fetchUrutan(() => jsonResponse(404, { code: "not_found", message: "tidak ada data" }));
+    const p = provider();
+    await expect(p.listingPerformance("SRIL")).rejects.toBeInstanceOf(NotFoundError);
+    await expect(p.listingPerformance("SRIL")).rejects.toBeInstanceOf(NotFoundError);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(await totalKredit()).toBe(1);
+    const baris = await ledger();
+    expect(baris).toHaveLength(2);
+    expect(baris[1]).toMatchObject({ status: 404, credits: 0, cacheHit: true });
+
+    // setelah 31 hari cache 404 kedaluwarsa → fetch lagi (1 kredit)
+    jam = new Date(jam.getTime() + 31 * 24 * 3600_000);
+    await expect(p.listingPerformance("SRIL")).rejects.toBeInstanceOf(NotFoundError);
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(await totalKredit()).toBe(2);
+  });
+
   it.each([
     [400, "bad_request"],
     [401, "subscription_not_active"],
