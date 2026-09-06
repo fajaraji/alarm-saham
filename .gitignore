@@ -39,3 +39,6 @@ Thumbs.db
 # worktree agen
 .worktrees/
 
+
+# PGlite lokal (drizzle-kit migrate tanpa DATABASE_URL)
+.pglite/
