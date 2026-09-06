@@ -39,3 +39,6 @@ Thumbs.db
 # worktree agen
 .worktrees/
 
+
+# cache respons & buku kredit Sectors (lokal, tidak pernah masuk git)
+.cache/

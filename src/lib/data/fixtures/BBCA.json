@@ -1,0 +1,90 @@
+{
+  "_catatan": "BBCA (Bank Central Asia): contoh emiten bersih/kontrol sehat. Tidak ada suspensi, laporan tepat waktu, tidak ada penjualan insider. Angka keuangan dalam IDR dan ilustratif (perkiraan). listing_performance tidak tersedia karena listing sebelum Mei 2005.",
+  "quarterly_financial_dates": {
+    "2019": ["2020-02-06", "2019-04-25", "2019-07-25", "2019-10-24", "2020-02-06"],
+    "2020": ["2021-02-08", "2020-04-30", "2020-07-30", "2020-10-22", "2021-02-08"],
+    "2021": ["2022-01-27", "2021-04-22", "2021-07-22", "2021-10-21", "2022-01-27"],
+    "2022": ["2023-01-26", "2022-04-21", "2022-07-21", "2022-10-20", "2023-01-26"],
+    "2023": ["2024-01-25", "2023-04-24", "2023-07-24", "2023-10-19", "2024-01-25"],
+    "2024": ["2025-01-23", "2024-04-22", "2024-07-24", "2024-10-23", "2025-01-23"]
+  },
+  "filings": [
+    {
+      "symbol": "BBCA",
+      "holder_name": "Institusi Dana Pensiun C (disamarkan)",
+      "holder_type": "institution",
+      "transaction_type": "buy",
+      "holding_before": 1200000000,
+      "holding_after": 1260000000,
+      "amount_transaction": 60000000,
+      "price": 9650,
+      "transaction_value": 579000000000,
+      "share_percentage_before": 0.0097,
+      "share_percentage_after": 0.0102,
+      "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-bbca-2023-08.pdf",
+      "timestamp": "2023-08-15T00:00:00"
+    }
+  ],
+  "corporate_actions": {
+    "symbol": "BBCA",
+    "dividend": [
+      { "date": "2024-03-27", "cum_date": "2024-03-27", "ex_date": "2024-03-28", "payment_date": "2024-04-17", "dividend_amount": 227.5, "type": "final" },
+      { "date": "2023-12-08", "cum_date": "2023-12-08", "ex_date": "2023-12-11", "payment_date": "2023-12-20", "dividend_amount": 42.5, "type": "interim" }
+    ],
+    "upcoming_dividend": [],
+    "stock_split": [
+      { "date": "2021-10-13", "ratio": "1:5", "split_type": "stock_split" }
+    ],
+    "right_issue": [],
+    "warrant": [],
+    "bonus": [],
+    "agm": [
+      { "date": "2024-03-14", "type": "AGM" }
+    ]
+  },
+  "quarterly_financials": [
+    {
+      "symbol": "BBCA",
+      "report_date": "2023-12-31",
+      "revenue": 99900000000000,
+      "earnings": 48600000000000,
+      "total_assets": 1408000000000000,
+      "total_equity": 242000000000000,
+      "total_liabilities": 1166000000000000,
+      "total_debt": 12000000000000,
+      "operating_cash_flow": 45000000000000,
+      "investing_cash_flow": -30000000000000,
+      "financing_cash_flow": -35000000000000,
+      "ebit": 60100000000000,
+      "ebitda": 62500000000000
+    },
+    {
+      "symbol": "BBCA",
+      "report_date": "2024-03-31",
+      "revenue": 25400000000000,
+      "earnings": 12900000000000,
+      "total_assets": 1444000000000000,
+      "total_equity": 250000000000000,
+      "total_liabilities": 1194000000000000,
+      "total_debt": 11500000000000,
+      "operating_cash_flow": 12000000000000,
+      "investing_cash_flow": -8000000000000,
+      "financing_cash_flow": -2000000000000,
+      "ebit": 16100000000000,
+      "ebitda": 16700000000000
+    }
+  ],
+  "broker_summary": {
+    "symbol": "BBCA",
+    "results": [
+      { "date": "2024-03-27", "broker": "AK", "bfreq": 3120, "blot": 142000, "bval": 1394000000000, "sfreq": 2890, "slot": 128000, "sval": 1256000000000, "nlot": 14000, "nval": 138000000000 },
+      { "date": "2024-03-27", "broker": "BK", "bfreq": 2450, "blot": 98000, "bval": 962000000000, "sfreq": 2610, "slot": 105000, "sval": 1030000000000, "nlot": -7000, "nval": -68000000000 }
+    ]
+  },
+  "listing_performance": null,
+  "daily": [
+    { "symbol": "BBCA", "date": "2024-03-25", "close": 9850, "open": 9800, "high": 9900, "low": 9775, "volume": 68400000, "market_cap": 1214000000000000 },
+    { "symbol": "BBCA", "date": "2024-03-26", "close": 9900, "open": 9850, "high": 9925, "low": 9825, "volume": 71200000, "market_cap": 1220000000000000 },
+    { "symbol": "BBCA", "date": "2024-03-27", "close": 9825, "open": 9900, "high": 9925, "low": 9800, "volume": 92500000, "market_cap": 1211000000000000 }
+  ]
+}
