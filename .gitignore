@@ -42,3 +42,6 @@ Thumbs.db
 
 # PGlite lokal (drizzle-kit migrate tanpa DATABASE_URL)
 .pglite/
+
+# cache respons & buku kredit Sectors (lokal, tidak pernah masuk git)
+.cache/

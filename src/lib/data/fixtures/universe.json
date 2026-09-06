@@ -1,0 +1,30 @@
+{
+  "_catatan": "Fixture pengembangan/tes tanpa kunci API. Bentuk mengikuti dokumentasi Sectors v2. Tanggal suspensi SRIL mengikuti pengumuman publik; teks reason dan URL adalah contoh, bukan salinan pengumuman resmi.",
+  "suspensions": [
+    {
+      "symbol": "SRIL",
+      "suspension_date": "2021-05-18",
+      "reason": "Penghentian sementara perdagangan efek sehubungan dengan penundaan pembayaran kewajiban keuangan (PKPU) dan belum disampaikannya laporan keuangan",
+      "pdf_url": "https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_EREP/202105/contoh-peng-sril-2021.pdf"
+    },
+    {
+      "symbol": "SRIL",
+      "suspension_date": "2024-11-01",
+      "reason": "Perpanjangan penghentian sementara perdagangan efek sehubungan dengan putusan pailit Pengadilan Niaga",
+      "pdf_url": "https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_EREP/202411/contoh-peng-sril-2024.pdf"
+    },
+    {
+      "symbol": "GOLL",
+      "suspension_date": "2019-01-30",
+      "reason": "Penghentian sementara perdagangan efek sehubungan dengan belum dipenuhinya kewajiban penyampaian laporan keuangan",
+      "pdf_url": "https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_EREP/201901/contoh-peng-goll-2019.pdf"
+    }
+  ],
+  "free_float": [
+    { "symbol": "BBCA", "company_name": "Bank Central Asia Tbk", "free_float": 0.4519 },
+    { "symbol": "SRIL", "company_name": "Sri Rejeki Isman Tbk", "free_float": 0.3971 },
+    { "symbol": "GOLL", "company_name": "Golden Plantation Tbk", "free_float": 0.2233 },
+    { "symbol": "TLKM", "company_name": "Telkom Indonesia (Persero) Tbk", "free_float": 0.4796 },
+    { "symbol": "BBRI", "company_name": "Bank Rakyat Indonesia (Persero) Tbk", "free_float": 0.4655 }
+  ]
+}
