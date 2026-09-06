@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (`ANTHROPIC_API_KEY`), 06 (Mesin uji)
 
-**Status:** ready-for-agent
+**Status:** done (kode) — diverifikasi 2026-09-07 di worktree t08 (lint/typecheck/test/build exit 0; 149 tes; route /api/agent/rakit & /api/agent/diagnosis terdaftar). **Uji nyata tertunda**: `ANTHROPIC_API_KEY` di `.env.local` masih kosong (dicek 2026-09-07 pagi). Jalankan `npm run agent:demo -- tele` setelah kunci diisi dan catat biaya token di docs/decisions.md.
 
-- [ ] Tes (model tiruan): perakit menghasilkan aturan valid untuk 3 kalimat contoh; kalimat di luar domain ditolak sopan
-- [ ] Tes (model tiruan): diagnosis memanggil ≥2 tool dan mengembalikan usulan blok + trace terstruktur
-- [ ] Uji nyata sekali dengan kunci: kasus "alarm laporan-telat saja bolong di TELE" → agent menyebut sebab dari data dan mengusulkan blok; trace tersimpan; biaya token dicatat di `docs/decisions.md`
-- [ ] Endpoint API mengembalikan JSON terstruktur untuk kedua kemampuan
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Tes (model tiruan): perakit menghasilkan aturan valid untuk 3 kalimat contoh; kalimat di luar domain ditolak sopan
+- [x] Tes (model tiruan): diagnosis memanggil ≥2 tool dan mengembalikan usulan blok + trace terstruktur
+- [ ] Uji nyata sekali dengan kunci → TERTUNDA (kunci Anthropic belum ada)
+- [x] Endpoint API mengembalikan JSON terstruktur untuk kedua kemampuan
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0
