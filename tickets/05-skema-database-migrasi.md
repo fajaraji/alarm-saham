@@ -4,9 +4,9 @@
 
 **Blocked by:** 01 (`DATABASE_URL`), 02 (Bootstrap repo & CI)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 02:10 WIB di worktree t05 (lint/typecheck/test/build exit 0; 19 tes lulus di PGlite; `db:migrate` 2× exit 0). Butir penyambungan `api_ledger` ke `SectorsProvider` dipindah ke tiket 07 (integrasi setelah merge dengan tiket 03).
 
-- [ ] `npm run db:migrate` exit 0 pada database kosong dan idempoten saat dijalankan dua kali
-- [ ] Tes integrasi (boleh memakai Postgres lokal via Docker atau Neon branch) membuktikan insert/select tiap tabel
-- [ ] `api_ledger` di DB terisi saat `SectorsProvider` dipakai dengan `DATABASE_URL`; tanpa `DATABASE_URL` fallback file tetap bekerja (tes untuk keduanya)
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] `npm run db:migrate` exit 0 pada database kosong dan idempoten saat dijalankan dua kali
+- [x] Tes integrasi (PGlite; jalur Docker tersedia tapi belum terbukti di mesin ini) membuktikan insert/select tiap tabel
+- [ ] `api_ledger` di DB terisi saat `SectorsProvider` dipakai dengan `DATABASE_URL` → dipindah ke tiket 07
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0
