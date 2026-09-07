@@ -111,7 +111,7 @@ git clone https://github.com/fajaraji/alarm-saham.git
 cd alarm-saham
 npm ci
 cp .env.example .env.local     # PowerShell: Copy-Item .env.example .env.local
-npm test                       # 268 tes; tanpa kunci, tanpa jaringan
+npm test                       # 268 tes (1 di-skip bila ./.pglite tidak ada); tanpa kunci, tanpa jaringan
 npm run dev                    # http://localhost:3000
 ```
 
@@ -167,9 +167,11 @@ Dijalankan 7 September 2026 di Windows 11 (Node 24) dari `git clone` lokal ke fo
 | Perintah | Hasil |
 |---|---|
 | `npm ci` | exit 0 |
-| `npm test` | exit 0 — 268 tes lulus, 33 berkas; tes hitung ulang PGlite di-skip dengan pesan (folder tidak ada) |
-| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture --today=2026-09-07` | exit 0 — 2/4 tertangkap, rata-rata 23 bln, alarm palsu 0/4 |
-| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07` | exit 0 — jatuh ke fixture (`DATABASE_URL kosong dan ./.pglite tidak ada`) |
+| `npm test` | exit 0 — 33 berkas, 267 tes lulus + 1 di-skip dengan pesan (hitung ulang PGlite; folder `./.pglite` tidak ada) |
+| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture --today=2026-09-07` | exit 0 — `Sumber: fixture universe-kecil.json (dipaksa)`; tertangkap 2/4 (delisting 2/3, watchlist 0/1), rata-rata 23 bln |
+| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07` | exit 0 — jatuh ke fixture dengan pesan `DATABASE_URL kosong dan ./.pglite tidak ada` |
+
+Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) `npm test` menjalankan 268 tes penuh termasuk hitung ulang snapshot; `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run test:e2e` (11 tes) exit 0.
 
 ## Status jujur
 
