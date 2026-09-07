@@ -58,7 +58,7 @@ export function PanelAi(p: Props) {
           <p>{d.ringkasan}</p>
           {d.perluTinjau ? (
             <p className="text-xs text-warn">
-              Sebagian kata pada jawaban disamarkan karena menyerupai saran investasi. Alarm Saham tidak memberi rekomendasi beli/jual.
+              Sebagian kata pada jawaban disamarkan karena menyerupai saran investasi. Alarm Saham hanya alat informasi.
             </p>
           ) : null}
           {d.emitenDibahas.length > 0 ? (

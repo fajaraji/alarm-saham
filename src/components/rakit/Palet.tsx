@@ -8,6 +8,8 @@ import type { PointerEventHandler, TouchEventHandler } from "react";
 import { DAFTAR_BLOK, type InfoBlok } from "@/lib/rakit/blok";
 import type { BlockKind } from "@/lib/engine/rules";
 
+import { Istilah } from "@/components/panduan/Istilah";
+
 import { idPalet, type DataSeret } from "./dnd";
 import { TEKS } from "./teks";
 
@@ -78,7 +80,7 @@ export function Palet({ adaDiPapan, onTambah }: PropsPalet) {
         ))}
       </div>
       <p className="mt-3 text-[11.5px] leading-snug text-ink-3">
-        Arahkan kursor ke blok untuk membaca artinya. Blok “orang dalam menjual” hanya punya data sejak 2024, jadi
+        Arahkan kursor ke blok untuk membaca artinya (atau buka Kamus). Blok “<Istilah id="insider_jual">orang dalam menjual</Istilah>” hanya punya data sejak 2024, jadi
         hasil ujinya lebih tipis.
       </p>
     </aside>

@@ -10,6 +10,9 @@ import { ATURAN_DEFAULT, petakanLampu } from "@/lib/putar-ulang/lampu";
 import type { EmitenPutarUlang } from "@/lib/putar-ulang/muat";
 import { fmtTanggal, LABEL_GROUP, pelajaran, ringkasSampai } from "@/lib/putar-ulang/ringkas";
 
+import { Istilah } from "@/components/panduan/Istilah";
+import { ISTILAH_BLOK } from "@/components/panduan/kamus";
+
 import { GarisWaktu } from "./GarisWaktu";
 import { Grafik } from "./Grafik";
 
@@ -80,8 +83,14 @@ export function PutarUlang({ emiten }: { emiten: EmitenPutarUlang }) {
             <b>{lampu.judul}</b>
             <div>{lampu.keterangan}</div>
             <div className="d">
-              aturan default: {ATURAN_DEFAULT.blocks.map((b) => LABEL_BLOK[b.kind].toLowerCase()).join(" ATAU ")} · dinilai
-              pada {t} · hanya data bertanggal ≤ {t}
+              aturan default:{" "}
+              {ATURAN_DEFAULT.blocks.map((b, i) => (
+                <span key={b.kind}>
+                  {i > 0 ? " ATAU " : ""}
+                  <Istilah id={ISTILAH_BLOK[b.kind]}>{LABEL_BLOK[b.kind].toLowerCase()}</Istilah>
+                </span>
+              ))}{" "}
+              · dinilai pada {t} · hanya data bertanggal ≤ {t}
             </div>
           </div>
         </div>

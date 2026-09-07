@@ -4,6 +4,9 @@
 import type { HasilSaham } from "@/lib/jaga/evaluasi";
 import type { Penjelasan } from "@/lib/jaga/penjelasan";
 
+import { Istilah } from "@/components/panduan/Istilah";
+import { istilahUntukBlok } from "@/components/panduan/kamus";
+
 import { KELAS_STATUS, LABEL_STATUS, TEKS } from "./teks";
 
 interface Props {
@@ -38,14 +41,17 @@ export function PesanPenjelasan({ saham, penjelasan, today }: Props) {
               <details className="mt-2 text-[12px] text-ink-2">
                 <summary className="cursor-pointer font-semibold">Rincian syarat & sumber ({h.alasan.length})</summary>
                 <ul className="mt-1 list-disc pl-5">
-                  {h.alasan.map((a) => (
-                    <li key={a.kind} data-testid={`alasan-${h.symbol}-${a.kind}`}>
-                      <b>{a.label}</b>
-                      {a.threshold ? ` (${a.threshold})` : ""}: {a.detail}
-                      {a.tanggal ? ` · tanggal ${a.tanggal}` : ""} · <span className="font-mono text-[11px]">{a.sumber}</span>
-                      {a.alarm.length ? ` · alarm: ${a.alarm.map((x) => x.name).join(", ")}` : ""}
-                    </li>
-                  ))}
+                  {h.alasan.map((a) => {
+                    const idIstilah = istilahUntukBlok(a.kind);
+                    return (
+                      <li key={a.kind} data-testid={`alasan-${h.symbol}-${a.kind}`}>
+                        <b>{idIstilah ? <Istilah id={idIstilah}>{a.label}</Istilah> : a.label}</b>
+                        {a.threshold ? ` (${a.threshold})` : ""}: {a.detail}
+                        {a.tanggal ? ` · tanggal ${a.tanggal}` : ""} · <span className="font-mono text-[11px]">{a.sumber}</span>
+                        {a.alarm.length ? ` · alarm: ${a.alarm.map((x) => x.name).join(", ")}` : ""}
+                      </li>
+                    );
+                  })}
                 </ul>
               </details>
             ) : null}

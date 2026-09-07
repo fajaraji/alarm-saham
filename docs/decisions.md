@@ -77,6 +77,11 @@ Catatan keputusan teknis dan produk Alarm Saham beserta aturan cadangan (PLAN.md
 - **§7.5 TERPICU**: `TELEGRAM_BOT_TOKEN` kosong (tiket 01) → tiket 12 memakai notifikasi in-app sebagai jalur utama; Telegram opsional.
 - §7.6 (build Vercel gagal karena dependensi) belum relevan — deploy belum dilakukan.
 
+## 2026-09-07 — Panduan, kamus, disclaimer (tiket 13)
+
+- **Perbaikan temuan tiket 14**: `/api/backtest` (dan `/api/agent/diagnosis`) kini memilih sumber lewat `getEventSource()` (Neon → PGlite `./.pglite` → fixture), sama dengan CLI dan `/putar-ulang`; label UI "data Sectors nyata" hanya bila sumber DB/PGlite. Sebelumnya route hanya melihat `DATABASE_URL`, sehingga demo lokal selalu memakai fixture 8 emiten.
+- Lapisan awam: overlay 3 langkah kunjungan pertama (localStorage `alarm-saham:panduan-selesai`), tombol Panduan, petunjuk bernomor per layar, tooltip `<Istilah>` buatan sendiri (tanpa dependensi), halaman `/kamus`; header & footer disclaimer dipasang sekali di layout akar (footer per halaman dihapus). Audit kata terlarang jadi tes (`tests/unit/copy/kata-terlarang.test.ts`) dengan pengecualian eksplisit "filing/transaksi/tipe jual".
+
 ## Kunci & akun yang belum ada (status 2026-09-07, cek keberadaan nilai saja)
 
 | Variabel | Status | Dampak |

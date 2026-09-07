@@ -16,8 +16,13 @@ export interface GalatApi {
 export type HasilApi<T> = { ok: true; data: T } | { ok: false; galat: GalatApi };
 
 export interface ResponBacktest {
+  /** "db" = data Sectors nyata (Neon/Postgres/PGlite); "fixture" = data contoh. */
   sumber: "db" | "fixture";
+  /** Jenis sumber persis dari server (neon | postgres | pglite | fixture). */
+  jenis?: "neon" | "postgres" | "pglite" | "fixture";
   keterangan: string;
+  /** Emiten kena yang dilewati karena tidak punya tanggal kejadian target (mis. MENN, TGRA, WSKT). */
+  dilewati?: string[];
   hasil: BacktestResult;
 }
 

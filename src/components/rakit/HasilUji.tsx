@@ -7,6 +7,9 @@ import type { BacktestResult, PerSymbolResult } from "@/lib/engine/score";
 import { labelBlok } from "@/lib/rakit/blok";
 import type { ResponBacktest } from "@/lib/rakit/api";
 
+import { Istilah } from "@/components/panduan/Istilah";
+import type { IdIstilah } from "@/components/panduan/kamus";
+
 import { KELOMPOK, TEKS } from "./teks";
 
 interface Props {
@@ -17,6 +20,7 @@ interface Props {
 }
 
 const URUTAN: Group[] = ["delisting", "watchlist", "control"];
+const ISTILAH_KELOMPOK: Record<Group, IdIstilah> = { delisting: "delisting", watchlist: "pemantauan_khusus", control: "kontrol_sehat" };
 
 function angkaId(x: number | null, satuan = ""): string {
   if (x == null) return "–";
@@ -48,7 +52,8 @@ function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }
     <div className="mt-2.5" data-testid={`kelompok-${group}`}>
       <div className="mb-1 flex justify-between gap-2 text-xs text-ink-2">
         <span>
-          {g.perSymbol.length} saham {KELOMPOK[group].judul} · {KELOMPOK[group].catatan}
+          {g.perSymbol.length} saham <Istilah id={ISTILAH_KELOMPOK[group]}>{KELOMPOK[group].judul}</Istilah> ·{" "}
+          {KELOMPOK[group].catatan}
         </span>
         <b className="font-mono font-medium">{nilai}</b>
       </div>
@@ -92,6 +97,12 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
             {sumber}
           </span>
           , akhir bulan {h.scanStart} – {h.today}.
+          {hasil?.dilewati?.length ? (
+            <span data-testid="dilewati">
+              {" "}
+              {hasil.dilewati.length} saham dilewati ({hasil.dilewati.join(", ")}) karena tidak punya tanggal kejadian target.
+            </span>
+          ) : null}
           {basi ? " Papan sudah berubah — klik “Uji ke masa lalu” lagi." : ""}
         </p>
       ) : (
@@ -113,18 +124,18 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
             <div className="text-[11px] text-ink-2">dari yang dihapus dari bursa</div>
           </div>
           <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3">Lebih awal</div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3"><Istilah id="lebih_awal">Lebih awal</Istilah></div>
             <div className="font-display text-2xl font-extrabold tabular-nums text-warn" data-testid="skor-lead">
               {h ? angkaId(h.leadMonthsAvg, " bln") : "–"}
             </div>
             <div className="text-[11px] text-ink-2">rata-rata sebelum kejadian</div>
           </div>
           <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3">Alarm palsu</div>
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3"><Istilah id="alarm_palsu">Alarm palsu</Istilah></div>
             <div className="font-display text-2xl font-extrabold tabular-nums text-crit" data-testid="skor-palsu">
               {h ? `${h.falseAlarms}/${h.controls}` : "–"}
             </div>
-            <div className="text-[11px] text-ink-2">dari saham sehat</div>
+            <div className="text-[11px] text-ink-2">dari <Istilah id="kontrol_sehat">saham sehat</Istilah></div>
           </div>
         </div>
         {h ? URUTAN.map((g) => <BarisKelompok key={g} hasil={h} group={g} />) : null}

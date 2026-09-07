@@ -4,6 +4,7 @@ import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import HalamanCaraKamiMenghitung from "../../src/app/cara-kami-menghitung/page";
+import { FooterDisclaimer } from "../../src/components/panduan/FooterDisclaimer";
 import { TENGGAT_LAPORAN_HARI } from "../../src/lib/engine/evaluate";
 import { BLOCK_KINDS, LABEL_BLOK } from "../../src/lib/engine/rules";
 import { KREDIT_ANGGARAN, KREDIT_TOTAL_LEDGER, ringkasSkor, SKOR_NYATA } from "../../src/lib/metodologi/skor";
@@ -64,6 +65,9 @@ describe("/cara-kami-menghitung", () => {
     expect(batas).toHaveTextContent("sejak 2024");
     expect(batas).toHaveTextContent("Survivorship");
     expect(screen.getByTestId("kredit-total")).toHaveTextContent(`${KREDIT_TOTAL_LEDGER} dari ${KREDIT_ANGGARAN}`);
+    // Disclaimer datang dari footer layout akar (tiket 13), bukan dari halaman ini.
+    expect(screen.queryByTestId("disclaimer")).not.toBeInTheDocument();
+    render(<FooterDisclaimer />);
     expect(screen.getByTestId("disclaimer")).toHaveTextContent("bukan saran investasi");
     expect(document.body.textContent).not.toMatch(/berbahaya|gorengan|akan pailit/i);
   });

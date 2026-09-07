@@ -4,6 +4,8 @@ import type { AlarmJaga } from "@/lib/jaga/bawaan";
 import { ringkasAlarmJaga } from "@/lib/jaga/bawaan";
 import { LABEL_BLOK_B, type BlokBKind } from "@/lib/jaga/blok-b";
 import { LABEL_BLOK, type BlockKind } from "@/lib/engine/rules";
+import { Istilah } from "@/components/panduan/Istilah";
+import { ISTILAH_BLOK, ISTILAH_BLOK_B } from "@/components/panduan/kamus";
 
 export interface AlarmTampil extends AlarmJaga {
   asal: "bawaan" | "lokal" | "server";
@@ -15,11 +17,33 @@ interface Props {
   onToggle: (id: string, aktif: boolean) => void;
 }
 
-function ringkasAwam(a: AlarmJaga): string {
-  if (a.kelas === "B") return (a.blokB ?? []).map((k: BlokBKind) => LABEL_BLOK_B[k]).join(" atau ");
+/** Ringkasan awam: tiap nama blok dibungkus tooltip kamus. */
+function RingkasAwam({ a }: { a: AlarmJaga }) {
+  if (a.kelas === "B") {
+    return (
+      <>
+        {(a.blokB ?? []).map((k: BlokBKind, i) => (
+          <span key={k}>
+            {i > 0 ? " atau " : ""}
+            <Istilah id={ISTILAH_BLOK_B[k]}>{LABEL_BLOK_B[k]}</Istilah>
+          </span>
+        ))}
+      </>
+    );
+  }
   const r = a.rule;
-  if (!r) return ringkasAlarmJaga(a);
-  return r.blocks.map((b) => `${LABEL_BLOK[b.kind as BlockKind]} (${b.threshold})`).join(r.combine === "any" ? " atau " : " dan ");
+  if (!r) return <>{ringkasAlarmJaga(a)}</>;
+  const kata = r.combine === "any" ? " atau " : " dan ";
+  return (
+    <>
+      {r.blocks.map((b, i) => (
+        <span key={b.kind}>
+          {i > 0 ? kata : ""}
+          <Istilah id={ISTILAH_BLOK[b.kind as BlockKind]}>{LABEL_BLOK[b.kind as BlockKind]}</Istilah> ({b.threshold})
+        </span>
+      ))}
+    </>
+  );
 }
 
 const LABEL_ASAL: Record<AlarmTampil["asal"], string> = {
@@ -50,7 +74,7 @@ export function KartuAlarm({ alarms, aktif, onToggle }: Props) {
               <b className="block text-[13.5px]">{a.name}</b>
               <div className="text-[11.5px] leading-snug text-ink-3">
                 {LABEL_ASAL[a.asal]} · {a.kelas === "B" ? "data terkini · " : ""}
-                {ringkasAwam(a)}
+                <RingkasAwam a={a} />
               </div>
             </div>
             <label className="flex shrink-0 cursor-pointer items-center gap-1.5 text-[12px] font-semibold">

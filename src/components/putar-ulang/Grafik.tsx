@@ -8,7 +8,7 @@ const URUTAN_LAJUR: { jenis: JenisKejadian; label: string }[] = [
   { jenis: "laporan_hilang", label: "Laporan hilang" },
   { jenis: "ekuitas_negatif", label: "Ekuitas negatif" },
   { jenis: "rights_issue", label: "Rights issue" },
-  { jenis: "insider_jual", label: "Orang dalam jual" },
+  { jenis: "insider_jual", label: "Orang dalam menjual" },
   { jenis: "laporan_tersedia", label: "Laporan tersedia" },
 ];
 

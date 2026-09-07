@@ -24,7 +24,6 @@ export const TEKS = {
   aiMemeriksa: "AI sedang memeriksa di mana alarmmu bolong…",
   aiMerakit: "AI sedang merakit blok…",
   papanKosongUji: "Papan alarm masih kosong. Klik atau seret satu blok dari kotak kiri, atau minta AI merakit.",
-  disclaimer: "Alarm Saham adalah alat informasi dan analisis, bukan saran investasi.",
   sumberDb: "data Sectors nyata",
   sumberFixture: "data contoh (bukan data Sectors nyata)",
 } as const;
