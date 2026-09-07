@@ -23,7 +23,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Tautan nav minimal (tiket 10); layout penuh dikerjakan tiket 09. */}
+        <nav aria-label="Navigasi" className="px-6 py-2 text-sm">
+          <a href="/putar-ulang" className="underline">
+            Putar ulang emiten
+          </a>
+        </nav>
+        {children}
+      </body>
     </html>
   );
 }

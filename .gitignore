@@ -45,3 +45,7 @@ Thumbs.db
 
 # cache respons & buku kredit Sectors (lokal, tidak pernah masuk git)
 .cache/
+
+# artefak Playwright (tiket 10)
+test-results/
+playwright-report/

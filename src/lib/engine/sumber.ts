@@ -91,8 +91,11 @@ function dariDb(t: DbTerbuka): SumberKejadian {
 
 /** Folder PGlite yang akan dipakai bila DATABASE_URL kosong; null bila tidak ada. */
 export function folderPglite(opsi: OpsiSumber = {}): string | null {
-  const dir = typeof opsi.pglite === "string" ? opsi.pglite : DIR_PGLITE_DEFAULT;
-  const absolut = path.resolve(process.cwd(), dir);
+  // Folder ditentukan saat runtime (opsi CLI) — jangan ditelusuri Turbopack sebagai aset.
+  const absolut =
+    typeof opsi.pglite === "string"
+      ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), opsi.pglite)
+      : path.join(/*turbopackIgnore: true*/ process.cwd(), DIR_PGLITE_DEFAULT);
   if (opsi.pglite === true || typeof opsi.pglite === "string") return absolut;
   return existsSync(absolut) ? absolut : null;
 }
