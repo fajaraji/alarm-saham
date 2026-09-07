@@ -1,6 +1,7 @@
 // Diagnosis dengan model tiruan: loop tool-use (≥2 tool), trace dari tool call
 // sungguhan, usulan blok terstruktur, guard, dan penyimpan trace yang disuntik.
-import { describe, expect, it } from "vitest";
+// Provider default tes: DeepSeek (tool-calling tanpa opsi Anthropic).
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { diagnosis, MAKS_USULAN, type RekamanRun } from "../../../src/lib/agent/diagnosis";
 import { DISCLAIMER } from "../../../src/lib/agent/instructions";
@@ -14,6 +15,9 @@ const sumber = fromFixture(universeKecil);
 const TODAY = "2026-09-07";
 const rule: Rule = { name: "Laporan hilang saja", combine: "any", blocks: [{ kind: "laporan_hilang", threshold: "longgar" }] };
 const backtest = await runBacktest(rule, sumber.universe, sumber, { today: TODAY });
+
+beforeEach(() => vi.stubEnv("LLM_PROVIDER", "deepseek"));
+afterEach(() => vi.unstubAllEnvs());
 
 const JAWABAN = {
   ringkasan:
@@ -98,13 +102,12 @@ describe("diagnosis (model tiruan)", () => {
     expect(rekaman[0].keluaran.usulanBlok).toHaveLength(2);
     expect(rekaman[0].rule).toBe(rule);
 
-    // Panggilan model: 3 langkah, instruksi sistem di-cache, tools terdaftar, thinking adaptive
+    // Panggilan model: 3 langkah, instruksi sistem tanpa opsi Anthropic (DeepSeek
+    // meng-cache otomatis), tools terdaftar, thinking DeepSeek
     expect(model.doGenerateCalls).toHaveLength(3);
     const call = model.doGenerateCalls[0];
-    expect(call.prompt[0]).toMatchObject({
-      role: "system",
-      providerOptions: { anthropic: { cacheControl: { type: "ephemeral", ttl: "1h" } } },
-    });
+    expect(call.prompt[0]).toMatchObject({ role: "system" });
+    expect(call.prompt[0].providerOptions).toBeUndefined();
     expect(String(call.prompt[0].content)).toContain(DISCLAIMER);
     expect(call.tools?.map((t) => t.name).sort()).toEqual([
       "getCorporateActions",
@@ -115,7 +118,8 @@ describe("diagnosis (model tiruan)", () => {
       "listMissed",
       "runAlarmOn",
     ]);
-    expect(call.providerOptions).toEqual({ anthropic: { thinking: { type: "adaptive" }, effort: "high" } });
+    expect(call.providerOptions).toEqual({ deepseek: { thinking: { type: "enabled" }, reasoningEffort: "high" } });
+    expect(JSON.stringify(model.doGenerateCalls.map((c) => c.providerOptions))).not.toContain("anthropic");
     expect(JSON.stringify(call.prompt[1])).toContain("Fokuskan pembahasan pada emiten TELE");
     // Hasil tool langkah 1 dikirim balik ke model pada langkah 2
     const pesanTool = model.doGenerateCalls[1].prompt.filter((m) => m.role === "tool");
@@ -159,6 +163,19 @@ describe("diagnosis (model tiruan)", () => {
     expect(peta.getFinancials).toMatch(/kuartal keuangan; terakhir \d{4}-\d{2}-\d{2} ekuitas/);
     expect(peta.runAlarmOn).toMatch(/^GALAT: /);
     expect(hasil.usulanBlok).toEqual([]);
+  });
+
+  it("provider Anthropic: tool-calling tetap jalan, instruksi di-cache, thinking adaptive", async () => {
+    vi.stubEnv("LLM_PROVIDER", "anthropic");
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahTeks({ ringkasan: "ok", emitenDibahas: [], usulanBlok: [] }),
+    ]);
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
+    expect(hasil.trace.map((t) => t.tool)).toEqual(["listMissed"]);
+    const call = model.doGenerateCalls[0];
+    expect(call.prompt[0].providerOptions).toEqual({ anthropic: { cacheControl: { type: "ephemeral", ttl: "1h" } } });
+    expect(call.providerOptions).toEqual({ anthropic: { thinking: { type: "adaptive" }, effort: "high" } });
   });
 
   it("stopWhen membatasi langkah: model yang terus memanggil tool berhenti di maxSteps", async () => {

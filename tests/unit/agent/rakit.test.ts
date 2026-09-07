@@ -1,5 +1,6 @@
 // Perakit blok dengan model tiruan: 3 kalimat contoh → aturan valid; kalimat
 // di luar domain dan permintaan rekomendasi ditolak; guard menyensor keluaran.
+// Provider default tes: DeepSeek (structured output tanpa opsi Anthropic).
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DISCLAIMER } from "../../../src/lib/agent/instructions";
@@ -42,6 +43,7 @@ const CONTOH: { kalimat: string; rule: Rule; alasan: string }[] = [
 describe("rakitAturan: kalimat contoh → aturan valid", () => {
   for (const c of CONTOH) {
     it(`"${c.kalimat}"`, async () => {
+      vi.stubEnv("LLM_PROVIDER", "deepseek");
       const model = modelTiruan([diterima(c.rule, c.alasan)]);
       const hasil = await rakitAturan(c.kalimat, { model });
       expect(hasil.ditolak).toBe(false);
@@ -52,19 +54,35 @@ describe("rakitAturan: kalimat contoh → aturan valid", () => {
       expect(hasil.perluTinjau).toBe(false);
       expect(hasil.usage).toMatchObject({ inputTokens: 100, outputTokens: 20, cacheReadTokens: 40 });
 
-      // Panggilan ke model: instruksi sistem (dengan cacheControl), kalimat di prompt,
-      // structured output (responseFormat json), thinking adaptive.
+      // Panggilan ke model: instruksi sistem (tanpa cacheControl Anthropic — DeepSeek
+      // meng-cache otomatis), kalimat di prompt, structured output (responseFormat
+      // json), thinking DeepSeek; tidak ada kunci "anthropic" di providerOptions.
       const call = model.doGenerateCalls[0];
       const sistem = call.prompt[0];
       expect(sistem.role).toBe("system");
       expect(sistem.content).toContain(DISCLAIMER);
-      expect(sistem.providerOptions).toEqual({ anthropic: { cacheControl: { type: "ephemeral", ttl: "1h" } } });
+      expect(sistem.providerOptions).toBeUndefined();
       expect(JSON.stringify(call.prompt[1])).toContain(c.kalimat);
       expect(call.responseFormat?.type).toBe("json");
       expect(JSON.stringify(call.responseFormat)).toContain('"suspensi"');
-      expect(call.providerOptions).toEqual({ anthropic: { thinking: { type: "adaptive" }, effort: "medium" } });
+      expect(call.providerOptions).toEqual({ deepseek: { thinking: { type: "enabled" }, reasoningEffort: "high" } });
+      expect(JSON.stringify({ sistem: sistem.providerOptions, call: call.providerOptions })).not.toContain("anthropic");
     });
   }
+});
+
+describe("rakitAturan: provider Anthropic", () => {
+  it("LLM_PROVIDER=anthropic → cacheControl pada instruksi + thinking adaptive, tanpa kunci deepseek", async () => {
+    vi.stubEnv("LLM_PROVIDER", "anthropic");
+    const c = CONTOH[0];
+    const model = modelTiruan([diterima(c.rule, c.alasan)]);
+    const hasil = await rakitAturan(c.kalimat, { model });
+    expect(hasil.ditolak).toBe(false);
+    const call = model.doGenerateCalls[0];
+    expect(call.prompt[0].providerOptions).toEqual({ anthropic: { cacheControl: { type: "ephemeral", ttl: "1h" } } });
+    expect(call.providerOptions).toEqual({ anthropic: { thinking: { type: "adaptive" }, effort: "medium" } });
+    expect(JSON.stringify(call.providerOptions)).not.toContain("deepseek");
+  });
 });
 
 describe("rakitAturan: penolakan sopan", () => {
@@ -117,8 +135,12 @@ describe("rakitAturan: pengaman", () => {
     expect(model.doGenerateCalls).toHaveLength(0);
   });
 
-  it("tanpa ANTHROPIC_API_KEY dan tanpa model suntikan → AiKeyMissingError", async () => {
+  it("tanpa kunci provider mana pun dan tanpa model suntikan → AiKeyMissingError menyebut kedua opsi", async () => {
+    vi.stubEnv("LLM_PROVIDER", "");
+    vi.stubEnv("DEEPSEEK_API_KEY", "");
     vi.stubEnv("ANTHROPIC_API_KEY", "");
-    await expect(rakitAturan("alarm saham pailit")).rejects.toBeInstanceOf(AiKeyMissingError);
+    const janji = rakitAturan("alarm saham pailit");
+    await expect(janji).rejects.toBeInstanceOf(AiKeyMissingError);
+    await expect(janji).rejects.toThrow(/DEEPSEEK_API_KEY[\s\S]*ANTHROPIC_API_KEY/);
   });
 });

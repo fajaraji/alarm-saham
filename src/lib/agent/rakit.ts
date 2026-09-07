@@ -1,15 +1,17 @@
 // Perakit blok: kalimat awam → aturan alarm (skema tiket 06) via structured output.
 //
-// Skema keluaran model memakai RuleSchema dari engine (tidak diduplikasi);
-// provider Anthropic menyalin batasan (min/max) ke deskripsi skema, dan kami
-// memvalidasi ulang dengan `parseRule` setelah model menjawab.
+// Skema keluaran model memakai RuleSchema dari engine (tidak diduplikasi).
+// Provider (DeepSeek/Anthropic) menerjemahkan skema ke format masing-masing —
+// DeepSeek menyisipkan skema JSON ke pesan sistem bila endpoint hanya
+// mendukung json_object — dan kami memvalidasi ulang dengan `parseRule`
+// setelah model menjawab.
 import { generateText, NoObjectGeneratedError, Output, type LanguageModel } from "ai";
 import { z } from "zod";
 
 import { parseRule, RuleError, RuleSchema, type Rule } from "../engine/rules";
 import { sensorObjek } from "./guard";
 import { INSTRUKSI_PERAKIT } from "./instructions";
-import { instruksiSistem, opsiAnthropic, pilihModel } from "./model";
+import { instruksiSistem, opsiProvider, pilihModel, providerDari } from "./model";
 import { ringkasUsage, type UsageRingkas } from "./usage";
 
 export const RakitOutputSchema = z.object({
@@ -54,7 +56,7 @@ export class RakitError extends Error {
 }
 
 export interface RakitOptions {
-  /** Model suntikan (tes memakai MockLanguageModelV4). Default: claude-opus-5. */
+  /** Model suntikan (tes memakai MockLanguageModelV4). Default: model peran 'penalaran' dari provider terpilih. */
   model?: LanguageModel;
 }
 
@@ -67,15 +69,16 @@ export async function rakitAturan(kalimat: string, opts: RakitOptions = {}): Pro
     throw new RakitError(`Kalimat terlalu panjang (maksimal ${KALIMAT_MAKS} karakter)`);
   }
 
-  const model = pilihModel("perakit", opts.model);
+  const model = pilihModel("penalaran", opts.model);
+  const provider = providerDari(model);
   let hasil: Awaited<ReturnType<typeof panggil>>;
   const panggil = () =>
     generateText({
       model,
-      instructions: instruksiSistem(INSTRUKSI_PERAKIT),
+      instructions: instruksiSistem(INSTRUKSI_PERAKIT, provider),
       prompt: `Kalimat pengguna: """${bersih}"""\n\nRakit aturan alarm dari kalimat itu, atau tolak bila di luar domain.`,
       output: Output.object({ schema: RakitOutputSchema, name: "hasil_rakit" }),
-      providerOptions: opsiAnthropic("medium"),
+      providerOptions: opsiProvider(provider, "medium"),
     });
   try {
     hasil = await panggil();
@@ -87,7 +90,7 @@ export async function rakitAturan(kalimat: string, opts: RakitOptions = {}): Pro
     }
     throw err;
   }
-  const usage = ringkasUsage(hasil.usage);
+  const usage = ringkasUsage(hasil.usage, hasil.providerMetadata);
   const keluaran = hasil.output;
 
   if (keluaran.ditolak) {
