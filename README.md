@@ -111,7 +111,7 @@ git clone https://github.com/fajaraji/alarm-saham.git
 cd alarm-saham
 npm ci
 cp .env.example .env.local     # PowerShell: Copy-Item .env.example .env.local
-npm test                       # 268 tes (1 di-skip bila ./.pglite tidak ada); tanpa kunci, tanpa jaringan
+npm test                       # 340 tes (1 di-skip bila ./.pglite tidak ada); tanpa kunci, tanpa jaringan
 npm run dev                    # http://localhost:3000
 ```
 
@@ -214,6 +214,14 @@ Yang **belum** ada dan tidak kami klaim: mode pasang, notifikasi, cron, deploy h
 | `npm run sectors -- <endpoint> <symbol>` | panggilan tunggal ke Sectors lewat provider (ledger + cache) |
 | `npm run db:migrate` · `npm run db:sync -- --from=pglite --to=neon` | migrasi Drizzle · salin PGlite → Neon tanpa kredit |
 | `npm run agent:demo -- tele` | diagnosis nyata (butuh kunci LLM, berbiaya) |
+| `npm run telegram:set-webhook -- https://<app>` | daftarkan webhook bot Telegram sekali setelah deploy (butuh `TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`) |
+
+## Pengecekan pagi otomatis & notifikasi (tiket 12)
+
+- `vercel.json` menjadwalkan Vercel Cron `30 23 * * *` (UTC) = **06:30 WIB** ke `GET /api/cron/jaga`, dilindungi `Authorization: Bearer <CRON_SECRET>` (tanpa `CRON_SECRET` di server endpoint menjawab 503; header salah 401). Uji manual: `curl -H "Authorization: Bearer $CRON_SECRET" "http://localhost:3000/api/cron/jaga?today=2026-09-07"`.
+- Cron menilai **kelas A saja** (nol kredit Sectors) untuk setiap portofolio yang punya alarm aktif, membandingkan dengan run terakhir, dan mengirim **hanya bendera baru** — pemanggilan kedua di hari yang sama menghasilkan 0 pesan (idempoten terhadap pengiriman ganda Vercel).
+- Notifikasi selalu ditulis ke **kotak masuk in-app** (`/api/inbox`, tampil di `/pasang`). Bila `TELEGRAM_BOT_TOKEN` terisi, bendera juga dikirim ke chat Telegram yang menautkan diri dengan `/mulai <kode-portofolio>` (kode tampil di kotak masuk); `/berhenti` melepas. Tanpa token: jalur in-app saja (PLAN §7.5), cron tetap berjalan.
+- Batas Vercel Hobby: cron minimal sekali sehari dengan presisi per jam (06:00–06:59 WIB), fungsi maks 300 detik — karena itu cron tidak memanggil API Sectors maupun LLM.
 
 ## Otak AI (perakit blok & diagnosis)
 

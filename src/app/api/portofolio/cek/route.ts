@@ -4,12 +4,9 @@
 // Kelas A dari DB/PGlite/fixture (nol kredit). Kelas B hanya bila `kelasB: true`
 // dan SECTORS_API_KEY ada — dengan cache 24 jam dan cadangan kredit provider.
 // `kreditTerpakai` dihitung dari ledger sebelum/sesudah (bukti, bukan taksiran).
-import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import type { Db } from "@/lib/db/client";
-import { alarms as tabelAlarm } from "@/lib/db/schema";
-import { RuleSchema } from "@/lib/engine/rules";
+import { alarmDariDb } from "@/lib/jaga/alarm-db";
 import { ALARM_BAWAAN, alarmDariKlien, AlarmKlienSchema, BlokBSchema, type AlarmJaga } from "@/lib/jaga/bawaan";
 import { cekPortofolio } from "@/lib/jaga/evaluasi";
 import { penjelasanPortofolio } from "@/lib/jaga/penjelasan";
@@ -43,22 +40,6 @@ const BodySchema = z.object({
 
 function galat(status: number, kode: string, pesan: string, rincian?: unknown) {
   return Response.json({ error: { kode, pesan, ...(rincian !== undefined ? { rincian } : {}) } }, { status });
-}
-
-/** Alarm kelas A milik pemilik di tabel `alarms` (tiket 09), satu AlarmJaga per aturan. */
-async function alarmDariDb(db: Db, owner: string): Promise<AlarmJaga[]> {
-  const rows = await db
-    .select({ id: tabelAlarm.id, name: tabelAlarm.name, rules: tabelAlarm.rules })
-    .from(tabelAlarm)
-    .where(eq(tabelAlarm.ownerToken, owner));
-  const hasil: AlarmJaga[] = [];
-  for (const r of rows) {
-    const aturan = r.rules.map((x) => RuleSchema.safeParse(x)).filter((p) => p.success).map((p) => p.data);
-    aturan.forEach((rule, i) => {
-      hasil.push({ id: r.id, name: aturan.length > 1 ? `${r.name} (${i + 1})` : r.name, kelas: "A", rule, bawaan: false });
-    });
-  }
-  return hasil;
 }
 
 export async function POST(req: Request): Promise<Response> {

@@ -243,6 +243,43 @@ export const apiCache = pgTable(
   (t) => [index("api_cache_endpoint_idx").on(t.endpoint)],
 );
 
+// ---------------------------------------------------------------------------
+// Notifikasi harian (tiket 12): kotak masuk in-app & tautan chat Telegram
+// ---------------------------------------------------------------------------
+// Satu baris = satu bendera baru untuk satu pemilik (fallback PLAN §7.5: selalu
+// ditulis, dengan atau tanpa Telegram). Tanpa FK ke portfolios/runs agar pesan
+// tetap terbaca walau portofolio dikosongkan.
+export const inbox = pgTable(
+  "inbox",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerToken: text("owner_token").notNull(),
+    portfolioId: uuid("portfolio_id"),
+    runId: uuid("run_id"),
+    symbol: text("symbol").notNull(),
+    // hijau | kuning | merah (StatusSaham); teks agar nilai baru tidak memecahkan insert.
+    status: text("status").notNull(),
+    judul: text("judul").notNull(),
+    teks: text("teks").notNull(),
+    readAt: tsz("read_at"),
+    createdAt: tsz("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("inbox_owner_created_idx").on(t.ownerToken, t.createdAt)],
+);
+
+// chat_id Telegram (bigint, disimpan sebagai teks) → pemilik yang mengetik
+// `/mulai <kode-portofolio>` di bot. Satu chat hanya menautkan satu pemilik.
+export const telegramLinks = pgTable(
+  "telegram_links",
+  {
+    chatId: text("chat_id").primaryKey(),
+    ownerToken: text("owner_token").notNull(),
+    portfolioId: uuid("portfolio_id"),
+    linkedAt: tsz("linked_at").defaultNow().notNull(),
+  },
+  (t) => [index("telegram_links_owner_idx").on(t.ownerToken)],
+);
+
 // Tipe bantu
 export type SymbolRow = typeof symbols.$inferSelect;
 export type NewSymbolRow = typeof symbols.$inferInsert;
@@ -254,5 +291,7 @@ export type FinancialQ = typeof financialsQ.$inferSelect;
 export type Alarm = typeof alarms.$inferSelect;
 export type Portfolio = typeof portfolios.$inferSelect;
 export type Run = typeof runs.$inferSelect;
+export type InboxRow = typeof inbox.$inferSelect;
+export type TelegramLink = typeof telegramLinks.$inferSelect;
 export type ApiLedgerEntry = typeof apiLedger.$inferSelect;
 export type ApiCacheEntry = typeof apiCache.$inferSelect;

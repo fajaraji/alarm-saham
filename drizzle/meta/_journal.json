@@ -15,6 +15,13 @@
       "when": 1788732468737,
       "tag": "0001_ledger_note",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788790749886,
+      "tag": "0002_cron_inbox_telegram",
+      "breakpoints": true
     }
   ]
 }

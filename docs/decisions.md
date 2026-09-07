@@ -77,6 +77,15 @@ Catatan keputusan teknis dan produk Alarm Saham beserta aturan cadangan (PLAN.md
 - **§7.5 TERPICU**: `TELEGRAM_BOT_TOKEN` kosong (tiket 01) → tiket 12 memakai notifikasi in-app sebagai jalur utama; Telegram opsional.
 - §7.6 (build Vercel gagal karena dependensi) belum relevan — deploy belum dilakukan.
 
+## 2026-09-07 — Cron harian & notifikasi (tiket 12)
+
+- Vercel Cron `30 23 * * *` (UTC = 06:30 WIB) → `GET /api/cron/jaga` dengan `Authorization: Bearer <CRON_SECRET>`; tanpa `CRON_SECRET` endpoint menjawab 503 (tidak pernah terbuka), header salah 401.
+- **Cron hanya kelas A** (nol kredit Sectors) dan **penjelasan template** (tanpa LLM): batas fungsi Vercel Hobby 300 detik dan kredit/biaya tidak boleh terpakai tanpa sepengetahuan pengguna. Tes membuktikan `api_ledger` tidak bertambah selama cron.
+- Bendera baru = perbandingan dengan `runs` terakhir pemilik (status memburuk atau alarm baru berbunyi); run baru selalu disimpan sehingga pemanggilan ganda Vercel (best-effort delivery) menghasilkan 0 pesan — idempoten tanpa tabel `sent_at`.
+- **§7.5 dijalankan**: tabel baru `inbox` (kotak masuk in-app per `owner_token`, `read_at`) selalu ditulis; `GET/PATCH /api/inbox` dan halaman `/pasang` menggabungkannya dengan kotak masuk browser. Telegram (grammY 1.46, webhook `std/http`, tabel `telegram_links` chat_id → pemilik, perintah `/mulai <kode-portofolio>` & `/berhenti`) hanya aktif bila `TELEGRAM_BOT_TOKEN` **dan** `TELEGRAM_WEBHOOK_SECRET` terisi; tanpa itu webhook menjawab 503 sopan. Email (Resend) dari §7.5 tidak dibangun — in-app sudah memenuhi "tetap ada notifikasi" dan hemat satu dependensi/kunci.
+- Kode portofolio untuk `/mulai` = id baris `portfolios` (UUID) — tidak perlu kolom kode pendek baru; ditampilkan di bagian kotak masuk.
+- Pesan Telegram dikirim sebagai teks polos (tanpa parse_mode) agar tidak perlu escape; satu pesan per portofolio per pagi, dipecah < 4096 karakter, setiap potongan ditutup disclaimer. 403 (bot diblokir) → tautan dilepas otomatis.
+
 ## Kunci & akun yang belum ada (status 2026-09-07, cek keberadaan nilai saja)
 
 | Variabel | Status | Dampak |

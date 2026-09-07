@@ -5,6 +5,7 @@ import type { BlokBKind } from "./blok-b";
 import type { HasilPortofolio } from "./evaluasi";
 import type { Penjelasan } from "./penjelasan";
 import { HEADER_PEMILIK, type PortofolioTersimpan } from "./portofolio";
+import type { PesanKotakMasuk } from "./simpan";
 
 export interface GalatApi {
   status: number;
@@ -86,6 +87,15 @@ export function cekPortofolioServer(
   signal?: AbortSignal,
 ) {
   return minta<ResponCek>("/api/portofolio/cek", { method: "POST", token, body: JSON.stringify(body), signal });
+}
+
+/** Kotak masuk di server (diisi cron harian, tiket 12); 501 bila server tanpa DB. */
+export function muatKotakMasukServer(token: string) {
+  return minta<{ pesan: PesanKotakMasuk[]; belumDibaca: number }>("/api/inbox", { method: "GET", token });
+}
+
+export function tandaiKotakMasukServer(token: string) {
+  return minta<{ dibaca: number }>("/api/inbox", { method: "PATCH", token });
 }
 
 /** Apakah kode saham ada di data kami (GET /api/emiten → 404 bila tidak). Nol kredit. */

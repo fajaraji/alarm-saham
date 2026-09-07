@@ -16,12 +16,15 @@ import {
   cekPortofolioServer,
   daftarAlarmServer,
   KODE_TANPA_DB,
+  muatKotakMasukServer,
   muatPortofolioServer,
   simpanPortofolioServer,
+  tandaiKotakMasukServer,
   type ResponCek,
 } from "@/lib/jaga/api";
 import { RuleSchema } from "@/lib/engine/rules";
 import {
+  gabungKotakMasuk,
   hasilTerakhirLokal,
   kotakMasukLokal,
   portofolioLokal,
@@ -65,6 +68,8 @@ export function PanelPasang() {
   const [sedangCek, setSedangCek] = useState(false);
   const [galatCek, setGalatCek] = useState<string | null>(null);
   const [kotak, setKotak] = useState<PesanKotakMasuk[]>([]);
+  // Id portofolio di server = kode untuk /mulai di bot Telegram (tiket 12).
+  const [idPortofolio, setIdPortofolio] = useState<string | null>(null);
 
   const siap = useRef(false);
   const noCek = useRef(0);
@@ -111,7 +116,12 @@ export function PanelPasang() {
           if (rp.data.portofolio) {
             simbolAwal = rp.data.portofolio.symbols;
             aktifAwal = new Set(rp.data.portofolio.alarmIds);
+            setIdPortofolio(rp.data.portofolio.id);
           }
+          // Kotak masuk server (diisi cron harian) digabung dengan yang di browser.
+          void muatKotakMasukServer(t).then((rk) => {
+            if (rk.ok && rk.data.pesan.length) setKotak((k) => gabungKotakMasuk(rk.data.pesan, k));
+          });
         } else {
           setPenyimpanan(rp.galat.kode === KODE_TANPA_DB || rp.galat.status === 501 ? "lokal" : "lokal");
         }
@@ -146,7 +156,8 @@ export function PanelPasang() {
     simpanPortofolioLokal(daftar, [...aktifIds]);
     if (token && penyimpanan === "server") {
       const r = await simpanPortofolioServer(token, { symbols: daftar, alarmIds: [...aktifIds] });
-      if (!r.ok && (r.galat.status === 501 || r.galat.kode === KODE_TANPA_DB)) setPenyimpanan("lokal");
+      if (r.ok) setIdPortofolio(r.data.portofolio.id);
+      else if (r.galat.status === 501 || r.galat.kode === KODE_TANPA_DB) setPenyimpanan("lokal");
     }
   }
 
@@ -215,6 +226,7 @@ export function PanelPasang() {
 
   function tandaiDibaca() {
     setKotak(simpanKotakMasuk(kotak.map((p) => ({ ...p, baru: false }))));
+    if (token && penyimpanan === "server") void tandaiKotakMasukServer(token);
   }
 
   const petaHasil = new Map<string, HasilSaham>((hasil?.saham ?? []).map((s) => [s.symbol, s]));
@@ -314,7 +326,7 @@ export function PanelPasang() {
             Alarm baru dibuat di layar <a href="/rakit" className="underline">Rakit alarm</a>; yang tersimpan di browser ini atau di server otomatis muncul di sini.
           </p>
         </section>
-        <KotakMasuk pesan={kotak} onTandaiDibaca={tandaiDibaca} />
+        <KotakMasuk pesan={kotak} onTandaiDibaca={tandaiDibaca} kodePortofolio={idPortofolio} />
       </div>
     </div>
   );
