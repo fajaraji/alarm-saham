@@ -36,6 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <a href="/rakit" className="underline">
             2. Rakit alarm
           </a>
+          <a href="/cara-kami-menghitung" className="underline">
+            Cara kami menghitung
+          </a>
         </nav>
         {children}
       </body>

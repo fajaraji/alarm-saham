@@ -1,0 +1,2874 @@
+{
+  "rule": "Saham mau pailit",
+  "scanStart": "2020-01-31",
+  "today": "2026-09-07",
+  "leadCutoff": "2021-01-01",
+  "hits": 26,
+  "total": 74,
+  "leadMonthsAvg": 9,
+  "leadMonthsMedian": 7,
+  "falseAlarms": 1,
+  "controls": 30,
+  "perGroup": {
+    "delisting": {
+      "group": "delisting",
+      "hits": 6,
+      "total": 18,
+      "leadMonthsAvg": 9.6,
+      "leadMonthsMedian": 4,
+      "falseAlarms": 0,
+      "controls": 0,
+      "perSymbol": [
+        {
+          "symbol": "COWL",
+          "group": "delisting",
+          "targetEventDate": "2020-07-13",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "DUCK",
+          "group": "delisting",
+          "targetEventDate": "2021-08-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2021-07-31",
+          "fired": true,
+          "firstFireDate": "2021-04-30",
+          "leadMonths": 4,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2020 q4 (akhir 2020-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ENVY",
+          "group": "delisting",
+          "targetEventDate": "2020-12-01",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-11-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "GOLL",
+          "group": "delisting",
+          "targetEventDate": "2019-01-30",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "LCGP",
+          "group": "delisting",
+          "targetEventDate": "2019-05-02",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "LMAS",
+          "group": "delisting",
+          "targetEventDate": "2023-12-20",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2023-11-30",
+          "fired": true,
+          "firstFireDate": "2022-04-30",
+          "leadMonths": 19,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2021 q4 (akhir 2021-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "MABA",
+          "group": "delisting",
+          "targetEventDate": "2020-02-17",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "MTRA",
+          "group": "delisting",
+          "targetEventDate": "2020-11-17",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-10-31",
+          "fired": true,
+          "firstFireDate": "2020-08-31",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2020-08-31 (dalam 12 bulan sebelum 2020-08-31)"
+            }
+          ],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "PLAS",
+          "group": "delisting",
+          "targetEventDate": "2018-12-28",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "SBAT",
+          "group": "delisting",
+          "targetEventDate": "2024-09-18",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-08-31",
+          "fired": true,
+          "firstFireDate": "2024-04-30",
+          "leadMonths": 4,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2023 q4 (akhir 2023-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "SKYB",
+          "group": "delisting",
+          "targetEventDate": "2020-02-17",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "SRIL",
+          "group": "delisting",
+          "targetEventDate": "2021-05-18",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2021-04-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "SUGI",
+          "group": "delisting",
+          "targetEventDate": "2019-07-01",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "TDPM",
+          "group": "delisting",
+          "targetEventDate": "2021-04-27",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2021-03-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TELE",
+          "group": "delisting",
+          "targetEventDate": "2025-06-06",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-05-31",
+          "fired": true,
+          "firstFireDate": "2023-09-30",
+          "leadMonths": 20,
+          "reasons": [
+            {
+              "kind": "ekuitas_negatif",
+              "threshold": "longgar",
+              "detail": "ekuitas Rp -4.63 T negatif pada kuartal 2023-09-30"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TOYS",
+          "group": "delisting",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TRIL",
+          "group": "delisting",
+          "targetEventDate": "2019-05-02",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "UNIT",
+          "group": "delisting",
+          "targetEventDate": "2021-03-01",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2021-02-28",
+          "fired": true,
+          "firstFireDate": "2021-01-31",
+          "leadMonths": 1,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2020 q3 (akhir 2020-09-30) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        }
+      ]
+    },
+    "watchlist": {
+      "group": "watchlist",
+      "hits": 20,
+      "total": 56,
+      "leadMonthsAvg": 8.85,
+      "leadMonthsMedian": 7,
+      "falseAlarms": 0,
+      "controls": 0,
+      "perSymbol": [
+        {
+          "symbol": "ALMI",
+          "group": "watchlist",
+          "targetEventDate": "2024-10-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-09-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ALTO",
+          "group": "watchlist",
+          "targetEventDate": "2025-06-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-05-31",
+          "fired": true,
+          "firstFireDate": "2025-04-30",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ARMY",
+          "group": "watchlist",
+          "targetEventDate": "2019-12-02",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "ARTI",
+          "group": "watchlist",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BEBS",
+          "group": "watchlist",
+          "targetEventDate": "2025-02-17",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BIKA",
+          "group": "watchlist",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BIMA",
+          "group": "watchlist",
+          "targetEventDate": "2026-04-09",
+          "scanFrom": "2020-04-30",
+          "scanTo": "2026-03-31",
+          "fired": true,
+          "firstFireDate": "2023-01-31",
+          "leadMonths": 38,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2022 q3 (akhir 2022-09-30) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BOSS",
+          "group": "watchlist",
+          "targetEventDate": "2024-02-16",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BTEL",
+          "group": "watchlist",
+          "targetEventDate": "2019-05-27",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "CBMF",
+          "group": "watchlist",
+          "targetEventDate": "2023-02-16",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2023-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "CPRI",
+          "group": "watchlist",
+          "targetEventDate": "2023-07-03",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2023-06-30",
+          "fired": true,
+          "firstFireDate": "2023-04-30",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2022 q4 (akhir 2022-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "DEAL",
+          "group": "watchlist",
+          "targetEventDate": "2024-02-16",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "DPNS",
+          "group": "watchlist",
+          "targetEventDate": "2025-10-31",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-09-30",
+          "fired": true,
+          "firstFireDate": "2024-04-30",
+          "leadMonths": 18,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2023 q4 (akhir 2023-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ETWA",
+          "group": "watchlist",
+          "targetEventDate": "2024-02-01",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "FASW",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": 7,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "FIMP",
+          "group": "watchlist",
+          "targetEventDate": "2025-08-13",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-07-31",
+          "fired": true,
+          "firstFireDate": "2022-01-31",
+          "leadMonths": 42,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2021 q3 (akhir 2021-09-30) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "GAMA",
+          "group": "watchlist",
+          "targetEventDate": "2023-07-03",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2023-06-30",
+          "fired": true,
+          "firstFireDate": "2023-04-30",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2022 q4 (akhir 2022-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "GLOB",
+          "group": "watchlist",
+          "targetEventDate": "2025-10-27",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-09-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "HKMU",
+          "group": "watchlist",
+          "targetEventDate": "2023-07-03",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2023-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "HOME",
+          "group": "watchlist",
+          "targetEventDate": "2020-02-03",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "HOTL",
+          "group": "watchlist",
+          "targetEventDate": "2022-08-01",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2022-07-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "IIKP",
+          "group": "watchlist",
+          "targetEventDate": "2020-01-23",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "INAF",
+          "group": "watchlist",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "INRU",
+          "group": "watchlist",
+          "targetEventDate": "2025-12-17",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-11-30",
+          "fired": true,
+          "firstFireDate": "2025-06-30",
+          "leadMonths": 5,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-06-10 (dalam 12 bulan sebelum 2025-06-30)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "IPPE",
+          "group": "watchlist",
+          "targetEventDate": "2024-09-06",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-08-31",
+          "fired": true,
+          "firstFireDate": "2024-07-31",
+          "leadMonths": 1,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q1 (akhir 2024-03-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "JSKY",
+          "group": "watchlist",
+          "targetEventDate": "2022-08-01",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2022-07-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "KAYU",
+          "group": "watchlist",
+          "targetEventDate": "2024-04-18",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-03-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "KBRI",
+          "group": "watchlist",
+          "targetEventDate": "2019-04-23",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "KIAS",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-07-31",
+          "leadMonths": 1,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-07-31 (dalam 12 bulan sebelum 2025-07-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "LMSH",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": 7,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "MAGP",
+          "group": "watchlist",
+          "targetEventDate": "2022-07-18",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2022-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "MFMI",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2024-10-31",
+          "leadMonths": 10,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q2 (akhir 2024-06-30) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "MKNT",
+          "group": "watchlist",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": true,
+          "firstFireDate": "2024-04-30",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2023 q4 (akhir 2023-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "MTPS",
+          "group": "watchlist",
+          "targetEventDate": "2025-11-05",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-10-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "MTSM",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": 7,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "NUSA",
+          "group": "watchlist",
+          "targetEventDate": "2020-08-31",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-07-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "PLIN",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": 7,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "PMMP",
+          "group": "watchlist",
+          "targetEventDate": "2025-06-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-05-31",
+          "fired": true,
+          "firstFireDate": "2025-04-30",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "POLL",
+          "group": "watchlist",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "POOL",
+          "group": "watchlist",
+          "targetEventDate": "2020-06-10",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-05-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "POSA",
+          "group": "watchlist",
+          "targetEventDate": "2020-11-24",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-10-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "PTMR",
+          "group": "watchlist",
+          "targetEventDate": "2025-06-26",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-05-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "PURE",
+          "group": "watchlist",
+          "targetEventDate": "2022-08-01",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2022-07-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "RIMO",
+          "group": "watchlist",
+          "targetEventDate": "2020-02-11",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "SIMA",
+          "group": "watchlist",
+          "targetEventDate": "2020-02-17",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2020-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "SMCB",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": 7,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "SMRU",
+          "group": "watchlist",
+          "targetEventDate": "2020-01-23",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "SWAT",
+          "group": "watchlist",
+          "targetEventDate": "2025-06-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-05-31",
+          "fired": true,
+          "firstFireDate": "2025-04-30",
+          "leadMonths": 2,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TECH",
+          "group": "watchlist",
+          "targetEventDate": "2023-08-07",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2023-07-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TGUK",
+          "group": "watchlist",
+          "targetEventDate": "2025-05-26",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-04-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TOPS",
+          "group": "watchlist",
+          "targetEventDate": "2024-07-02",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2024-06-30",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "TRAM",
+          "group": "watchlist",
+          "targetEventDate": "2020-01-23",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "TRIO",
+          "group": "watchlist",
+          "targetEventDate": "2019-07-17",
+          "scanFrom": null,
+          "scanTo": null,
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": true
+        },
+        {
+          "symbol": "WICO",
+          "group": "watchlist",
+          "targetEventDate": "2025-09-30",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": 7,
+          "reasons": [
+            {
+              "kind": "suspensi",
+              "threshold": "longgar",
+              "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "WIKA",
+          "group": "watchlist",
+          "targetEventDate": "2025-02-18",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-01-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ZBRA",
+          "group": "watchlist",
+          "targetEventDate": "2026-01-22",
+          "scanFrom": "2020-01-31",
+          "scanTo": "2025-12-31",
+          "fired": true,
+          "firstFireDate": "2025-04-30",
+          "leadMonths": 8,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        }
+      ]
+    },
+    "control": {
+      "group": "control",
+      "hits": 0,
+      "total": 0,
+      "leadMonthsAvg": null,
+      "leadMonthsMedian": null,
+      "falseAlarms": 1,
+      "controls": 30,
+      "perSymbol": [
+        {
+          "symbol": "AADI",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": true,
+          "firstFireDate": "2025-01-31",
+          "leadMonths": null,
+          "reasons": [
+            {
+              "kind": "laporan_hilang",
+              "threshold": "longgar",
+              "detail": "laporan 2024 q3 (akhir 2024-09-30) belum tersedia 120 hari setelahnya"
+            }
+          ],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ADMR",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ADRO",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "AKRA",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "AMMN",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "AMRT",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ANTM",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ASII",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BBCA",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BBNI",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BBRI",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BBTN",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BMRI",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BRPT",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "BUMI",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "CPIN",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "CUAN",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "DEWA",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "EMTK",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ESSA",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "EXCL",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "GOTO",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "HRTA",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ICBP",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "INCO",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "INDF",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "INDY",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "INKP",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ISAT",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        },
+        {
+          "symbol": "ITMG",
+          "group": "control",
+          "targetEventDate": null,
+          "scanFrom": "2020-01-31",
+          "scanTo": "2026-08-31",
+          "fired": false,
+          "firstFireDate": null,
+          "leadMonths": null,
+          "reasons": [],
+          "excludedFromLead": false
+        }
+      ]
+    }
+  },
+  "perSymbol": [
+    {
+      "symbol": "AADI",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": null,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q3 (akhir 2024-09-30) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ADMR",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ADRO",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "AKRA",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ALMI",
+      "group": "watchlist",
+      "targetEventDate": "2024-10-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-09-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ALTO",
+      "group": "watchlist",
+      "targetEventDate": "2025-06-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-05-31",
+      "fired": true,
+      "firstFireDate": "2025-04-30",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "AMMN",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "AMRT",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ANTM",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ARMY",
+      "group": "watchlist",
+      "targetEventDate": "2019-12-02",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "ARTI",
+      "group": "watchlist",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ASII",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BBCA",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BBNI",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BBRI",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BBTN",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BEBS",
+      "group": "watchlist",
+      "targetEventDate": "2025-02-17",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BIKA",
+      "group": "watchlist",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BIMA",
+      "group": "watchlist",
+      "targetEventDate": "2026-04-09",
+      "scanFrom": "2020-04-30",
+      "scanTo": "2026-03-31",
+      "fired": true,
+      "firstFireDate": "2023-01-31",
+      "leadMonths": 38,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2022 q3 (akhir 2022-09-30) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BMRI",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BOSS",
+      "group": "watchlist",
+      "targetEventDate": "2024-02-16",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BRPT",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "BTEL",
+      "group": "watchlist",
+      "targetEventDate": "2019-05-27",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "BUMI",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "CBMF",
+      "group": "watchlist",
+      "targetEventDate": "2023-02-16",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2023-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "COWL",
+      "group": "delisting",
+      "targetEventDate": "2020-07-13",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "CPIN",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "CPRI",
+      "group": "watchlist",
+      "targetEventDate": "2023-07-03",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2023-06-30",
+      "fired": true,
+      "firstFireDate": "2023-04-30",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2022 q4 (akhir 2022-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "CUAN",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "DEAL",
+      "group": "watchlist",
+      "targetEventDate": "2024-02-16",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "DEWA",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "DPNS",
+      "group": "watchlist",
+      "targetEventDate": "2025-10-31",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-09-30",
+      "fired": true,
+      "firstFireDate": "2024-04-30",
+      "leadMonths": 18,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2023 q4 (akhir 2023-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "DUCK",
+      "group": "delisting",
+      "targetEventDate": "2021-08-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2021-07-31",
+      "fired": true,
+      "firstFireDate": "2021-04-30",
+      "leadMonths": 4,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2020 q4 (akhir 2020-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "EMTK",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ENVY",
+      "group": "delisting",
+      "targetEventDate": "2020-12-01",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-11-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "ESSA",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ETWA",
+      "group": "watchlist",
+      "targetEventDate": "2024-02-01",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "EXCL",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "FASW",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": 7,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "FIMP",
+      "group": "watchlist",
+      "targetEventDate": "2025-08-13",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-07-31",
+      "fired": true,
+      "firstFireDate": "2022-01-31",
+      "leadMonths": 42,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2021 q3 (akhir 2021-09-30) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "GAMA",
+      "group": "watchlist",
+      "targetEventDate": "2023-07-03",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2023-06-30",
+      "fired": true,
+      "firstFireDate": "2023-04-30",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2022 q4 (akhir 2022-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "GLOB",
+      "group": "watchlist",
+      "targetEventDate": "2025-10-27",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-09-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "GOLL",
+      "group": "delisting",
+      "targetEventDate": "2019-01-30",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "GOTO",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "HKMU",
+      "group": "watchlist",
+      "targetEventDate": "2023-07-03",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2023-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "HOME",
+      "group": "watchlist",
+      "targetEventDate": "2020-02-03",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "HOTL",
+      "group": "watchlist",
+      "targetEventDate": "2022-08-01",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2022-07-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "HRTA",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ICBP",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "IIKP",
+      "group": "watchlist",
+      "targetEventDate": "2020-01-23",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "INAF",
+      "group": "watchlist",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "INCO",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "INDF",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "INDY",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "INKP",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "INRU",
+      "group": "watchlist",
+      "targetEventDate": "2025-12-17",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-11-30",
+      "fired": true,
+      "firstFireDate": "2025-06-30",
+      "leadMonths": 5,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-06-10 (dalam 12 bulan sebelum 2025-06-30)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "IPPE",
+      "group": "watchlist",
+      "targetEventDate": "2024-09-06",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-08-31",
+      "fired": true,
+      "firstFireDate": "2024-07-31",
+      "leadMonths": 1,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q1 (akhir 2024-03-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ISAT",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ITMG",
+      "group": "control",
+      "targetEventDate": null,
+      "scanFrom": "2020-01-31",
+      "scanTo": "2026-08-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "JSKY",
+      "group": "watchlist",
+      "targetEventDate": "2022-08-01",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2022-07-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "KAYU",
+      "group": "watchlist",
+      "targetEventDate": "2024-04-18",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-03-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "KBRI",
+      "group": "watchlist",
+      "targetEventDate": "2019-04-23",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "KIAS",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-07-31",
+      "leadMonths": 1,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-07-31 (dalam 12 bulan sebelum 2025-07-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "LCGP",
+      "group": "delisting",
+      "targetEventDate": "2019-05-02",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "LMAS",
+      "group": "delisting",
+      "targetEventDate": "2023-12-20",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2023-11-30",
+      "fired": true,
+      "firstFireDate": "2022-04-30",
+      "leadMonths": 19,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2021 q4 (akhir 2021-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "LMSH",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": 7,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "MABA",
+      "group": "delisting",
+      "targetEventDate": "2020-02-17",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "MAGP",
+      "group": "watchlist",
+      "targetEventDate": "2022-07-18",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2022-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "MFMI",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2024-10-31",
+      "leadMonths": 10,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q2 (akhir 2024-06-30) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "MKNT",
+      "group": "watchlist",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": true,
+      "firstFireDate": "2024-04-30",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2023 q4 (akhir 2023-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "MTPS",
+      "group": "watchlist",
+      "targetEventDate": "2025-11-05",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-10-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "MTRA",
+      "group": "delisting",
+      "targetEventDate": "2020-11-17",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-10-31",
+      "fired": true,
+      "firstFireDate": "2020-08-31",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2020-08-31 (dalam 12 bulan sebelum 2020-08-31)"
+        }
+      ],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "MTSM",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": 7,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "NUSA",
+      "group": "watchlist",
+      "targetEventDate": "2020-08-31",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-07-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "PLAS",
+      "group": "delisting",
+      "targetEventDate": "2018-12-28",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "PLIN",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": 7,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "PMMP",
+      "group": "watchlist",
+      "targetEventDate": "2025-06-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-05-31",
+      "fired": true,
+      "firstFireDate": "2025-04-30",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "POLL",
+      "group": "watchlist",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "POOL",
+      "group": "watchlist",
+      "targetEventDate": "2020-06-10",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-05-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "POSA",
+      "group": "watchlist",
+      "targetEventDate": "2020-11-24",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-10-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "PTMR",
+      "group": "watchlist",
+      "targetEventDate": "2025-06-26",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-05-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "PURE",
+      "group": "watchlist",
+      "targetEventDate": "2022-08-01",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2022-07-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "RIMO",
+      "group": "watchlist",
+      "targetEventDate": "2020-02-11",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "SBAT",
+      "group": "delisting",
+      "targetEventDate": "2024-09-18",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-08-31",
+      "fired": true,
+      "firstFireDate": "2024-04-30",
+      "leadMonths": 4,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2023 q4 (akhir 2023-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "SIMA",
+      "group": "watchlist",
+      "targetEventDate": "2020-02-17",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "SKYB",
+      "group": "delisting",
+      "targetEventDate": "2020-02-17",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2020-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "SMCB",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": 7,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "SMRU",
+      "group": "watchlist",
+      "targetEventDate": "2020-01-23",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "SRIL",
+      "group": "delisting",
+      "targetEventDate": "2021-05-18",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2021-04-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "SUGI",
+      "group": "delisting",
+      "targetEventDate": "2019-07-01",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "SWAT",
+      "group": "watchlist",
+      "targetEventDate": "2025-06-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-05-31",
+      "fired": true,
+      "firstFireDate": "2025-04-30",
+      "leadMonths": 2,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TDPM",
+      "group": "delisting",
+      "targetEventDate": "2021-04-27",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2021-03-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TECH",
+      "group": "watchlist",
+      "targetEventDate": "2023-08-07",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2023-07-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TELE",
+      "group": "delisting",
+      "targetEventDate": "2025-06-06",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-05-31",
+      "fired": true,
+      "firstFireDate": "2023-09-30",
+      "leadMonths": 20,
+      "reasons": [
+        {
+          "kind": "ekuitas_negatif",
+          "threshold": "longgar",
+          "detail": "ekuitas Rp -4.63 T negatif pada kuartal 2023-09-30"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TGUK",
+      "group": "watchlist",
+      "targetEventDate": "2025-05-26",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-04-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TOPS",
+      "group": "watchlist",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TOYS",
+      "group": "delisting",
+      "targetEventDate": "2024-07-02",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2024-06-30",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "TRAM",
+      "group": "watchlist",
+      "targetEventDate": "2020-01-23",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "TRIL",
+      "group": "delisting",
+      "targetEventDate": "2019-05-02",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "TRIO",
+      "group": "watchlist",
+      "targetEventDate": "2019-07-17",
+      "scanFrom": null,
+      "scanTo": null,
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": true
+    },
+    {
+      "symbol": "UNIT",
+      "group": "delisting",
+      "targetEventDate": "2021-03-01",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2021-02-28",
+      "fired": true,
+      "firstFireDate": "2021-01-31",
+      "leadMonths": 1,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2020 q3 (akhir 2020-09-30) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "WICO",
+      "group": "watchlist",
+      "targetEventDate": "2025-09-30",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-08-31",
+      "fired": true,
+      "firstFireDate": "2025-01-31",
+      "leadMonths": 7,
+      "reasons": [
+        {
+          "kind": "suspensi",
+          "threshold": "longgar",
+          "detail": "suspensi 2025-01-31 (dalam 12 bulan sebelum 2025-01-31)"
+        }
+      ],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "WIKA",
+      "group": "watchlist",
+      "targetEventDate": "2025-02-18",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-01-31",
+      "fired": false,
+      "firstFireDate": null,
+      "leadMonths": null,
+      "reasons": [],
+      "excludedFromLead": false
+    },
+    {
+      "symbol": "ZBRA",
+      "group": "watchlist",
+      "targetEventDate": "2026-01-22",
+      "scanFrom": "2020-01-31",
+      "scanTo": "2025-12-31",
+      "fired": true,
+      "firstFireDate": "2025-04-30",
+      "leadMonths": 8,
+      "reasons": [
+        {
+          "kind": "laporan_hilang",
+          "threshold": "longgar",
+          "detail": "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya"
+        }
+      ],
+      "excludedFromLead": false
+    }
+  ],
+  "skippedNoTarget": [
+    "MENN",
+    "TGRA",
+    "WSKT"
+  ]
+}
