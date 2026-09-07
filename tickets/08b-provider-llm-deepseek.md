@@ -4,11 +4,11 @@
 
 **Blocked by:** 08 (Agent diagnosis + perakit blok)
 
-**Status:** ready-for-agent
+**Status:** done (kode) — diverifikasi 2026-09-07 di worktree t08b (lint/typecheck/test/build exit 0; 169 tes). Temuan: alias `deepseek-chat`/`deepseek-reasoner` dipensiunkan DeepSeek 2026-07-24 → default `deepseek-v4-flash`, `DEEPSEEK_REASONER=1` → `deepseek-v4-pro`. Uji nyata menunggu `DEEPSEEK_API_KEY`.
 
-- [ ] `.env.example` memuat `LLM_PROVIDER`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` (default deepseek-chat) dengan komentar awam
-- [ ] Tes (model tiruan): pemilihan provider sesuai env untuk 4 kombinasi (deepseek saja, anthropic saja, keduanya + LLM_PROVIDER, tidak ada → error)
-- [ ] Tes: structured output & tool-calling agent tetap lulus dengan provider DeepSeek (mock) — tanpa opsi Anthropic di providerOptions
-- [ ] `npm run agent:demo -- tele` dengan `DEEPSEEK_API_KEY` nyata (dijalankan koordinator setelah kunci ada) mencetak usulan blok + trace + token
-- [ ] README/docs mencatat cara mendapatkan kunci DeepSeek dan perkiraan biaya
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] `.env.example` memuat `LLM_PROVIDER`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` (default deepseek-v4-flash) dengan komentar awam
+- [x] Tes (model tiruan): pemilihan provider sesuai env untuk 4 kombinasi
+- [x] Tes: structured output & tool-calling agent tetap lulus dengan provider DeepSeek (mock) — tanpa opsi Anthropic di providerOptions
+- [ ] `npm run agent:demo -- tele` dengan `DEEPSEEK_API_KEY` nyata → TERTUNDA (kunci belum ada)
+- [x] README/docs mencatat cara mendapatkan kunci DeepSeek dan perkiraan biaya (≈US$0,02 per diagnosis, harga dicek 2026-09-07)
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0
