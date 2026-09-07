@@ -16,6 +16,10 @@ export default defineConfig({
   },
   test: {
     exclude: ["**/node_modules/**", "**/.next/**", "tests/e2e/**"],
+    // PGlite in-memory + migrasi dan impor route berat (grammY/AI SDK) bisa >10 s
+    // saat suite berjalan paralel di mesin yang sibuk; batas bawaan (5 s/10 s) terlalu ketat.
+    testTimeout: 30_000,
+    hookTimeout: 60_000,
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],

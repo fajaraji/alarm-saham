@@ -29,11 +29,13 @@ describe("vercel.json", () => {
     expect(`${String(Math.floor(menitWib / 60)).padStart(2, "0")}:${String(menitWib % 60).padStart(2, "0")}`).toBe("06:30");
   });
 
+  // Impor route menarik PGlite/grammY/AI SDK (±4 s dingin); saat suite penuh
+  // berjalan paralel bisa melewati batas 5 s bawaan — beri batas eksplisit.
   it("route cron memakai maxDuration <= 300 (batas fungsi Vercel Hobby)", async () => {
     const route = await import("../../src/app/api/cron/jaga/route");
     expect(route.maxDuration).toBeLessThanOrEqual(300);
     expect(typeof route.GET).toBe("function");
-  });
+  }, 30_000);
 });
 
 describe(".env.example", () => {
