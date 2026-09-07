@@ -26,6 +26,10 @@ const POLA = [
     regex: /ANTHROPIC_API_KEY\s*=\s*['"]?[^\s'"]+/,
   },
   {
+    nama: "DEEPSEEK_API_KEY berisi nilai",
+    regex: /DEEPSEEK_API_KEY\s*=\s*['"]?[^\s'"]+/,
+  },
+  {
     nama: "URL Postgres dengan kredensial",
     regex: /postgres(?:ql)?:\/\/[^\s/:@]+:[^\s@]+@/,
   },

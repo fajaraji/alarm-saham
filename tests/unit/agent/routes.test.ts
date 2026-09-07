@@ -1,4 +1,4 @@
-// Route handler App Router: 400 untuk input salah, 503 tanpa kunci Anthropic.
+// Route handler App Router: 400 untuk input salah, 503 tanpa kunci AI (DeepSeek/Anthropic).
 // Tidak ada panggilan model — semua kasus berhenti sebelum memanggil AI.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -35,12 +35,15 @@ describe("POST /api/agent/rakit", () => {
     }
   });
 
-  it("503 dengan pesan jelas bila ANTHROPIC_API_KEY kosong", async () => {
+  it("503 dengan pesan jelas bila tidak ada kunci provider mana pun", async () => {
+    vi.stubEnv("LLM_PROVIDER", "");
+    vi.stubEnv("DEEPSEEK_API_KEY", "");
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     const res = await rakitPost(req({ kalimat: "aku mau alarm buat saham yang mau pailit" }));
     expect(res.status).toBe(503);
     const json = await res.json();
     expect(json.error.kode).toBe("AI_TIDAK_TERSEDIA");
+    expect(json.error.pesan).toMatch(/DEEPSEEK_API_KEY/);
     expect(json.error.pesan).toMatch(/ANTHROPIC_API_KEY/);
   });
 });
@@ -68,7 +71,9 @@ describe("POST /api/agent/diagnosis", () => {
     }
   });
 
-  it("503 bila ANTHROPIC_API_KEY kosong (input valid)", async () => {
+  it("503 bila tidak ada kunci provider (input valid)", async () => {
+    vi.stubEnv("LLM_PROVIDER", "");
+    vi.stubEnv("DEEPSEEK_API_KEY", "");
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     const res = await diagnosisPost(req({ rule: ATURAN, targetSymbol: "tele" }));
     expect(res.status).toBe(503);

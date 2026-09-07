@@ -16,7 +16,7 @@ import { BLOCK_KINDS, LABEL_BLOK, ringkasAturan, THRESHOLDS, type Rule } from ".
 import type { BacktestResult, PerSymbolResult } from "../engine/score";
 import { sensorObjek } from "./guard";
 import { INSTRUKSI_DIAGNOSIS } from "./instructions";
-import { instruksiSistem, opsiAnthropic, pilihModel } from "./model";
+import { instruksiSistem, opsiProvider, pilihModel, providerDari } from "./model";
 import { ringkasUsage, type UsageRingkas } from "./usage";
 
 // ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ export interface DiagnosisInput {
   /** Emiten yang diminta khusus dibahas (opsional). */
   targetSymbol?: string;
   source: EventSource;
-  /** Model suntikan (tes memakai MockLanguageModelV4). Default: claude-opus-5. */
+  /** Model suntikan (tes memakai MockLanguageModelV4). Default: model peran 'penalaran' dari provider terpilih. */
   model?: LanguageModel;
   /** Batas langkah loop tool-use (default 8). */
   maxSteps?: number;
@@ -361,20 +361,21 @@ export async function simpanRunKeDb(rekaman: RekamanRun, db?: Db): Promise<strin
 // ---------------------------------------------------------------------------
 
 export async function diagnosis(input: DiagnosisInput): Promise<DiagnosisResult> {
-  const model = pilihModel("diagnosis", input.model);
+  const model = pilihModel("penalaran", input.model);
+  const provider = providerDari(model);
   const tools = buatTools(input);
   const hasil = await generateText({
     model,
     tools,
-    instructions: instruksiSistem(INSTRUKSI_DIAGNOSIS),
+    instructions: instruksiSistem(INSTRUKSI_DIAGNOSIS, provider),
     prompt: susunPrompt(input),
     stopWhen: isStepCount(input.maxSteps ?? MAKS_LANGKAH_DEFAULT),
     output: Output.object({ schema: DiagnosisOutputSchema, name: "hasil_diagnosis" }),
-    providerOptions: opsiAnthropic("high"),
+    providerOptions: opsiProvider(provider, "high"),
   });
 
   const trace = susunTrace(hasil.steps);
-  const usage = ringkasUsage(hasil.usage);
+  const usage = ringkasUsage(hasil.usage, hasil.providerMetadata);
   const mentah: DiagnosisOutput = {
     ...hasil.output,
     usulanBlok: hasil.output.usulanBlok.slice(0, MAKS_USULAN),

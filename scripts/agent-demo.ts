@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Demo agent AI (tiket 08) — MEMANGGIL API ANTHROPIC SUNGGUHAN (berbiaya).
+// Demo agent AI (tiket 08/08b) — MEMANGGIL API LLM SUNGGUHAN (DeepSeek atau
+// Anthropic; berbiaya). Provider dipilih lewat LLM_PROVIDER / kunci yang ada.
 //
 //   npm run agent:demo -- tele
 //     Aturan hanya `laporan_hilang` longgar pada fixture universe-kecil →
@@ -14,8 +15,9 @@
 import {
   AiKeyMissingError,
   diagnosis,
-  hasAiKey,
-  MODEL_ID,
+  idModel,
+  pilihModel,
+  pilihProvider,
   pilihSumber,
   rakitAturan,
   RakitError,
@@ -30,7 +32,8 @@ function bantuan(): string {
     "  npm run agent:demo -- tele [--symbol=TELE] [--today=YYYY-MM-DD] [--db] [--json]",
     "  npm run agent:demo -- rakit \"<kalimat>\" [--json]",
     "",
-    `Model: diagnosis/perakit ${MODEL_ID.diagnosis}. Butuh ANTHROPIC_API_KEY di .env.local (memanggil API sungguhan).`,
+    "Provider: LLM_PROVIDER=deepseek|anthropic (kosong = DeepSeek bila DEEPSEEK_API_KEY ada, else Anthropic).",
+    "Butuh DEEPSEEK_API_KEY atau ANTHROPIC_API_KEY di .env.local — memanggil API sungguhan (berbiaya).",
   ].join("\n");
 }
 
@@ -51,6 +54,12 @@ function urai(argv: string[]): Argumen {
     }
   }
   return { posisi, opsi };
+}
+
+/** "deepseek/deepseek-v4-flash" — provider & model peran 'penalaran' yang akan dipakai. */
+function namaModel(): string {
+  const provider = pilihProvider();
+  return `${provider}/${idModel(provider, "penalaran")}`;
 }
 
 function cetakUsage(u: { inputTokens: number; outputTokens: number; totalTokens: number; cacheReadTokens: number; cacheWriteTokens: number }) {
@@ -111,7 +120,7 @@ async function kasusTele(arg: Argumen): Promise<number> {
   const terlewat = backtest.perSymbol.filter((r) => r.group !== "control" && !r.fired).map((r) => r.symbol);
   console.log(`Terlewat : ${terlewat.join(", ") || "-"}`);
   console.log("");
-  console.log(`Menjalankan diagnosis dengan ${MODEL_ID.diagnosis} ...`);
+  console.log(`Menjalankan diagnosis dengan ${namaModel()} ...`);
   const mulai = Date.now();
   const hasil = await diagnosis({ rule, backtest, source, targetSymbol: arg.opsi.symbol });
   console.log(`Selesai dalam ${((Date.now() - mulai) / 1000).toFixed(1)} detik.`);
@@ -127,7 +136,7 @@ async function kasusRakit(arg: Argumen): Promise<number> {
     return 1;
   }
   console.log(`Kalimat  : ${kalimat}`);
-  console.log(`Menjalankan perakit dengan ${MODEL_ID.perakit} ...`);
+  console.log(`Menjalankan perakit dengan ${namaModel()} ...`);
   const hasil = await rakitAturan(kalimat);
   if (arg.opsi.json) console.log(JSON.stringify(hasil, null, 2));
   else cetakRakit(hasil);
@@ -141,10 +150,14 @@ async function main(): Promise<number> {
     console.log(bantuan());
     return arg.opsi.help ? 0 : 1;
   }
-  if (!hasAiKey()) {
-    console.error(new AiKeyMissingError().message);
+  try {
+    // Memvalidasi provider + kunci (membuat klien saja; belum memanggil jaringan).
+    pilihModel("penalaran");
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : String(err));
     return 2;
   }
+  console.log(`Provider : ${namaModel()}`);
   switch (kasus) {
     case "tele":
       return kasusTele(arg);
