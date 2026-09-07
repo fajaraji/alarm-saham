@@ -40,8 +40,9 @@ Thumbs.db
 .worktrees/
 
 
-# PGlite lokal (drizzle-kit migrate tanpa DATABASE_URL)
+# PGlite lokal (drizzle-kit migrate tanpa DATABASE_URL) + salinan lama yang disisihkan
 .pglite/
+.pglite-old-*/
 
 # cache respons & buku kredit Sectors (lokal, tidak pernah masuk git)
 .cache/

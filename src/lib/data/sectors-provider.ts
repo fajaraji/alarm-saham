@@ -22,6 +22,7 @@ import {
   type DataProvider,
 } from "./provider";
 import {
+  BrokersSchema,
   BrokerSummarySchema,
   CompaniesPageSchema,
   CorporateActionsSchema,
@@ -244,6 +245,18 @@ export class SectorsProvider implements DataProvider {
       aturan: "per-request",
       ttlMs: this.ttlUntukRentang(end),
       schema: BrokerSummarySchema,
+    });
+    return r.data;
+  }
+
+  async brokers() {
+    const r = await this.panggil({
+      endpoint: "/v2/brokers/",
+      params: {},
+      aturan: "per-request",
+      // Registry anggota bursa jarang berubah; 30 hari agar mode jaga tidak membayar ulang tiap hari.
+      ttlMs: 30 * TTL_SEHARI_MS,
+      schema: BrokersSchema,
     });
     return r.data;
   }
