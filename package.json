@@ -15,7 +15,8 @@
     "sectors": "node --env-file-if-exists=.env.local --import tsx scripts/sectors.ts",
     "data-proof": "node --env-file-if-exists=.env.local --import tsx scripts/data-proof.ts",
     "pull-universe": "node --env-file-if-exists=.env.local --import tsx scripts/pull-universe.ts",
-    "cache:migrate-to-db": "node --env-file-if-exists=.env.local --import tsx scripts/cache-migrate-to-db.ts"
+    "cache:migrate-to-db": "node --env-file-if-exists=.env.local --import tsx scripts/cache-migrate-to-db.ts",
+    "db:sync": "node --env-file-if-exists=.env.local --import tsx scripts/db-sync.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
