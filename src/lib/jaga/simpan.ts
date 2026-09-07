@@ -92,6 +92,18 @@ export function simpanKotakMasuk(daftar: PesanKotakMasuk[]): PesanKotakMasuk[] {
   return potong;
 }
 
+/**
+ * Gabungkan kotak masuk server (cron harian, tiket 12) dengan yang tersimpan di
+ * browser: unik per id (versi server menang), terbaru dulu, dipotong MAKS.
+ * Murni — tidak menulis localStorage.
+ */
+export function gabungKotakMasuk(server: PesanKotakMasuk[], lokal: PesanKotakMasuk[]): PesanKotakMasuk[] {
+  const peta = new Map<string, PesanKotakMasuk>();
+  for (const p of lokal) peta.set(p.id, p);
+  for (const p of server) peta.set(p.id, p);
+  return [...peta.values()].sort((a, b) => (a.waktu < b.waktu ? 1 : a.waktu > b.waktu ? -1 : 0)).slice(0, MAKS_KOTAK_MASUK);
+}
+
 const URUTAN: Record<StatusSaham, number> = { hijau: 0, kuning: 1, merah: 2 };
 
 /**
