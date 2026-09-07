@@ -190,3 +190,35 @@ _Ditulis manual 7 Sep 2026 setelah membaca hasil di atas. Semua angka kredit dar
 2. 404 ditagih → jangan pernah memanggil endpoint yang diketahui 404 (listing-performance) untuk universe.
 3. Untuk cache permanen, `end` pada broker/daily harus < tanggal hari ini **UTC** (skrip ini memakai 2026-09-06 saat UTC masih 06 Sep → TTL 24 jam, entri akan kedaluwarsa).
 4. Semua respons enam emiten uji sudah di cache; tiket 07 tidak perlu menarik ulang selama kunci (endpoint+params) sama.
+
+## Skor nyata pertama (aturan default)
+
+_Ditulis 7 Sep 2026 (tiket 10). Perintah: `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07`. Sumber: **PGlite lokal `./.pglite`** hasil tiket 07 (dipilih otomatis oleh `getEventSource()` di `src/lib/engine/sumber.ts` karena `DATABASE_URL` kosong; nol panggilan API). Aturan: `suspensi(longgar) ATAU laporan_hilang(longgar) ATAU ekuitas_negatif(longgar)`; pindai akhir bulan 2020-01-31 .. 2026-09-07._
+
+| Ukuran | Nilai |
+|---|---|
+| Tertangkap (semua emiten kena) | **26/74** |
+| — delisting | **6/18** (DUCK, LMAS, MTRA, SBAT, TELE, UNIT) |
+| — pemantauan khusus | **20/56** |
+| Lebih awal (semua kena, target ≥ 2021) | rata-rata **9 bln**, median **7 bln** |
+| — delisting | rata-rata 9,6 bln, median 4 bln (MTRA lead 2 bln dikecualikan, target 2020) |
+| — pemantauan khusus | rata-rata 8,85 bln, median 7 bln |
+| Alarm palsu | **1/30** kontrol sehat (AADI) |
+| Dilewati | 3 emiten pemantauan tanpa `target_event_date` (MENN, TGRA, WSKT) — tidak ada kejadian target untuk diukur (lihat docs/universe-pull.md catatan 4) |
+
+Blok yang berbunyi pertama kali pada 26 emiten tertangkap: `laporan_hilang` 17, `suspensi` 9, `ekuitas_negatif` 1 (TELE, ekuitas negatif sejak 2023-09-30, 20 bulan sebelum 2025-06-06).
+
+### Mengapa 12 dari 18 delisting terlewat (jujur)
+
+- **Data mulai 2020 q1, kejadian target 2018–2021.** GOLL (2019-01), PLAS (2018-12), LCGP/TRIL (2019-05), SUGI (2019-07), MABA/SKYB (2020-02), COWL (2020-07), ENVY (2020-12): rentang pindai `< target` hampir kosong, dan 8 di antaranya (COWL, KBRI, MABA, NUSA, RIMO, SIMA, SKYB, SUGI) mengembalikan 404 pada endpoint `dates` sehingga blok laporan hilang tidak pernah punya kuartal pertama.
+- **Suspensi per simbol hanya 1 baris** (suspensi terakhir). SRIL: suspensi 2021-05-18 = tanggal target, ekuitas negatif baru tersedia dari 2022-12-31, daftar kuartal lengkap sampai 2024 q3 → tidak ada tanda **sebelum** target di data ini walau tanda setelahnya banyak (lihat halaman `/putar-ulang?kode=SRIL`). TDPM/TOYS serupa: suspensi = target, laporan masih lengkap sebelum target.
+- Kesimpulan yang boleh diklaim: aturan default menangkap **1 dari 3 emiten kena** rata-rata **9 bulan** sebelum kejadian, dengan **1 alarm palsu dari 30** kontrol; untuk emiten dengan kejadian ≥ 2021 dan data laporan tersedia, tangkapannya jauh lebih tinggi (6/9 delisting dengan target ≥ 2021 dan dates tersedia).
+
+### Alarm palsu AADI
+
+Daftar `dates` AADI memuat 2023 q4, 2024 q1, 2024 q2, lalu **melompat ke 2024 q4** (2024 q3 tidak ada) — AADI tercatat di bursa Desember 2024, jadi kuartal 2024 q3 memang tidak pernah disampaikan sebagai emiten tercatat. Blok `laporan_hilang` longgar (120 hari) berbunyi pada 2025-01-31. Ini keterbatasan definisi "kuartal yang diharapkan = semua akhir kuartal sejak kuartal pertama yang tersedia"; belum diubah agar skor ini tetap sebanding dengan fixture tiket 06.
+
+### Perubahan yang menyertai skor ini
+
+- `src/lib/engine/sumber.ts` — `getEventSource()`: DATABASE_URL → PGlite `./.pglite` (bila ada) → fixture; dipakai `scripts/backtest.ts` (`--pglite[=dir]`, otomatis) dan halaman `/putar-ulang`.
+- `scripts/backtest.ts` melewati emiten kena tanpa `target_event_date` dan mencetaknya di baris `Dilewati`; JSON memuat `skippedNoTarget`.

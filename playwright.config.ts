@@ -1,29 +1,36 @@
-// Playwright end-to-end: build + start Next (tanpa kunci AI, tanpa DB) lalu
-// buka /rakit di Chromium. Port 3100 agar tidak bentrok dengan `next dev`.
+// Playwright end-to-end: `next build` lalu `next start` di port 3100 agar tidak
+// bentrok dengan `next dev`. Data: PGlite ./.pglite bila ada (DATABASE_URL kosong),
+// selain itu fixture — nol panggilan API Sectors. Kunci AI dikosongkan agar panel AI
+// diuji pada jalur 503.
+//
+// Catatan PGlite: satu proses per folder; jangan jalankan e2e bersamaan dengan
+// `npm run backtest`/`next dev` yang membuka ./.pglite.
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3100;
+const PORT = Number(process.env.E2E_PORT ?? 3100);
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: "tests/e2e",
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  retries: 0,
-  reporter: [["list"]],
+  workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `npm run build && npm run start -- -p ${PORT}`,
-    url: `http://localhost:${PORT}/rakit`,
+    command: process.env.E2E_SKIP_BUILD
+      ? `npm run start -- -p ${PORT}`
+      : `npm run build && npm run start -- -p ${PORT}`,
+    url: `http://127.0.0.1:${PORT}/putar-ulang`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
     stdout: "ignore",
     stderr: "pipe",
-    // Uji memakai mock/fixture: pastikan fitur AI 503 dan sumber uji = fixture.
-    env: { ANTHROPIC_API_KEY: "", DATABASE_URL: "" },
+    env: { ANTHROPIC_API_KEY: "", DEEPSEEK_API_KEY: "", DATABASE_URL: "" },
   },
 });

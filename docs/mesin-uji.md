@@ -1,7 +1,8 @@
 # Mesin uji-ke-masa-lalu (tiket 06)
 
-Kode: `src/lib/engine/`. CLI: `npm run backtest -- <aturan.json> [--fixture] [--json] [--today=YYYY-MM-DD]`.
-Nol panggilan API: data dari DB (`DATABASE_URL`) atau fixture `src/lib/engine/fixtures/universe-kecil.json`.
+Kode: `src/lib/engine/`. CLI: `npm run backtest -- <aturan.json> [--fixture] [--pglite[=dir]] [--json] [--today=YYYY-MM-DD]`.
+Nol panggilan API: data dari DB (`DATABASE_URL`), PGlite lokal `./.pglite` bila foldernya ada (otomatis; tiket 10, `getEventSource()` di `src/lib/engine/sumber.ts`), atau fixture `src/lib/engine/fixtures/universe-kecil.json`.
+Emiten kena tanpa `target_event_date` (MENN, TGRA, WSKT) dilewati CLI dan dicetak di baris `Dilewati`. Skor nyata pertama di atas PGlite: `docs/data-proof.md` § "Skor nyata pertama (aturan default)".
 
 ## Alur
 

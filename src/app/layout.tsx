@@ -28,7 +28,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="id" className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <nav aria-label="Navigasi" className="flex gap-4 px-6 py-2 text-sm">
+          <a href="/putar-ulang" className="underline">
+            1. Putar ulang
+          </a>
+          <a href="/rakit" className="underline">
+            2. Rakit alarm
+          </a>
+        </nav>
+        {children}
+      </body>
     </html>
   );
 }
