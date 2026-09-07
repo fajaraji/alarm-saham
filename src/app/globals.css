@@ -1,26 +1,134 @@
 @import "tailwindcss";
 
+/* Token warna Alarm Saham (rasa visual yang disetujui pemilik).
+   Terang di :root; gelap lewat prefers-color-scheme dan data-theme="dark". */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #e9edf4;
+  --line: #d5dbe6;
+  --line-strong: #b9c2d2;
+  --ink: #151c2b;
+  --ink-2: #3f4a5f;
+  --ink-3: #6b7791;
+  --accent: #2c3f9e;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e8fb;
+  --crit: #b93636;
+  --crit-soft: #fbe6e6;
+  --warn: #b8771a;
+  --warn-soft: #fdf0dc;
+  --ok: #25794b;
+  --ok-soft: #e1f3e8;
+  --b-if: #2c3f9e;
+  --b-cond: #1f6f8b;
+  --b-then: #b8771a;
+  --b-text: #ffffff;
+  --shadow: 0 1px 2px rgba(21, 28, 43, 0.06), 0 8px 24px rgba(21, 28, 43, 0.08);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --bg: #0f1420;
+    --surface: #171d2c;
+    --surface-2: #1f2637;
+    --line: #2a3347;
+    --line-strong: #3a455e;
+    --ink: #eef1f7;
+    --ink-2: #b9c2d4;
+    --ink-3: #8590a6;
+    --accent: #8ea0ff;
+    --accent-ink: #0f1420;
+    --accent-soft: #232c4d;
+    --crit: #f08a8a;
+    --crit-soft: #3a1f22;
+    --warn: #f0b664;
+    --warn-soft: #3a2d18;
+    --ok: #7ad0a0;
+    --ok-soft: #173226;
+    --b-if: #5468d6;
+    --b-cond: #2f8fb0;
+    --b-then: #c98a2a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
   }
 }
 
+:root[data-theme="dark"] {
+  --bg: #0f1420;
+  --surface: #171d2c;
+  --surface-2: #1f2637;
+  --line: #2a3347;
+  --line-strong: #3a455e;
+  --ink: #eef1f7;
+  --ink-2: #b9c2d4;
+  --ink-3: #8590a6;
+  --accent: #8ea0ff;
+  --accent-ink: #0f1420;
+  --accent-soft: #232c4d;
+  --crit: #f08a8a;
+  --crit-soft: #3a1f22;
+  --warn: #f0b664;
+  --warn-soft: #3a2d18;
+  --ok: #7ad0a0;
+  --ok-soft: #173226;
+  --b-if: #5468d6;
+  --b-cond: #2f8fb0;
+  --b-then: #c98a2a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-crit: var(--crit);
+  --color-crit-soft: var(--crit-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-b-if: var(--b-if);
+  --color-b-cond: var(--b-cond);
+  --color-b-then: var(--b-then);
+  --color-b-text: var(--b-text);
+  --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), Consolas, monospace;
+  --shadow-panel: var(--shadow);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Blok yang baru masuk papan "melompat" masuk (dimatikan bila pengguna
+   meminta gerakan dikurangi). */
+@keyframes blok-masuk {
+  from {
+    transform: translateY(-10px) scale(0.96);
+    opacity: 0;
+  }
+}
+.blok-masuk {
+  animation: blok-masuk 0.25s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .blok-masuk {
+    animation: none;
+  }
 }

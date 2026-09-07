@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     ".cache/**",
     ".pglite/**",
     "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 
