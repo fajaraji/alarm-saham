@@ -14,7 +14,14 @@ export interface BarisLedger {
 
 export const NAMA_FILE_LEDGER = "ledger.jsonl";
 
-export class Ledger {
+/** Kontrak penyimpan buku kredit: file JSONL (`Ledger`) atau tabel `api_ledger` (`LedgerDb`). */
+export interface PenyimpanLedger {
+  catat(baris: BarisLedger): Promise<void>;
+  semua(): Promise<BarisLedger[]>;
+  totalKredit(): Promise<number>;
+}
+
+export class Ledger implements PenyimpanLedger {
   readonly file: string;
 
   constructor(dir: string) {

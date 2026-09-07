@@ -1,0 +1,1 @@
+ALTER TABLE "api_ledger" ADD COLUMN "note" text;

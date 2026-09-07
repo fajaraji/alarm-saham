@@ -8,8 +8,17 @@ import { sectorsProviderDariEnv, type EnvSumber } from "./sectors-provider";
 export * from "./types";
 export * from "./provider";
 export * from "./credits";
-export { Ledger, type BarisLedger } from "./ledger";
-export { CacheRespons, kunciCache, TTL_SEHARI_MS } from "./cache";
+export { Ledger, type BarisLedger, type PenyimpanLedger } from "./ledger";
+export { CacheRespons, kunciCache, TTL_SEHARI_MS, type EntriCache, type PenyimpanCache } from "./cache";
+export { LedgerDb, CacheDb } from "./db-store";
+export {
+  migrasiCacheKeDb,
+  migrasiKeDb,
+  sumberDariBerkas,
+  sumberDariDb,
+  type HasilMigrasi,
+  type SumberMigrasi,
+} from "./migrasi-cache";
 export {
   SectorsProvider,
   sectorsProviderDariEnv,

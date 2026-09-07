@@ -57,6 +57,18 @@ export function createCacheRepo(db: Db) {
     async delete(key: string): Promise<void> {
       await db.delete(apiCache).where(eq(apiCache.key, key));
     },
+
+    /** Semua kunci yang belum kedaluwarsa (pra-terbang tanpa membaca payload). */
+    async validKeys(now: Date = new Date()): Promise<Set<string>> {
+      const rows = await db
+        .select({ key: apiCache.key, expiresAt: apiCache.expiresAt })
+        .from(apiCache);
+      const hasil = new Set<string>();
+      for (const r of rows) {
+        if (!r.expiresAt || r.expiresAt.getTime() > now.getTime()) hasil.add(r.key);
+      }
+      return hasil;
+    },
   };
 }
 
