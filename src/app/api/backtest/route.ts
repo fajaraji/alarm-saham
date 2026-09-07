@@ -1,11 +1,12 @@
 // POST /api/backtest  { rule, today?, pakaiFixture? }
-// → { sumber: 'db' | 'fixture', keterangan, hasil: BacktestResult }
+// → { sumber: 'db' | 'fixture', jenis, keterangan, dilewati, hasil: BacktestResult }
 //
-// Server memilih sumber: DB (DATABASE_URL) bila ada, selain itu fixture
-// universe-kecil.json. Nol panggilan API Sectors. Tidak butuh kunci AI.
+// Server memilih sumber lewat `getEventSource()` (satu pintu dengan CLI dan
+// /putar-ulang): Neon/Postgres bila DATABASE_URL ada → PGlite lokal ./.pglite
+// → fixture universe-kecil.json. Nol panggilan API Sectors. Tidak butuh kunci AI.
 import { z } from "zod";
 
-import { pilihSumber } from "@/lib/agent/sumber";
+import { pilihSumber, sumberDariDb } from "@/lib/agent/sumber";
 import { RuleError, RuleSchema, runBacktest } from "@/lib/engine";
 
 export const maxDuration = 60;
@@ -17,7 +18,7 @@ const BodySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, { error: "today harus YYYY-MM-DD" })
     .optional(),
-  /** Paksa fixture walau DATABASE_URL ada (demo/tes). */
+  /** Paksa fixture walau DB/PGlite ada (demo/tes). */
   pakaiFixture: z.boolean().optional(),
 });
 
@@ -46,13 +47,13 @@ export async function POST(req: Request): Promise<Response> {
 
   try {
     const { rule, today, pakaiFixture } = parsed.data;
-    const { source, universe, keterangan } = await pilihSumber(pakaiFixture);
+    const { source, universe, dilewati, keterangan, jenis } = await pilihSumber(pakaiFixture);
     if (universe.length === 0) {
       return galat(503, "UNIVERSE_KOSONG", `Universe kosong dari ${keterangan}; belum ada saham yang bisa diuji.`);
     }
     const hasil = await runBacktest(rule, universe, source, { today });
-    const sumber: SumberBacktest = source.name === "db" ? "db" : "fixture";
-    return Response.json({ sumber, keterangan, hasil });
+    const sumber: SumberBacktest = sumberDariDb(jenis) ? "db" : "fixture";
+    return Response.json({ sumber, jenis, keterangan, dilewati, hasil });
   } catch (err) {
     if (err instanceof RuleError) return galat(400, "ATURAN_TIDAK_VALID", err.message, err.issues);
     console.error("[api/backtest]", err);

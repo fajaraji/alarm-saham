@@ -20,6 +20,13 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
     trace: "retain-on-failure",
+    // Overlay panduan kunjungan pertama (tiket 13) dianggap sudah ditutup agar
+    // spec layar lain tidak terhalang; tests/e2e/panduan.spec.ts mengosongkannya
+    // sendiri untuk menguji kunjungan pertama.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: `http://127.0.0.1:${PORT}`, localStorage: [{ name: "alarm-saham:panduan-selesai", value: "1" }] }],
+    },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

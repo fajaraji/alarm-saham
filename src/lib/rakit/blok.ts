@@ -43,15 +43,15 @@ export const INFO_BLOK: Record<BlockKind, InfoBlok> = {
   ekuitas_negatif: {
     kind: "ekuitas_negatif",
     label: LABEL_BLOK.ekuitas_negatif,
-    tooltip: "Kalau semua harta dijual pun utangnya tidak lunas (ekuitas negatif). Perusahaan sedang sekarat.",
+    tooltip: "Kalau semua harta dijual pun utangnya tidak lunas (ekuitas negatif) — angka ekuitas di laporan keuangan di bawah nol.",
     ambang: { longgar: "ekuitas negatif", ketat: "ekuitas turun >= 50% setahun" },
     dataSejak: "data sejak 2020",
   },
   insider_jual: {
     kind: "insider_jual",
     label: LABEL_BLOK.insider_jual,
-    tooltip: "Direksi/pemilik besar wajib melapor kalau menjual saham perusahaannya sendiri. Kalau ramai-ramai jual, itu sinyal.",
-    ambang: { longgar: "ada 6 bln terakhir", ketat: "jual >= 1 poin persen" },
+    tooltip: "Direksi/pemilik besar wajib melapor (filing) kalau melepas saham perusahaannya sendiri. Blok ini berbunyi bila ada laporan pelepasan itu.",
+    ambang: { longgar: "ada 6 bln terakhir", ketat: "melepas >= 1 poin persen" },
     dataSejak: "hanya 2024+",
   },
 };

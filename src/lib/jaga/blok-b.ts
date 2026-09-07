@@ -28,7 +28,7 @@ export const LABEL_BLOK_B: Record<BlokBKind, string> = {
 /** Penjelasan awam (tooltip kamus). */
 export const PENJELASAN_BLOK_B: Record<BlokBKind, string> = {
   ritel_dominan:
-    "Mayoritas pembeli 14 hari terakhir adalah broker ritel (orang biasa), sementara broker asing/institusi lebih banyak melepas. Sering terjadi saat harga “digoreng”.",
+    "Mayoritas pembeli 14 hari terakhir adalah broker ritel (orang biasa), sementara broker asing/institusi lebih banyak melepas. Pola ini sering muncul saat harga naik cepat tanpa dukungan lembaga besar.",
   free_float_kecil:
     "Porsi saham yang benar-benar beredar di publik kecil (< 15%), sehingga harganya mudah digerakkan segelintir pihak.",
   jatuh_dari_puncak:

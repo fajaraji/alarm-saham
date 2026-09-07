@@ -29,7 +29,6 @@ export const TEKS = {
   tidakAdaData: "tidak ada data",
   disimpanServer: "tersimpan di server (tautan rahasia)",
   disimpanLokal: "tersimpan di browser ini (server tanpa database)",
-  disclaimer: "Alarm Saham adalah alat informasi, bukan saran investasi.",
 } as const;
 
 export const LABEL_STATUS: Record<StatusSaham, string> = {

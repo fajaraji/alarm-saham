@@ -4,9 +4,9 @@
 
 **Blocked by:** 09 (Layar 2), 10 (Layar 1), 11 (Layar 3)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 di worktree t13 (lint/typecheck/test/build exit 0; 328 tes; 22 e2e). Termasuk perbaikan temuan tiket 14: `/api/backtest` & `/api/agent/diagnosis` memakai `getEventSource()` (PGlite/Neon) — e2e membuktikan label "data Sectors nyata", 104 saham, 3 dilewati (MENN, TGRA, WSKT). Audit kata terlarang otomatis (`tests/unit/copy/kata-terlarang.test.ts`).
 
-- [ ] Uji end-to-end: kunjungan pertama menampilkan panduan; setelah ditutup tidak muncul lagi; tombol Panduan membukanya kembali
-- [ ] Setiap istilah dalam daftar punya tooltip (tes: render tiap layar, cari istilah tanpa tooltip → 0)
-- [ ] Disclaimer ada di footer semua halaman dan di template pesan Telegram/in-app (tes)
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Uji end-to-end: kunjungan pertama menampilkan panduan; setelah ditutup tidak muncul lagi; tombol Panduan membukanya kembali
+- [x] Setiap istilah dalam daftar punya tooltip/definisi kamus (14 istilah; tes memindai daftar vs komponen)
+- [x] Disclaimer ada di footer semua halaman (layout) dan di template pesan in-app/Telegram (tes tiket 11/12)
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

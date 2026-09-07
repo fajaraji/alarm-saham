@@ -3,8 +3,9 @@
 // di-commit dan diverifikasi tes), definisi blok & ambang dari konstanta mesin
 // uji (src/lib/engine) agar tidak pernah menyimpang dari kode yang menghitung.
 import type { Metadata } from "next";
-import Link from "next/link";
 
+import { Istilah } from "@/components/panduan/Istilah";
+import { ISTILAH_BLOK } from "@/components/panduan/kamus";
 import {
   INSIDER_POIN_KETAT,
   JENDELA_INSIDER_HARI,
@@ -84,7 +85,7 @@ function angka(x: number | null | undefined): string {
   return x == null ? "–" : String(x).replace(".", ",");
 }
 
-function Stat({ label, nilai, sub, testid }: { label: string; nilai: string; sub?: string; testid?: string }) {
+function Stat({ label, nilai, sub, testid }: { label: React.ReactNode; nilai: string; sub?: string; testid?: string }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-4 shadow-panel" data-testid={testid}>
       <p className="m-0 text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">{label}</p>
@@ -161,342 +162,304 @@ export default function HalamanCaraKamiMenghitung() {
   const kreditUniverse = totalKredit(KREDIT_UNIVERSE);
 
   return (
-    <>
-      <header className="sticky top-0 z-10 border-b border-line bg-surface">
-        <div className="mx-auto flex max-w-[1000px] flex-wrap items-center gap-4 px-6 py-3">
-          <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline">
-            <span
-              aria-hidden="true"
-              className="grid h-8 w-8 place-items-center rounded-lg bg-accent font-display font-extrabold text-accent-ink"
-            >
-              !
-            </span>
-            <span>
-              <span className="block font-display text-lg font-bold leading-tight text-ink">Alarm Saham</span>
-              <small className="block text-[11px] uppercase tracking-wider text-ink-3">Sectors Hackathon 2026</small>
-            </span>
-          </Link>
-          <nav aria-label="Langkah" className="flex gap-1 text-[13px]">
-            <Link href="/putar-ulang" className="rounded-lg px-3 py-2 text-ink-2 no-underline hover:bg-surface-2">
-              1. Putar ulang
-            </Link>
-            <Link href="/rakit" className="rounded-lg px-3 py-2 text-ink-2 no-underline hover:bg-surface-2">
-              2. Rakit alarm
-            </Link>
-            <span aria-current="page" className="rounded-lg bg-accent-soft px-3 py-2 font-semibold text-ink">
-              Cara kami menghitung
-            </span>
-          </nav>
+    <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="metodologi">
+      <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">Metodologi</p>
+      <h1 className="mb-2 mt-1 font-display text-[30px] font-extrabold leading-tight tracking-tight text-balance">
+        Cara kami menghitung
+      </h1>
+      <p className="m-0 max-w-[70ch] text-ink-2">
+        Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
+        ke masa lalu dan apa saja yang belum bisa kami buktikan. Semua angka di sini berasal dari data resmi Sectors yang
+        tersimpan di database kami — tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di
+        halaman ini sama dengan keluaran mesin uji.
+      </p>
+
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-8" aria-labelledby="skor">
+        <h2 id="skor" className="font-display text-xl font-bold">
+          Skor nyata aturan bawaan (snapshot {SKOR_NYATA.today})
+        </h2>
+        <p className="mt-1 max-w-[70ch] text-ink-2">
+          Aturan yang diuji: <strong>{SKOR_NYATA.rule}</strong> = {LABEL_BLOK.suspensi} (longgar) ATAU {LABEL_BLOK.laporan_hilang}{" "}
+          (longgar) ATAU {LABEL_BLOK.ekuitas_negatif} (longgar). Dipindai setiap akhir bulan dari {SKOR_NYATA.scanStart} sampai{" "}
+          {SKOR_NYATA.today}.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            testid="stat-tertangkap"
+            label="Tertangkap"
+            nilai={`${s.hits}/${s.total}`}
+            sub={`delisting ${s.delisting.hits}/${s.delisting.total} · pemantauan khusus ${s.watchlist.hits}/${s.watchlist.total}`}
+          />
+          <Stat
+            testid="stat-lebih-awal"
+            label={<Istilah id="lebih_awal">Lebih awal</Istilah>}
+            nilai={`${angka(s.leadAvg)} bln`}
+            sub={`rata-rata; median ${angka(s.leadMedian)} bln (hanya kejadian ≥ ${SKOR_NYATA.leadCutoff})`}
+          />
+          <Stat
+            testid="stat-alarm-palsu"
+            label={<Istilah id="alarm_palsu">Alarm palsu</Istilah>}
+            nilai={`${s.falseAlarms}/${s.controls}`}
+            sub="kontrol sehat yang alarmnya pernah berbunyi"
+          />
+          <Stat
+            testid="stat-dilewati"
+            label="Dilewati"
+            nilai={String(s.skipped.length)}
+            sub={`${s.skipped.join(", ")} — tanpa tanggal kejadian target`}
+          />
         </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="metodologi">
-        <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">Metodologi</p>
-        <h1 className="mb-2 mt-1 font-display text-[30px] font-extrabold leading-tight tracking-tight text-balance">
-          Cara kami menghitung
-        </h1>
-        <p className="m-0 max-w-[70ch] text-ink-2">
-          Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
-          ke masa lalu dan apa saja yang belum bisa kami buktikan. Semua angka di sini berasal dari data resmi Sectors yang
-          tersimpan di database kami — tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di
-          halaman ini sama dengan keluaran mesin uji.
+        <p className="mt-3 text-sm text-ink-2" data-testid="blok-pertama">
+          Blok yang terpenuhi saat alarm pertama berbunyi pada {s.hits} emiten tertangkap:{" "}
+          {BLOCK_KINDS.filter((k) => s.blokPertama[k] > 0)
+            .map((k) => `${LABEL_BLOK[k]} ${s.blokPertama[k]}`)
+            .join(", ")}
+          . {s.excludedFromLead} emiten kena punya kejadian target sebelum {SKOR_NYATA.leadCutoff}; mereka ikut hitungan
+          tertangkap/terlewat tetapi tidak ikut rata-rata &ldquo;lebih awal&rdquo; karena data laporan baru mulai 2020.
         </p>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-8" aria-labelledby="skor">
-          <h2 id="skor" className="font-display text-xl font-bold">
-            Skor nyata aturan bawaan (snapshot {SKOR_NYATA.today})
-          </h2>
-          <p className="mt-1 max-w-[70ch] text-ink-2">
-            Aturan yang diuji: <strong>{SKOR_NYATA.rule}</strong> = {LABEL_BLOK.suspensi} (longgar) ATAU {LABEL_BLOK.laporan_hilang}{" "}
-            (longgar) ATAU {LABEL_BLOK.ekuitas_negatif} (longgar). Dipindai setiap akhir bulan dari {SKOR_NYATA.scanStart} sampai{" "}
-            {SKOR_NYATA.today}.
-          </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat
-              testid="stat-tertangkap"
-              label="Tertangkap"
-              nilai={`${s.hits}/${s.total}`}
-              sub={`delisting ${s.delisting.hits}/${s.delisting.total} · pemantauan khusus ${s.watchlist.hits}/${s.watchlist.total}`}
-            />
-            <Stat
-              testid="stat-lebih-awal"
-              label="Lebih awal"
-              nilai={`${angka(s.leadAvg)} bln`}
-              sub={`rata-rata; median ${angka(s.leadMedian)} bln (hanya kejadian ≥ ${SKOR_NYATA.leadCutoff})`}
-            />
-            <Stat
-              testid="stat-alarm-palsu"
-              label="Alarm palsu"
-              nilai={`${s.falseAlarms}/${s.controls}`}
-              sub="kontrol sehat yang alarmnya pernah berbunyi"
-            />
-            <Stat
-              testid="stat-dilewati"
-              label="Dilewati"
-              nilai={String(s.skipped.length)}
-              sub={`${s.skipped.join(", ")} — tanpa tanggal kejadian target`}
-            />
-          </div>
-          <p className="mt-3 text-sm text-ink-2" data-testid="blok-pertama">
-            Blok yang terpenuhi saat alarm pertama berbunyi pada {s.hits} emiten tertangkap:{" "}
-            {BLOCK_KINDS.filter((k) => s.blokPertama[k] > 0)
-              .map((k) => `${LABEL_BLOK[k]} ${s.blokPertama[k]}`)
-              .join(", ")}
-            . {s.excludedFromLead} emiten kena punya kejadian target sebelum {SKOR_NYATA.leadCutoff}; mereka ikut hitungan
-            tertangkap/terlewat tetapi tidak ikut rata-rata &ldquo;lebih awal&rdquo; karena data laporan baru mulai 2020.
-          </p>
-          <p className="mt-2 text-sm text-ink-2">
-            Cara mereproduksi (nol panggilan API, dari database lokal):{" "}
-            <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[12px]">{PERINTAH_SNAPSHOT}</code>. Tanpa
-            database, tambahkan <code className="font-mono">--fixture</code> untuk contoh kecil 8 emiten.
-          </p>
-          <div className="mt-4 grid gap-3">
-            <TabelKelompok group="delisting" />
-            <TabelKelompok group="watchlist" />
-            <TabelKelompok group="control" />
-          </div>
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-10" aria-labelledby="apa">
-          <h2 id="apa" className="font-display text-xl font-bold">
-            Apa yang sebenarnya dihitung
-          </h2>
-          <dl className="mt-3 grid gap-3 md:grid-cols-2">
-            <div className="rounded-xl border border-line bg-surface p-4">
-              <dt className="font-semibold">&ldquo;Berbunyi&rdquo;</dt>
-              <dd className="m-0 mt-1 text-sm text-ink-2">
-                Alarm berbunyi pada tanggal t bila syarat bloknya terpenuhi <em>hanya</em> dengan data yang bertanggal ≤ t.
-                Blok digabung dengan ATAU (cukup satu terpenuhi) atau DAN (semua harus terpenuhi). Kami memeriksa t pada
-                setiap akhir bulan.
-              </dd>
-            </div>
-            <div className="rounded-xl border border-line bg-surface p-4">
-              <dt className="font-semibold">&ldquo;Tertangkap&rdquo; dan &ldquo;lebih awal&rdquo;</dt>
-              <dd className="m-0 mt-1 text-sm text-ink-2">
-                Emiten kena dikatakan tertangkap bila alarm berbunyi <em>sebelum</em> tanggal kejadian targetnya. Lebih awal =
-                bulan utuh antara bunyi pertama dan kejadian target. Bunyi di bulan yang sama dengan kejadian tidak sempat
-                &ldquo;terdengar&rdquo; (mis. WIKA: suspensi jatuh tepat pada tanggal target).
-              </dd>
-            </div>
-            <div className="rounded-xl border border-line bg-surface p-4">
-              <dt className="font-semibold">&ldquo;Alarm palsu&rdquo;</dt>
-              <dd className="m-0 mt-1 text-sm text-ink-2">
-                Alarm berbunyi kapan pun pada emiten kontrol sehat dalam rentang {SCAN_START_DEFAULT} sampai tanggal uji.
-                Satu kali bunyi sudah dihitung palsu.
-              </dd>
-            </div>
-            <div className="rounded-xl border border-line bg-surface p-4">
-              <dt className="font-semibold">Rentang pindai</dt>
-              <dd className="m-0 mt-1 text-sm text-ink-2">
-                Emiten kena: dari yang terbesar antara {SCAN_START_DEFAULT} dan {LOOKBACK_YEARS_DEFAULT} tahun sebelum
-                target, sampai sebelum target. Kontrol: {SCAN_START_DEFAULT} sampai tanggal uji. Emiten kena dengan target
-                sebelum {LEAD_CUTOFF_DEFAULT} ikut hitungan tertangkap tetapi tidak ikut rata-rata lebih awal.
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-10" aria-labelledby="blok">
-          <h2 id="blok" className="font-display text-xl font-bold">
-            Definisi tiap blok dan ambangnya
-          </h2>
-          <p className="mt-1 max-w-[70ch] text-ink-2">
-            Lima blok &ldquo;kelas A&rdquo; ini yang bisa diuji ke masa lalu. Angka ambang di bawah dibaca langsung dari
-            konstanta mesin uji, jadi tidak bisa berbeda dari kode yang menghitung.
-          </p>
-          <div className="mt-3 grid gap-3">
-            {BLOCK_KINDS.map((k) => {
-              const d = DEFINISI_BLOK[k];
-              return (
-                <article key={k} className="rounded-xl border border-line bg-surface p-4" data-testid={`blok-${k}`}>
-                  <h3 className="m-0 font-display text-base font-bold">
-                    {LABEL_BLOK[k]} <code className="ml-1 font-mono text-[12px] font-normal text-ink-3">{k}</code>
-                  </h3>
-                  <p className="m-0 mt-1 text-sm text-ink-2">{d.awam}</p>
-                  <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[110px_1fr]">
-                    <dt className="font-semibold text-ink-3">Longgar</dt>
-                    <dd className="m-0">{d.longgar}</dd>
-                    <dt className="font-semibold text-ink-3">Ketat</dt>
-                    <dd className="m-0">{d.ketat}</dd>
-                    <dt className="font-semibold text-ink-3">Sumber</dt>
-                    <dd className="m-0 font-mono text-[12px]">{d.sumber}</dd>
-                    <dt className="font-semibold text-ink-3">Data sejak</dt>
-                    <dd className="m-0">{d.kedalaman}</dd>
-                  </dl>
-                </article>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-sm text-ink-2">
-            Blok kelas B (ritel dominan, free float kecil, jatuh dari puncak 90 hari) memakai data terkini yang tidak punya
-            sejarah di Sectors, sehingga hanya untuk mode &ldquo;pasang&rdquo; dan <strong>tidak pernah</strong> ikut skor uji
-            ke masa lalu.
-          </p>
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-10" aria-labelledby="universe">
-          <h2 id="universe" className="font-display text-xl font-bold">
-            Universe uji: 18 + 59 + 30 emiten
-          </h2>
-          <ul className="mt-2 grid gap-2 pl-5 text-sm text-ink-2">
-            <li>
-              <strong>18 emiten dihapus dari bursa</strong> (delisting efektif 10 November 2026; 7 karena pailit, 11 karena
-              suspensi lebih dari 50 bulan). Kejadian target = tanggal suspensi yang berujung delisting, diverifikasi ke feed
-              suspensi; 5 emiten (ENVY, LMAS, MTRA, SBAT, TELE) memakai tanggal catatan publik karena feed tidak memuat
-              suspensinya.
-            </li>
-            <li>
-              <strong>59 emiten Papan Pemantauan Khusus</strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026). Kejadian
-              target = suspensi terakhir ≤ 30 Juni 2026 di feed. Tiga emiten (MENN, TGRA, WSKT) tidak punya kejadian di
-              feed dan dilewati — bukan dihitung sebagai tertangkap.
-            </li>
-            <li>
-              <strong>30 kontrol sehat</strong>: anggota LQ45 menurut screener Sectors yang tidak pernah muncul di feed
-              suspensi 2019–2026 dan bukan anggota dua kelompok di atas. Dari 44 yang lolos, kami mengambil{" "}
-              <strong>30 pertama menurut urutan API (alfabetis)</strong> — bukan peringkat kapitalisasi pasar, karena
-              screener tidak mengembalikan market cap dan menolak <code className="font-mono">order_by</code> (HTTP 400).
-              Memilih ulang berarti menarik ulang data ±90 kredit, jadi himpunan ini dikunci dan diumumkan apa adanya.
-            </li>
-          </ul>
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-10" aria-labelledby="lookahead">
-          <h2 id="lookahead" className="font-display text-xl font-bold">
-            Anti-lookahead: tidak mengintip masa depan
-          </h2>
-          <p className="mt-1 max-w-[70ch] text-ink-2">
-            Sumber data mengembalikan <em>semua</em> baris satu emiten; pemotongan &ldquo;hanya yang bertanggal ≤ t&rdquo;
-            dilakukan di satu tempat oleh fungsi evaluasi murni. Daftar kuartal tersedia pun dipotong: kuartal dianggap
-            &ldquo;diketahui&rdquo; pada t hanya bila akhir periodenya ≤ t, karena endpoint tidak memuat tanggal
-            penyampaian. Tes otomatis membuktikan bahwa menggeser tanggal kejadian target mengubah hasil secara deterministik,
-            dan skor yang sama dari fixture maupun database harus identik.
-          </p>
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-10" aria-labelledby="batas">
-          <h2 id="batas" className="font-display text-xl font-bold">
-            Keterbatasan yang jujur
-          </h2>
-          <ul className="mt-2 grid gap-2 pl-5 text-sm text-ink-2" data-testid="keterbatasan">
-            <li>
-              <strong>Data laporan dan keuangan baru mulai 2020 kuartal 1.</strong> Inilah sebab {s.delisting.total - s.delisting.hits}{" "}
-              dari {s.delisting.total} emiten delisting terlewat: kejadian target mereka 2018–2021 (GOLL Jan 2019, PLAS Des
-              2018, LCGP/TRIL Mei 2019, SUGI Jul 2019, MABA/SKYB Feb 2020, COWL Jul 2020, ENVY Des 2020), sehingga rentang
-              pindai sebelum target nyaris kosong. Untuk SRIL, TDPM, dan TOYS suspensi jatuh tepat pada tanggal target dan
-              laporan masih lengkap sebelumnya — tanda-tandanya justru banyak <em>setelah</em> target.
-            </li>
-            <li>
-              <strong>8 emiten mengembalikan 404</strong> pada endpoint tanggal laporan (COWL, SUGI, MABA, SKYB, KBRI, NUSA,
-              RIMO, SIMA — &ldquo;Invalid stock symbol&rdquo;). Untuk mereka hanya feed suspensi yang ada; blok laporan hilang,
-              dilutif, dan ekuitas negatif tidak bisa dihitung.
-            </li>
-            <li>
-              <strong>Filing orang dalam hanya sejak 2024.</strong> Feed filings tidak memuat satu pun baris ≤ 2023, sehingga
-              blok &ldquo;orang dalam menjual&rdquo; hanya boleh diklaim untuk jendela 2024 ke depan (aturan cadangan
-              PLAN §7.2 terpicu: klaimnya dalam bulan, bukan tahun).
-            </li>
-            <li>
-              <strong>Suspensi per simbol hanya 1 baris</strong> (suspensi terakhir). Sejarah suspensi diambil dari feed seluruh
-              bursa, yang sendiri jarang sebelum 2020 dan tidak memuat tanggal pencabutan.
-            </li>
-            <li>
-              <strong>Free float tanpa sejarah</strong>: hanya snapshot hari ini (TTL cache 24 jam), jadi tidak bisa diuji ke masa
-              lalu — dipakai untuk nama emiten dan mode pasang saja.
-            </li>
-            <li>
-              <strong>Alarm palsu AADI</strong> adalah keterbatasan definisi kami, bukan tanda apa pun tentang emitennya: AADI
-              tercatat di bursa Desember 2024, daftar kuartalnya melompat dari 2024 q2 ke 2024 q4, dan blok laporan hilang
-              menganggap 2024 q3 &ldquo;hilang&rdquo;. Definisi belum diubah agar skor tetap sebanding dengan fixture tes.
-            </li>
-            <li>
-              <strong>Survivorship dan pemilihan universe.</strong> Kelompok kena dipilih dari daftar resmi yang sudah diketahui
-              hasilnya (delisting, pemantauan khusus); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
-              tanda resmi sudah ada sebelum kejadian&rdquo; — bukan &ldquo;berapa peluang emiten acak akan kena&rdquo;.
-            </li>
-            <li>
-              <strong>Granularitas bulanan.</strong> Kejadian yang terjadi di bulan yang sama dengan bunyi pertama tidak
-              dihitung lebih awal; blok laporan hilang tidak bisa mendeteksi laporan yang telat lalu akhirnya disampaikan.
-            </li>
-          </ul>
-        </section>
-
-        {/* ------------------------------------------------------------ */}
-        <section className="mt-10" aria-labelledby="kredit">
-          <h2 id="kredit" className="font-display text-xl font-bold">
-            Kredit Sectors yang terpakai
-          </h2>
-          <p className="mt-1 max-w-[70ch] text-ink-2">
-            Setiap panggilan API dicatat di buku kredit (tabel <code className="font-mono">api_ledger</code>), termasuk cache hit
-            dan 404. Per {KREDIT_TANGGAL_LEDGER}: <strong data-testid="kredit-total">{KREDIT_TOTAL_LEDGER} dari {KREDIT_ANGGARAN}</strong>{" "}
-            kredit terpakai; sisa {KREDIT_ANGGARAN - KREDIT_TOTAL_LEDGER}, dengan {KREDIT_CADANGAN_JURI} kredit cadangan untuk demo juri
-            yang tidak disentuh kode (panggilan ditolak bila sisa di bawah cadangan). Uji ke masa lalu dan halaman ini tidak
-            memanggil API sama sekali.
-          </p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
-            <table className="w-full min-w-[640px] border-collapse text-[13px]">
-              <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
-                  <th className="px-3 py-2">Langkah</th>
-                  <th className="px-3 py-2 text-right">Kredit</th>
-                  <th className="px-3 py-2">Catatan</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t border-line bg-surface-2">
-                  <td className="px-3 py-1.5 font-semibold" colSpan={3}>
-                    Pembuktian data (tiket 03–04) — {kreditPembuktian} kredit
-                  </td>
-                </tr>
-                {KREDIT_PEMBUKTIAN.map((b) => (
-                  <tr key={b.langkah} className="border-t border-line align-top">
-                    <td className="px-3 py-2">{b.langkah}</td>
-                    <td className="px-3 py-2 text-right font-mono">{b.kredit}</td>
-                    <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
-                  </tr>
-                ))}
-                <tr className="border-t border-line bg-surface-2">
-                  <td className="px-3 py-1.5 font-semibold" colSpan={3}>
-                    Penarikan universe 107 emiten (tiket 07) — {kreditUniverse} kredit
-                  </td>
-                </tr>
-                {KREDIT_UNIVERSE.map((b) => (
-                  <tr key={b.langkah} className="border-t border-line align-top">
-                    <td className="px-3 py-2">{b.langkah}</td>
-                    <td className="px-3 py-2 text-right font-mono">{b.kredit}</td>
-                    <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
-                  </tr>
-                ))}
-                <tr className="border-t border-line-strong font-semibold">
-                  <td className="px-3 py-2">Total ledger</td>
-                  <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse}</td>
-                  <td className="px-3 py-2 text-ink-2">= {KREDIT_TOTAL_LEDGER} menurut api_ledger; run ulang penarikan = 0 kredit (idempoten)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <p className="mt-8 text-sm text-ink-2">
-          Rincian teknis lebih lanjut: <code className="font-mono">docs/mesin-uji.md</code> (asumsi mesin),{" "}
-          <code className="font-mono">docs/data-proof.md</code> (kedalaman data per endpoint),{" "}
-          <code className="font-mono">docs/universe-pull.md</code> (penarikan & kredit), dan{" "}
-          <code className="font-mono">docs/decisions.md</code> (log keputusan) di repositori.
+        <p className="mt-2 text-sm text-ink-2">
+          Cara mereproduksi (nol panggilan API, dari database lokal):{" "}
+          <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[12px]">{PERINTAH_SNAPSHOT}</code>. Tanpa
+          database, tambahkan <code className="font-mono">--fixture</code> untuk contoh kecil 8 emiten.
         </p>
-      </main>
+        <div className="mt-4 grid gap-3">
+          <TabelKelompok group="delisting" />
+          <TabelKelompok group="watchlist" />
+          <TabelKelompok group="control" />
+        </div>
+      </section>
 
-      <footer className="border-t border-line bg-surface">
-        <p className="mx-auto max-w-[1000px] px-6 py-4 text-center text-xs text-ink-3" data-testid="disclaimer">
-          <strong>Alarm Saham adalah alat informasi dan analisis, bukan saran investasi.</strong> Semua angka di halaman ini
-          adalah fakta resmi dari feed Sectors (data BEI); tidak ada penilaian tentang emiten mana pun dan tidak ada eksekusi
-          jual-beli.
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="apa">
+        <h2 id="apa" className="font-display text-xl font-bold">
+          Apa yang sebenarnya dihitung
+        </h2>
+        <dl className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <dt className="font-semibold">&ldquo;Berbunyi&rdquo;</dt>
+            <dd className="m-0 mt-1 text-sm text-ink-2">
+              Alarm berbunyi pada tanggal t bila syarat bloknya terpenuhi <em>hanya</em> dengan data yang bertanggal ≤ t.
+              Blok digabung dengan ATAU (cukup satu terpenuhi) atau DAN (semua harus terpenuhi). Kami memeriksa t pada
+              setiap akhir bulan.
+            </dd>
+          </div>
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <dt className="font-semibold">&ldquo;Tertangkap&rdquo; dan &ldquo;lebih awal&rdquo;</dt>
+            <dd className="m-0 mt-1 text-sm text-ink-2">
+              Emiten kena dikatakan tertangkap bila alarm berbunyi <em>sebelum</em> tanggal kejadian targetnya. Lebih awal =
+              bulan utuh antara bunyi pertama dan kejadian target. Bunyi di bulan yang sama dengan kejadian tidak sempat
+              &ldquo;terdengar&rdquo; (mis. WIKA: suspensi jatuh tepat pada tanggal target).
+            </dd>
+          </div>
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <dt className="font-semibold">&ldquo;Alarm palsu&rdquo;</dt>
+            <dd className="m-0 mt-1 text-sm text-ink-2">
+              Alarm berbunyi kapan pun pada emiten kontrol sehat dalam rentang {SCAN_START_DEFAULT} sampai tanggal uji.
+              Satu kali bunyi sudah dihitung palsu.
+            </dd>
+          </div>
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <dt className="font-semibold">Rentang pindai</dt>
+            <dd className="m-0 mt-1 text-sm text-ink-2">
+              Emiten kena: dari yang terbesar antara {SCAN_START_DEFAULT} dan {LOOKBACK_YEARS_DEFAULT} tahun sebelum
+              target, sampai sebelum target. Kontrol: {SCAN_START_DEFAULT} sampai tanggal uji. Emiten kena dengan target
+              sebelum {LEAD_CUTOFF_DEFAULT} ikut hitungan tertangkap tetapi tidak ikut rata-rata lebih awal.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="blok">
+        <h2 id="blok" className="font-display text-xl font-bold">
+          Definisi tiap blok dan ambangnya
+        </h2>
+        <p className="mt-1 max-w-[70ch] text-ink-2">
+          Lima blok &ldquo;kelas A&rdquo; ini yang bisa diuji ke masa lalu. Angka ambang di bawah dibaca langsung dari
+          konstanta mesin uji, jadi tidak bisa berbeda dari kode yang menghitung.
         </p>
-      </footer>
-    </>
+        <div className="mt-3 grid gap-3">
+          {BLOCK_KINDS.map((k) => {
+            const d = DEFINISI_BLOK[k];
+            return (
+              <article key={k} className="rounded-xl border border-line bg-surface p-4" data-testid={`blok-${k}`}>
+                <h3 className="m-0 font-display text-base font-bold">
+                  <Istilah id={ISTILAH_BLOK[k]}>{LABEL_BLOK[k]}</Istilah> <code className="ml-1 font-mono text-[12px] font-normal text-ink-3">{k}</code>
+                </h3>
+                <p className="m-0 mt-1 text-sm text-ink-2">{d.awam}</p>
+                <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[110px_1fr]">
+                  <dt className="font-semibold text-ink-3">Longgar</dt>
+                  <dd className="m-0">{d.longgar}</dd>
+                  <dt className="font-semibold text-ink-3">Ketat</dt>
+                  <dd className="m-0">{d.ketat}</dd>
+                  <dt className="font-semibold text-ink-3">Sumber</dt>
+                  <dd className="m-0 font-mono text-[12px]">{d.sumber}</dd>
+                  <dt className="font-semibold text-ink-3">Data sejak</dt>
+                  <dd className="m-0">{d.kedalaman}</dd>
+                </dl>
+              </article>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-sm text-ink-2">
+          Blok kelas B (<Istilah id="ritel_dominan">ritel dominan</Istilah>, <Istilah id="free_float">free float</Istilah> kecil, <Istilah id="jatuh_dari_puncak">jatuh dari puncak 90 hari</Istilah>) memakai data terkini yang tidak punya
+          sejarah di Sectors, sehingga hanya untuk mode &ldquo;pasang&rdquo; dan <strong>tidak pernah</strong> ikut skor uji
+          ke masa lalu.
+        </p>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="universe">
+        <h2 id="universe" className="font-display text-xl font-bold">
+          Universe uji: 18 + 59 + 30 emiten
+        </h2>
+        <ul className="mt-2 grid gap-2 pl-5 text-sm text-ink-2">
+          <li>
+            <strong>18 emiten <Istilah id="delisting">dihapus dari bursa</Istilah></strong> (delisting efektif 10 November 2026; 7 karena pailit, 11 karena
+            suspensi lebih dari 50 bulan). Kejadian target = tanggal suspensi yang berujung delisting, diverifikasi ke feed
+            suspensi; 5 emiten (ENVY, LMAS, MTRA, SBAT, TELE) memakai tanggal catatan publik karena feed tidak memuat
+            suspensinya.
+          </li>
+          <li>
+            <strong>59 emiten <Istilah id="pemantauan_khusus">Papan Pemantauan Khusus</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026). Kejadian
+            target = suspensi terakhir ≤ 30 Juni 2026 di feed. Tiga emiten (MENN, TGRA, WSKT) tidak punya kejadian di
+            feed dan dilewati — bukan dihitung sebagai tertangkap.
+          </li>
+          <li>
+            <strong>30 <Istilah id="kontrol_sehat">kontrol sehat</Istilah></strong>: anggota LQ45 menurut screener Sectors yang tidak pernah muncul di feed
+            suspensi 2019–2026 dan bukan anggota dua kelompok di atas. Dari 44 yang lolos, kami mengambil{" "}
+            <strong>30 pertama menurut urutan API (alfabetis)</strong> — bukan peringkat kapitalisasi pasar, karena
+            screener tidak mengembalikan market cap dan menolak <code className="font-mono">order_by</code> (HTTP 400).
+            Memilih ulang berarti menarik ulang data ±90 kredit, jadi himpunan ini dikunci dan diumumkan apa adanya.
+          </li>
+        </ul>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="lookahead">
+        <h2 id="lookahead" className="font-display text-xl font-bold">
+          Anti-lookahead: tidak mengintip masa depan
+        </h2>
+        <p className="mt-1 max-w-[70ch] text-ink-2">
+          Sumber data mengembalikan <em>semua</em> baris satu emiten; pemotongan &ldquo;hanya yang bertanggal ≤ t&rdquo;
+          dilakukan di satu tempat oleh fungsi evaluasi murni. Daftar kuartal tersedia pun dipotong: kuartal dianggap
+          &ldquo;diketahui&rdquo; pada t hanya bila akhir periodenya ≤ t, karena endpoint tidak memuat tanggal
+          penyampaian. Tes otomatis membuktikan bahwa menggeser tanggal kejadian target mengubah hasil secara deterministik,
+          dan skor yang sama dari fixture maupun database harus identik.
+        </p>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="batas">
+        <h2 id="batas" className="font-display text-xl font-bold">
+          Keterbatasan yang jujur
+        </h2>
+        <ul className="mt-2 grid gap-2 pl-5 text-sm text-ink-2" data-testid="keterbatasan">
+          <li>
+            <strong>Data laporan dan keuangan baru mulai 2020 kuartal 1.</strong> Inilah sebab {s.delisting.total - s.delisting.hits}{" "}
+            dari {s.delisting.total} emiten delisting terlewat: kejadian target mereka 2018–2021 (GOLL Jan 2019, PLAS Des
+            2018, LCGP/TRIL Mei 2019, SUGI Jul 2019, MABA/SKYB Feb 2020, COWL Jul 2020, ENVY Des 2020), sehingga rentang
+            pindai sebelum target nyaris kosong. Untuk SRIL, TDPM, dan TOYS suspensi jatuh tepat pada tanggal target dan
+            laporan masih lengkap sebelumnya — tanda-tandanya justru banyak <em>setelah</em> target.
+          </li>
+          <li>
+            <strong>8 emiten mengembalikan 404</strong> pada endpoint tanggal laporan (COWL, SUGI, MABA, SKYB, KBRI, NUSA,
+            RIMO, SIMA — &ldquo;Invalid stock symbol&rdquo;). Untuk mereka hanya feed suspensi yang ada; blok laporan hilang,
+            dilutif, dan ekuitas negatif tidak bisa dihitung.
+          </li>
+          <li>
+            <strong><Istilah id="insider_jual">Filing orang dalam</Istilah> hanya sejak 2024.</strong> Feed filings tidak memuat satu pun baris ≤ 2023, sehingga
+            blok &ldquo;orang dalam menjual&rdquo; hanya boleh diklaim untuk jendela 2024 ke depan (aturan cadangan
+            PLAN §7.2 terpicu: klaimnya dalam bulan, bukan tahun).
+          </li>
+          <li>
+            <strong>Suspensi per simbol hanya 1 baris</strong> (suspensi terakhir). Sejarah suspensi diambil dari feed seluruh
+            bursa, yang sendiri jarang sebelum 2020 dan tidak memuat tanggal pencabutan.
+          </li>
+          <li>
+            <strong><Istilah id="free_float">Free float</Istilah> tanpa sejarah</strong>: hanya snapshot hari ini (TTL cache 24 jam), jadi tidak bisa diuji ke masa
+            lalu — dipakai untuk nama emiten dan mode pasang saja.
+          </li>
+          <li>
+            <strong>Alarm palsu AADI</strong> adalah keterbatasan definisi kami, bukan tanda apa pun tentang emitennya: AADI
+            tercatat di bursa Desember 2024, daftar kuartalnya melompat dari 2024 q2 ke 2024 q4, dan blok laporan hilang
+            menganggap 2024 q3 &ldquo;hilang&rdquo;. Definisi belum diubah agar skor tetap sebanding dengan fixture tes.
+          </li>
+          <li>
+            <strong>Survivorship dan pemilihan universe.</strong> Kelompok kena dipilih dari daftar resmi yang sudah diketahui
+            hasilnya (delisting, pemantauan khusus); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
+            tanda resmi sudah ada sebelum kejadian&rdquo; — bukan &ldquo;berapa peluang emiten acak akan kena&rdquo;.
+          </li>
+          <li>
+            <strong>Granularitas bulanan.</strong> Kejadian yang terjadi di bulan yang sama dengan bunyi pertama tidak
+            dihitung lebih awal; blok laporan hilang tidak bisa mendeteksi laporan yang telat lalu akhirnya disampaikan.
+          </li>
+        </ul>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="kredit">
+        <h2 id="kredit" className="font-display text-xl font-bold">
+          Kredit Sectors yang terpakai
+        </h2>
+        <p className="mt-1 max-w-[70ch] text-ink-2">
+          Setiap panggilan API dicatat di buku kredit (tabel <code className="font-mono">api_ledger</code>), termasuk cache hit
+          dan 404. Per {KREDIT_TANGGAL_LEDGER}: <strong data-testid="kredit-total">{KREDIT_TOTAL_LEDGER} dari {KREDIT_ANGGARAN}</strong>{" "}
+          kredit terpakai; sisa {KREDIT_ANGGARAN - KREDIT_TOTAL_LEDGER}, dengan {KREDIT_CADANGAN_JURI} kredit cadangan untuk demo juri
+          yang tidak disentuh kode (panggilan ditolak bila sisa di bawah cadangan). Uji ke masa lalu dan halaman ini tidak
+          memanggil API sama sekali.
+        </p>
+        <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
+          <table className="w-full min-w-[640px] border-collapse text-[13px]">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
+                <th className="px-3 py-2">Langkah</th>
+                <th className="px-3 py-2 text-right">Kredit</th>
+                <th className="px-3 py-2">Catatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-line bg-surface-2">
+                <td className="px-3 py-1.5 font-semibold" colSpan={3}>
+                  Pembuktian data (tiket 03–04) — {kreditPembuktian} kredit
+                </td>
+              </tr>
+              {KREDIT_PEMBUKTIAN.map((b) => (
+                <tr key={b.langkah} className="border-t border-line align-top">
+                  <td className="px-3 py-2">{b.langkah}</td>
+                  <td className="px-3 py-2 text-right font-mono">{b.kredit}</td>
+                  <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
+                </tr>
+              ))}
+              <tr className="border-t border-line bg-surface-2">
+                <td className="px-3 py-1.5 font-semibold" colSpan={3}>
+                  Penarikan universe 107 emiten (tiket 07) — {kreditUniverse} kredit
+                </td>
+              </tr>
+              {KREDIT_UNIVERSE.map((b) => (
+                <tr key={b.langkah} className="border-t border-line align-top">
+                  <td className="px-3 py-2">{b.langkah}</td>
+                  <td className="px-3 py-2 text-right font-mono">{b.kredit}</td>
+                  <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
+                </tr>
+              ))}
+              <tr className="border-t border-line-strong font-semibold">
+                <td className="px-3 py-2">Total ledger</td>
+                <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse}</td>
+                <td className="px-3 py-2 text-ink-2">= {KREDIT_TOTAL_LEDGER} menurut api_ledger; run ulang penarikan = 0 kredit (idempoten)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <p className="mt-8 text-sm text-ink-2">
+        Rincian teknis lebih lanjut: <code className="font-mono">docs/mesin-uji.md</code> (asumsi mesin),{" "}
+        <code className="font-mono">docs/data-proof.md</code> (kedalaman data per endpoint),{" "}
+        <code className="font-mono">docs/universe-pull.md</code> (penarikan & kredit), dan{" "}
+        <code className="font-mono">docs/decisions.md</code> (log keputusan) di repositori.
+      </p>
+    </main>
   );
 }
