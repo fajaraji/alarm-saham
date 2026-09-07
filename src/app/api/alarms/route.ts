@@ -1,12 +1,16 @@
 // POST /api/alarms  { owner_token, name, rules, last_score? }
 // → 201 { id, di: 'db', createdAt } bila DATABASE_URL ada;
 //   503 DB_TIDAK_TERSEDIA bila tidak (klien menyimpan di localStorage).
+// GET  /api/alarms  (header x-owner-token) → { alarms: [{id, name, rules, createdAt}] }
+//   daftar alarm milik pemilik untuk layar "Pasang" (tiket 11); 503 tanpa DB.
 //
 // Tanpa login (PLAN §2): pemilik dikenali dari token acak yang dibuat browser.
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb, hasDb, schema } from "@/lib/db";
 import { RuleSchema } from "@/lib/engine";
+import { tokenDariHeader } from "@/lib/jaga/portofolio";
 
 export const maxDuration = 30;
 
@@ -23,6 +27,32 @@ const BodySchema = z.object({
 
 function galat(status: number, kode: string, pesan: string, rincian?: unknown) {
   return Response.json({ error: { kode, pesan, ...(rincian !== undefined ? { rincian } : {}) } }, { status });
+}
+
+export async function GET(req: Request): Promise<Response> {
+  const token = tokenDariHeader(req);
+  if (!token) return galat(401, "TOKEN_TIDAK_ADA", "Header x-owner-token wajib (16–128 karakter).");
+  if (!hasDb()) {
+    return galat(503, "DB_TIDAK_TERSEDIA", "Server belum punya database; alarm dibaca dari browser ini saja.");
+  }
+  try {
+    const rows = await getDb()
+      .select({
+        id: schema.alarms.id,
+        name: schema.alarms.name,
+        rules: schema.alarms.rules,
+        createdAt: schema.alarms.createdAt,
+      })
+      .from(schema.alarms)
+      .where(eq(schema.alarms.ownerToken, token))
+      .orderBy(desc(schema.alarms.createdAt));
+    return Response.json({
+      alarms: rows.map((r) => ({ id: r.id, name: r.name, rules: r.rules, createdAt: r.createdAt.toISOString() })),
+    });
+  } catch (err) {
+    console.error("[api/alarms GET]", err);
+    return galat(500, "GALAT_INTERNAL", "Gagal memuat daftar alarm; coba lagi sesaat.");
+  }
 }
 
 export async function POST(req: Request): Promise<Response> {

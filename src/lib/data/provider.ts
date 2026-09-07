@@ -1,4 +1,5 @@
 import type {
+  Broker,
   BrokerSummary,
   CorporateActions,
   DailyBar,
@@ -47,6 +48,9 @@ export interface DataProvider {
 
   /** Ringkasan broker per simbol; rentang maks 14 hari. 1 kredit. */
   brokerSummary(symbol: string, start: string, end: string): Promise<BrokerSummary>;
+
+  /** Registry broker anggota bursa (kode → cohort retail/mixed/institutional, asing/domestik). 1 kredit. */
+  brokers(): Promise<Broker[]>;
 
   /** Kinerja sejak IPO (hanya listing setelah Mei 2005). 1 kredit. */
   listingPerformance(symbol: string): Promise<ListingPerformance>;

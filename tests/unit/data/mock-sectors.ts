@@ -58,6 +58,9 @@ export function buatFetchFixture(fixture = new FixtureProvider()) {
       if (p === "/v2/free-float/") {
         return jsonResponse(200, await fixture.freeFloat());
       }
+      if (p === "/v2/brokers/") {
+        return jsonResponse(200, await fixture.brokers());
+      }
       if ((m = p.match(/^\/v2\/broker-summary\/([A-Z0-9]{4})\/$/))) {
         return jsonResponse(200, await fixture.brokerSummary(m[1], q.start, q.end));
       }

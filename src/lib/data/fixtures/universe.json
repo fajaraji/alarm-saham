@@ -1,5 +1,5 @@
 {
-  "_catatan": "Fixture pengembangan/tes tanpa kunci API. Bentuk mengikuti dokumentasi Sectors v2. Tanggal suspensi SRIL mengikuti pengumuman publik; teks reason dan URL adalah contoh, bukan salinan pengumuman resmi.",
+  "_catatan": "Fixture pengembangan/tes tanpa kunci API. Bentuk mengikuti dokumentasi Sectors v2. Tanggal suspensi SRIL mengikuti pengumuman publik; teks reason dan URL adalah contoh, bukan salinan pengumuman resmi. Registry broker (brokers) adalah contoh kecil berbentuk /v2/brokers/ untuk tes blok ritel dominan.",
   "suspensions": [
     {
       "symbol": "SRIL",
@@ -21,10 +21,81 @@
     }
   ],
   "free_float": [
-    { "symbol": "BBCA", "company_name": "Bank Central Asia Tbk", "free_float": 0.4519 },
-    { "symbol": "SRIL", "company_name": "Sri Rejeki Isman Tbk", "free_float": 0.3971 },
-    { "symbol": "GOLL", "company_name": "Golden Plantation Tbk", "free_float": 0.2233 },
-    { "symbol": "TLKM", "company_name": "Telkom Indonesia (Persero) Tbk", "free_float": 0.4796 },
-    { "symbol": "BBRI", "company_name": "Bank Rakyat Indonesia (Persero) Tbk", "free_float": 0.4655 }
+    {
+      "symbol": "BBCA",
+      "company_name": "Bank Central Asia Tbk",
+      "free_float": 0.4519
+    },
+    {
+      "symbol": "SRIL",
+      "company_name": "Sri Rejeki Isman Tbk",
+      "free_float": 0.3971
+    },
+    {
+      "symbol": "GOLL",
+      "company_name": "Golden Plantation Tbk",
+      "free_float": 0.2233
+    },
+    {
+      "symbol": "TLKM",
+      "company_name": "Telkom Indonesia (Persero) Tbk",
+      "free_float": 0.4796
+    },
+    {
+      "symbol": "BBRI",
+      "company_name": "Bank Rakyat Indonesia (Persero) Tbk",
+      "free_float": 0.4655
+    }
+  ],
+  "brokers": [
+    {
+      "code": "AK",
+      "name": "UBS Sekuritas Indonesia",
+      "is_foreign": true,
+      "cohort": "institutional",
+      "license_type": "Perantara Pedagang Efek"
+    },
+    {
+      "code": "BK",
+      "name": "J.P. Morgan Sekuritas Indonesia",
+      "is_foreign": true,
+      "cohort": "institutional",
+      "license_type": "Perantara Pedagang Efek"
+    },
+    {
+      "code": "YP",
+      "name": "Mirae Asset Sekuritas Indonesia",
+      "is_foreign": false,
+      "cohort": "retail",
+      "license_type": "Online, Perantara Pedagang Efek"
+    },
+    {
+      "code": "PD",
+      "name": "Indo Premier Sekuritas",
+      "is_foreign": false,
+      "cohort": "retail",
+      "license_type": "Online, Perantara Pedagang Efek"
+    },
+    {
+      "code": "CC",
+      "name": "Mandiri Sekuritas",
+      "is_foreign": false,
+      "cohort": "mixed",
+      "license_type": "Online, Penjamin Emisi Efek, Perantara Pedagang Efek"
+    },
+    {
+      "code": "XC",
+      "name": "Ajaib Sekuritas Asia",
+      "is_foreign": false,
+      "cohort": "retail",
+      "license_type": "Online"
+    },
+    {
+      "code": "ZZ",
+      "name": "Contoh Tanpa Cohort",
+      "is_foreign": false,
+      "cohort": null,
+      "license_type": null
+    }
   ]
 }

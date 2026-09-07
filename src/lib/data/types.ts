@@ -218,6 +218,22 @@ export const FreeFloatEntrySchema = z.looseObject({
 export type FreeFloatEntry = z.infer<typeof FreeFloatEntrySchema>;
 export const FreeFloatSchema = z.array(FreeFloatEntrySchema);
 
+/** Cohort broker menurut registry Sectors (`/v2/brokers/`, dibaca 7 Sep 2026). */
+export const BROKER_COHORTS = ["retail", "mixed", "institutional", "unknown"] as const;
+export type BrokerCohort = (typeof BROKER_COHORTS)[number];
+
+/** Satu baris registry broker anggota bursa: kode, nama, asal, cohort. 1 kredit per panggilan. */
+export const BrokerSchema = z.looseObject({
+  code: z.string(),
+  name: teks,
+  is_foreign: z.boolean().nullable().optional(),
+  /** retail | mixed | institutional | unknown; null bila belum diklasifikasi. */
+  cohort: z.string().nullable().optional(),
+  license_type: teks,
+});
+export type Broker = z.infer<typeof BrokerSchema>;
+export const BrokersSchema = z.array(BrokerSchema);
+
 export const BrokerSummaryRowSchema = z.looseObject({
   broker_code: z.string(),
   bfreq: angka,

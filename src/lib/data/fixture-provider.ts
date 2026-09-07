@@ -11,6 +11,7 @@ import {
   type DataProvider,
 } from "./provider";
 import type {
+  Broker,
   BrokerSummary,
   CorporateActions,
   DailyBar,
@@ -40,6 +41,8 @@ export interface FixtureEmiten {
 export interface FixtureUniverse {
   suspensions: Suspension[];
   free_float: FreeFloatEntry[];
+  /** Registry broker (bentuk `/v2/brokers/`); opsional agar fixture lama tetap sah. */
+  brokers?: Broker[];
 }
 
 export interface KumpulanFixture {
@@ -157,6 +160,10 @@ export class FixtureProvider implements DataProvider {
       end,
       data: ringkas.data.filter((h) => h.date >= start && h.date <= end),
     };
+  }
+
+  async brokers(): Promise<Broker[]> {
+    return this.fixture.universe.brokers ?? [];
   }
 
   async listingPerformance(symbol: string): Promise<ListingPerformance> {

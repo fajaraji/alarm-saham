@@ -20,6 +20,7 @@ const ENDPOINTS = [
   "corporate-actions",
   "financials",
   "free-float",
+  "brokers",
   "broker",
   "listing",
   "daily",
@@ -37,6 +38,8 @@ function bantuan(): string {
     "  corporate-actions <symbol>",
     "  financials <symbol>    --n=4   (MAHAL: 1 kredit per kuartal)",
     "  free-float             (1 kredit per 100 emiten)",
+    "  brokers                registry broker (cohort retail/mixed/institutional; 1 kredit, cache 30 hari)",
+    "  brokers                registry broker (cohort retail/mixed/institutional; 1 kredit, cache 30 hari)",
     "  broker <symbol>        --start --end   (maks 14 hari)",
     "  listing <symbol>",
     "  daily <symbol>         --start --end   (maks 90 hari)",
@@ -114,6 +117,8 @@ async function jalankan(p: SectorsProvider, arg: Argumen): Promise<unknown> {
       return p.quarterlyFinancials(wajibSimbol(symbol, endpoint), angka(opsi.n) ?? 4);
     case "free-float":
       return p.freeFloat();
+    case "brokers":
+      return p.brokers();
     case "broker": {
       const [s, e] = wajibRentang(opsi, endpoint);
       return p.brokerSummary(wajibSimbol(symbol, endpoint), s, e);
