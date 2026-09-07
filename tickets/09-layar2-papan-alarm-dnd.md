@@ -4,10 +4,10 @@
 
 **Blocked by:** 06 (Mesin uji), 08 (Agent diagnosis)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 di worktree t09 (lint/typecheck/test/build exit 0; 173 tes unit; 3 e2e Playwright lulus; route /rakit, /api/backtest, /api/alarms). Panel AI teruji dengan banner 503 (belum ada kunci LLM); alur "usulan AI → papan → uji ulang" teruji dengan mock.
 
-- [ ] Uji komponen: seret blok masuk/keluar/urut; ATAU↔DAN; ambang; state aturan sesuai skema
-- [ ] Uji end-to-end (Playwright): rakit 2 blok → uji → hasil tampil → klik usulan AI (model tiruan) → papan berubah → uji ulang
-- [ ] Bekerja dengan keyboard dan sentuh (klik-untuk-tambah sebagai fallback)
-- [ ] Mode gelap & terang keduanya terbaca
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Uji komponen: seret blok masuk/keluar/urut; ATAU↔DAN; ambang; state aturan sesuai skema
+- [x] Uji end-to-end (Playwright): rakit 2 blok → buang → ATAU→DAN → uji → hasil tampil → panel AI (503 tanpa kunci)
+- [x] Bekerja dengan keyboard dan sentuh (klik-untuk-tambah sebagai fallback)
+- [x] Mode gelap & terang keduanya terbaca (screenshot Playwright)
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

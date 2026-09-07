@@ -45,3 +45,8 @@ Thumbs.db
 
 # cache respons & buku kredit Sectors (lokal, tidak pernah masuk git)
 .cache/
+
+# artefak Playwright (laporan, trace, screenshot mode terang/gelap)
+playwright-report/
+test-results/
+tests/e2e/screenshots/
