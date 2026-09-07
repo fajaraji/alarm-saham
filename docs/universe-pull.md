@@ -204,7 +204,9 @@ Kriteria: anggota LQ45 menurut screener `/v2/companies/?where=indices in ['LQ45'
 npm run pull-universe -- --dry     # pra-terbang: harus 0 belum ter-cache setelah penarikan penuh
 npm run pull-universe              # idempoten: run kedua 0 kredit (bukti di api_ledger)
 npm run pull-universe -- --laporan # tulis ulang laporan ini dari DB
+npm run db:sync -- --from=pglite --to=neon   # salin PGlite → Neon tanpa kredit (butuh DATABASE_URL + db:migrate)
 ```
+(tambahkan `--pglite` pada pull-universe bila DATABASE_URL kosong.)
 
 <!-- universe-pull:manual -->
 
@@ -242,16 +244,33 @@ Pemangkasan otomatis kuartal (`pasKuartal`) tidak sampai terpicu pada run 2 kare
 
 ### 3. Penyimpangan & keputusan
 
-1. **DATABASE_URL kosong di `.env.local`** — tidak ada URL Neon di mesin ini (env OS juga kosong, tanpa CLI Neon). Karena agen tidak boleh membuat akun/kredensial, ledger, cache, dan semua tabel data disimpan di **PGlite berkas `./.pglite`** (Postgres asli via WASM, durable, migrasi Drizzle yang sama). `npm run db:migrate` pada mesin ini juga jatuh ke PGlite (drizzle.config.ts) — **bukti migrasi terhadap Neon belum ada**. Jalur pindah ke Neon **tanpa kredit**: isi `DATABASE_URL`, lalu `npm run db:migrate`, `npm run cache:migrate-to-db -- --from-pglite`, `npm run pull-universe` (semua respons sudah di cache → 0 kredit, tabel data dibangun ulang).
+1. **DATABASE_URL kosong di `.env.local`** — tidak ada URL Neon di mesin ini (env OS juga kosong, tanpa CLI Neon). Karena agen tidak boleh membuat akun/kredensial, ledger, cache, dan semua tabel data disimpan di **PGlite berkas `./.pglite`** (Postgres asli via WASM, durable, migrasi Drizzle yang sama). `npm run db:migrate` pada mesin ini juga jatuh ke PGlite (drizzle.config.ts) — **bukti migrasi terhadap Neon belum ada**. Jalur pindah ke Neon **tanpa kredit**: `npm run db:sync -- --from=pglite --to=neon` (salin 8 tabel: data + ledger + cache; lihat §5 di bawah). Jalur cadangan bila hanya ledger/cache yang ingin dipindah: `npm run cache:migrate-to-db -- --from-pglite` lalu `npm run pull-universe` (semua respons sudah di cache → 0 kredit, tabel data dibangun ulang).
 2. **Kontrol tidak berperingkat market cap.** Screener tidak mengembalikan `market_cap` dan menolak `order_by=market_cap desc` (400). 30 kontrol = 30 pertama secara alfabetis dari 44 anggota LQ45 tanpa suspensi 2019–2026 (45 anggota; hanya 1 yang pernah tersuspensi). Mengulang dengan sintaks `order_by` lain berisiko mengubah himpunan kontrol dan memaksa tarik ulang dates/CA/filings (~90 kredit) — tidak dilakukan. Yang tersisih (alfabetis setelah #30): 14 emiten LQ45 lain.
-3. **8 emiten 404 di `dates`** (COWL, SUGI, MABA, SKYB, KBRI, NUSA, RIMO, SIMA — "Invalid stock symbol or data does not exist"): API tidak lagi mengenal simbol lama ini. Untuk mereka hanya feed suspensi yang tersedia; blok "laporan hilang", "dilutif", dan "utang > harta" tidak bisa dihitung. Respons 404 di-cache 30 hari; langkah corporate-actions dan financials melewati emiten ini tanpa memanggil API.
+3. **8 emiten 404 di `dates`** (COWL, SUGI, MABA, SKYB, KBRI, NUSA, RIMO, SIMA — "Invalid stock symbol or data does not exist"): API tidak lagi mengenal simbol lama ini. Untuk mereka hanya feed suspensi yang tersedia; blok "laporan hilang", "dilutif", dan "utang > harta" tidak bisa dihitung. Respons 404 di-cache 30 hari, tetapi 404 DITAGIH 1 kredit — maka 8 emiten ini kini tercantum **eksplisit** di `DIKETAHUI_404.dates` (`src/lib/universe/daftar.ts`): langkah dates, corporate-actions, dan financials melewati mereka tanpa memanggil API, tidak bergantung pada cache 404 yang kedaluwarsa (bukti: `--dry --pglite` mencetak `dilewati … DIKETAHUI_404.dates`, 0 belum ter-cache).
 4. **3 emiten pemantauan tanpa `target_event_date`** (MENN, TGRA, WSKT): tidak ada kejadian di feed suspensi ≤ 2026-06-30 (feed jarang sebelum 2020 dan tidak memuat suspensi WSKT 2023). Mesin uji harus memperlakukan mereka sebagai "tanpa kejadian target" (tidak masuk penghitungan lead time).
 5. **5 emiten delisting memakai tanggal catatan** (ENVY, LMAS, MTRA, SBAT, TELE): feed memuat 0 kejadian (ENVY) atau 1 kejadian di luar jendela [catatan − 60 hari, ∞) (LMAS, MTRA, SBAT, TELE). PLAS terverifikasi ke 2018-12-28 (catatan 27 Des).
 6. **Rate limit Sectors**: 429 muncul setelah ±25–45 panggilan beruntun; gratis. Skrip kini menunggu 20 s dan mengulang (maks 4×) serta memberi jeda 450 ms antar panggilan berbayar.
 7. **Kredit terbuang: 0** — tidak ada 404 yang dibayar dua kali; 400/429 tidak ditagih.
-8. Free-float di cache 24 jam akan kedaluwarsa 2026-09-07 ~19:40 UTC; run berikutnya setelah itu membayar 10 kredit lagi (sesuai §5) — jalankan `--dry` dulu.
+8. **Dua cache ber-TTL yang tidak dibayar ulang pada run penuh.** (a) **Free-float** (`/v2/free-float/`, 10 kredit, TTL 24 jam — kedaluwarsa 2026-09-07 ~19:40 UTC): hanya dipakai untuk nama emiten; bila TTL habis tetapi universe (18 + 59 emiten) sudah ada di tabel `symbols`, langkah dilewati (`upsertSimbol` memakai `coalesce`, nama lama dipertahankan). (b) **Screener kontrol LQ45** (`/v2/companies/`, 1 kredit, TTL 30 hari): bila TTL habis tetapi 30 kontrol sudah ada di `symbols`, langkah dilewati agar himpunan kontrol tidak berubah (memilih ulang bisa memaksa tarik ulang dates/CA/filings ≈ 90 kredit). Pagar ini hanya aktif pada run penuh; paksa dengan `--step=free-float` atau `--step=control`. Akibatnya `npm run pull-universe -- --dry --pglite` tetap **0 belum ter-cache** setelah kedua TTL lewat.
 
 ### 4. Yang belum (di luar tiket ini)
 
 - `npm run backtest` skor nyata: ditunda sampai tiket 06 (mesin uji) di-merge.
 - Broker/daily demo 8 emiten (30 kredit, §5) belum ditarik — bagian mode pasang.
+
+### 5. Menuju Neon (produksi)
+
+Semua data tiket 07 saat ini hanya ada di PGlite lokal `./.pglite` (tidak di-track git). Memindahkannya ke Neon **tidak memakai kredit API** — `db:sync` menyalin baris tabel, bukan memanggil Sectors. Langkah persis setelah `DATABASE_URL` diisi di `.env.local` (URL Neon; jangan pernah dicetak/di-commit):
+
+```
+npm run db:migrate                            # terapkan ./drizzle ke Neon (skema identik dengan PGlite)
+npm run db:sync -- --from=pglite --to=neon    # salin symbols, suspensions, report_dates, corporate_actions,
+                                              # filings, financials_q, api_ledger, api_cache (upsert idempoten per batch 200)
+npm run pull-universe -- --dry                # verifikasi: harus 0 belum ter-cache, ledger Neon = 463 kredit
+```
+
+Verifikasi hitung baris: `db:sync` mencetak tabel `Sumber | Tujuan | Status` per tabel dan exit 0 hanya bila semua **sama** (exit 2 bila beda, exit 1 bila DB gagal dibuka). Angka yang diharapkan sama dengan tabel "Baris per tabel (DB)" di atas: symbols 107, suspensions 583, report_dates 1901, corporate_actions 963, filings 248, financials_q 91; plus api_ledger dan api_cache. Menjalankan `db:sync` dua kali tidak menggandakan baris (dibuktikan tes PGlite → PGlite `tests/db/sinkron.test.ts`; Neon sendiri belum pernah diuji dari mesin ini).
+
+Perilaku saat `DATABASE_URL` kosong (kondisi mesin ini, 7 Sep 2026): `npm run db:sync -- --from=pglite --to=neon` keluar **exit 1** dengan pesan `GAGAL membuka DB: DATABASE_URL kosong …` — tidak ada yang disalin.
+
+**Blocker tiket 16 (deploy/produksi):** tanpa `DATABASE_URL` Neon, langkah di atas belum bisa dijalankan; aplikasi produksi tidak punya data universe, ledger, maupun cache. Tiket 16 harus dimulai dengan pengisian `DATABASE_URL` lalu ketiga perintah di atas.

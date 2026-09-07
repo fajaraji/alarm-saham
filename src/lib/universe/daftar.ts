@@ -46,8 +46,15 @@ export const EMITEN_PEMANTAUAN: readonly string[] = [
 export const TANGGAL_ACUAN_PEMANTAUAN = "2026-06-30";
 /** Jumlah kontrol sehat yang dipilih. */
 export const JUMLAH_KONTROL = 30;
-/** Emiten yang diketahui 404 di endpoint tertentu (docs/data-proof.md) — jangan dipanggil lagi. */
+/**
+ * Emiten yang diketahui 404 di endpoint tertentu (docs/data-proof.md, docs/universe-pull.md)
+ * — jangan dipanggil lagi. 404 DITAGIH 1 kredit, dan cache 404 hanya 30 hari, maka daftar
+ * ini eksplisit agar run setelah cache kedaluwarsa tetap 0 kredit.
+ * `dates` (get_quarterly_financial_dates 404 = "Invalid stock symbol", 7 Sep 2026) juga
+ * berarti corporate-actions dan financials emiten itu tidak dipanggil (bergantung `dates`).
+ */
 export const DIKETAHUI_404: Readonly<Record<string, readonly string[]>> = {
   "broker-summary": ["BTEL"],
   "listing-performance": ["SRIL", "TELE", "WIKA", "INAF", "BTEL"],
+  dates: ["COWL", "SUGI", "MABA", "SKYB", "KBRI", "NUSA", "RIMO", "SIMA"],
 };

@@ -11,7 +11,12 @@
 // Disiplin anggaran (docs/data-proof.md §5–§6):
 // - Ledger & cache WAJIB di DB (api_ledger/api_cache: Neon bila DATABASE_URL, atau PGlite
 //   lokal dengan --pglite); run kedua = 0 kredit. Pindah PGlite → Neon tanpa kredit:
+//   `npm run db:sync -- --from=pglite --to=neon` (salin semua tabel data + ledger + cache), atau
 //   `npm run cache:migrate-to-db -- --from-pglite` lalu `npm run pull-universe` (semua dari cache).
+// - Emiten di DIKETAHUI_404.dates (dates 404 = simbol tak dikenal API) dilewati EKSPLISIT di
+//   dates/corporate-actions/financials — tidak bergantung pada cache 404 yang hanya 30 hari.
+// - Pada run penuh, free-float (TTL 24 jam) dan screener kontrol (TTL 30 hari) TIDAK dibayar
+//   ulang bila universe/kontrol sudah ada di tabel symbols; paksa dengan --step=free-float|control.
 // - Batas keras: berhenti bila perkiraan + terpakai run ini > BATAS_KREDIT_RUN, atau
 //   sisa menurut ledger (anggaran − total) − perkiraan < SISA_MINIMUM.
 // - Suspensi universe `limit=30` dengan `end` TETAP (< hari ini UTC) agar cache permanen.
@@ -63,6 +68,7 @@ import {
   targetPemantauan,
 } from "../src/lib/universe/aturan";
 import {
+  DIKETAHUI_404,
   EMITEN_DELISTING,
   EMITEN_PEMANTAUAN,
   JUMLAH_KONTROL,
@@ -142,6 +148,8 @@ const URUTAN: readonly Langkah[] = [
 ];
 type Kelompok = "delisting" | "watchlist" | "control";
 const SEMUA_KELOMPOK: readonly Kelompok[] = ["delisting", "watchlist", "control"];
+/** Daftar lewati eksplisit: `dates` 404 (simbol tak dikenal API) → dates/CA/financials tidak dipanggil. */
+const LEWATI_DATES: ReadonlySet<string> = new Set(DIKETAHUI_404.dates ?? []);
 
 // ---------- Argumen ----------
 
@@ -238,6 +246,21 @@ class Konteks {
   async dates404(symbol: string): Promise<boolean> {
     const entri = await this.provider.cache.baca(`/v2/company/get_quarterly_financial_dates/${symbol}/`, {});
     return entri?.status === 404;
+  }
+
+  /**
+   * Alasan emiten dilewati pada endpoint yang bergantung pada `dates` (CA, financials):
+   * daftar lewati eksplisit (DIKETAHUI_404.dates) dulu, lalu cache 404; null = boleh dipanggil.
+   */
+  async alasanLewatiDates(symbol: string): Promise<string | null> {
+    if (LEWATI_DATES.has(symbol)) return "dates 404 — daftar lewati eksplisit DIKETAHUI_404.dates";
+    if (await this.dates404(symbol)) return "dates 404 di cache (simbol tak dikenal API)";
+    return null;
+  }
+
+  /** Run penuh (semua langkah) — pagar "jangan bayar ulang" hanya berlaku di sini, bukan saat --step. */
+  get runPenuh(): boolean {
+    return this.arg.langkah.size === URUTAN.length;
   }
 
   /** Baca entri cache (untuk perkiraan dry-run); null bila tidak ada/kedaluwarsa. */
@@ -427,6 +450,16 @@ async function langkahSuspensions(k: Konteks): Promise<void> {
 
 async function langkahFreeFloat(k: Konteks): Promise<Map<string, string>> {
   const nama = new Map<string, string>();
+  // Free-float hanya dipakai untuk nama emiten; TTL cache 24 jam. Bila universe sudah ada di
+  // tabel symbols, jangan bayar 10 kredit lagi hanya untuk nama (upsertSimbol memakai coalesce).
+  if (!k.diCache("/v2/free-float/", {}) && k.runPenuh) {
+    const [r] = await k.db.select({ n: count() }).from(symbols);
+    const n = Number(r?.n ?? 0);
+    if (n >= EMITEN_DELISTING.length + EMITEN_PEMANTAUAN.length) {
+      k.lewati("free-float", "universe", `cache TTL 24 jam habis, tetapi ${n} emiten sudah ada di symbols → tidak membayar ${ANGGARAN_LANGKAH["free-float"]} kredit lagi (paksa: --step=free-float)`);
+      return nama;
+    }
+  }
   const data =
     (await k.panggil("free-float", "universe", "/v2/free-float/", {}, ANGGARAN_LANGKAH["free-float"], () => k.provider.freeFloat())) ??
     (await k.bacaCache("/v2/free-float/", {}, (b) => {
@@ -440,6 +473,15 @@ async function langkahFreeFloat(k: Konteks): Promise<Map<string, string>> {
 async function langkahControl(k: Konteks): Promise<void> {
   const params: Record<string, string> = { where: SCREENER_WHERE, limit: String(SCREENER_LIMIT) };
   if (SCREENER_ORDER_BY) params.order_by = SCREENER_ORDER_BY;
+  // Screener di-cache 30 hari. Setelah itu, pada run penuh, kontrol yang sudah terpilih di DB
+  // dipertahankan (memilih ulang bisa mengubah himpunan kontrol → tarik ulang dates/CA/filings).
+  if (!k.diCache("/v2/companies/", params) && k.runPenuh) {
+    const lama = await simbolKelompok(k.db, "control");
+    if (lama.length >= JUMLAH_KONTROL) {
+      k.lewati("control", "screener LQ45", `cache TTL 30 hari habis, tetapi ${lama.length} kontrol sudah ada di symbols → tidak membayar 1 kredit lagi (pilih ulang: --step=control)`);
+      return;
+    }
+  }
   const page = await k.panggil("control", "screener LQ45", "/v2/companies/", params, 1, () =>
     k.provider.companies({ where: SCREENER_WHERE, order_by: SCREENER_ORDER_BY, limit: SCREENER_LIMIT }),
   );
@@ -510,6 +552,10 @@ async function upsertSimbol(db: Db, row: typeof symbols.$inferInsert): Promise<v
 
 async function langkahDates(k: Konteks): Promise<void> {
   for (const { symbol } of await universePerKelompok(k, "dates")) {
+    if (LEWATI_DATES.has(symbol)) {
+      k.lewati("dates", symbol, "diketahui 404 (DIKETAHUI_404.dates) → tidak dipanggil, hemat 1 kredit");
+      continue;
+    }
     const endpoint = `/v2/company/get_quarterly_financial_dates/${symbol}/`;
     const dates = await k.panggil("dates", symbol, endpoint, {}, 1, () => k.provider.quarterlyFinancialDates(symbol));
     if (!dates) continue;
@@ -520,8 +566,9 @@ async function langkahDates(k: Konteks): Promise<void> {
 
 async function langkahCorporateActions(k: Konteks): Promise<void> {
   for (const { symbol } of await universePerKelompok(k, "corporate-actions")) {
-    if (await k.dates404(symbol)) {
-      k.lewati("corporate-actions", symbol, "dates 404 (simbol tak dikenal API) → tidak dipanggil, hemat 1 kredit");
+    const alasan = await k.alasanLewatiDates(symbol);
+    if (alasan) {
+      k.lewati("corporate-actions", symbol, `${alasan} → tidak dipanggil, hemat 1 kredit`);
       continue;
     }
     const endpoint = `/v2/company/corporate-actions/${symbol}/`;
@@ -577,11 +624,17 @@ async function langkahFinancials(k: Konteks): Promise<void> {
   if (!k.arg.kelompok.has("delisting")) return;
   // Kuartal tersedia per emiten: dari report_dates (DB) atau cache dates; tanpa data → maks (dry) / lewati (nyata).
   const tersedia = new Map<string, number>();
+  const alasanLewati = new Map<string, string>();
   for (const e of EMITEN_DELISTING) {
     const symbol = e.symbol;
+    const alasan = await k.alasanLewatiDates(symbol);
+    if (alasan) {
+      tersedia.set(symbol, -2);
+      alasanLewati.set(symbol, alasan);
+      continue;
+    }
     const rows = await k.db.select({ d: reportDates.reportDate }).from(reportDates).where(and(eq(reportDates.symbol, symbol), gte(reportDates.reportDate, FINANCIALS_SEJAK), lte(reportDates.reportDate, "2099-12-31")));
     if (rows.length) tersedia.set(symbol, rows.length);
-    else if (await k.dates404(symbol)) tersedia.set(symbol, -2);
     else {
       const dates = await k.bacaCache(`/v2/company/get_quarterly_financial_dates/${symbol}/`, {}, (b) => {
         const p = QuarterlyFinancialDatesSchema.safeParse(b);
@@ -616,7 +669,7 @@ async function langkahFinancials(k: Konteks): Promise<void> {
       continue;
     }
     if (nTersedia < 0) {
-      k.lewati("financials", symbol, nTersedia === -2 ? "dates 404 (simbol tak dikenal API) → tidak dipanggil" : "dates belum ditarik (jalankan langkah dates dulu)");
+      k.lewati("financials", symbol, nTersedia === -2 ? `${alasanLewati.get(symbol) ?? "dates 404"} → tidak dipanggil` : "dates belum ditarik (jalankan langkah dates dulu)");
       continue;
     }
     // Sudah ter-cache dari run sebelumnya → pakai n yang sama (0 kredit); selain itu n yang dipangkas.
@@ -732,7 +785,16 @@ async function susunLaporan(db: Db, provider: SectorsProvider, run: HasilRun, la
   if (run.berhenti) b.push(`- Run dihentikan pagar anggaran: ${run.berhenti}`);
   b.push("");
   b.push("## Cara mengulang", "");
-  b.push("```", "npm run pull-universe -- --dry     # pra-terbang: harus 0 belum ter-cache setelah penarikan penuh", "npm run pull-universe              # idempoten: run kedua 0 kredit (bukti di api_ledger)", "npm run pull-universe -- --laporan # tulis ulang laporan ini dari DB", "```", "");
+  b.push(
+    "```",
+    "npm run pull-universe -- --dry     # pra-terbang: harus 0 belum ter-cache setelah penarikan penuh",
+    "npm run pull-universe              # idempoten: run kedua 0 kredit (bukti di api_ledger)",
+    "npm run pull-universe -- --laporan # tulis ulang laporan ini dari DB",
+    "npm run db:sync -- --from=pglite --to=neon   # salin PGlite → Neon tanpa kredit (butuh DATABASE_URL + db:migrate)",
+    "```",
+    "(tambahkan `--pglite` pada pull-universe bila DATABASE_URL kosong.)",
+    "",
+  );
   return b.join("\n");
 }
 
