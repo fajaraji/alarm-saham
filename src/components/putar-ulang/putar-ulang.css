@@ -1,25 +1,30 @@
-/* Token & gaya layar "Putar ulang" (tiket 10). Mandiri: semua di bawah .pu agar
-   tidak bentrok dengan layout/global CSS tiket lain. Warna mengikuti mockup
-   (aksen indigo #2c3f9e), gelap/terang otomatis. */
+/* Gaya layar "Putar ulang" (tiket 10). Semua di bawah .pu agar tidak bentrok
+   dengan CSS layar lain.
+   Warna: token --pu-* hanyalah ALIAS token global di src/app/globals.css. Dulu
+   palet ini diduplikasi lengkap dengan blok `prefers-color-scheme: dark`
+   sendiri; akibatnya kontrak tema global (atribut data-theme mengalahkan
+   preferensi sistem) tidak dihormati di layar ini. Sebagai alias, satu-satunya
+   sumber kebenaran warna sekarang ada di globals.css dan ketiga jalur tema
+   (terang, prefers-color-scheme, data-theme) otomatis ikut. */
 .pu {
-  --pu-bg: #f3f5f9;
-  --pu-surface: #ffffff;
-  --pu-surface-2: #e9edf4;
-  --pu-line: #d5dbe6;
-  --pu-line-strong: #b9c2d2;
-  --pu-ink: #151c2b;
-  --pu-ink-2: #3f4a5f;
-  --pu-ink-3: #6b7791;
-  --pu-accent: #2c3f9e;
-  --pu-accent-ink: #ffffff;
-  --pu-accent-soft: #e3e8fb;
-  --pu-crit: #b93636;
-  --pu-crit-soft: #fbe6e6;
-  --pu-warn: #b8771a;
-  --pu-warn-soft: #fdf0dc;
-  --pu-ok: #25794b;
-  --pu-ok-soft: #e1f3e8;
-  --pu-shadow: 0 1px 2px rgba(21, 28, 43, 0.06), 0 8px 24px rgba(21, 28, 43, 0.08);
+  --pu-bg: var(--bg);
+  --pu-surface: var(--surface);
+  --pu-surface-2: var(--surface-2);
+  --pu-line: var(--line);
+  --pu-line-strong: var(--line-strong);
+  --pu-ink: var(--ink);
+  --pu-ink-2: var(--ink-2);
+  --pu-ink-3: var(--ink-3);
+  --pu-accent: var(--accent);
+  --pu-accent-ink: var(--accent-ink);
+  --pu-accent-soft: var(--accent-soft);
+  --pu-crit: var(--crit);
+  --pu-crit-soft: var(--crit-soft);
+  --pu-warn: var(--warn);
+  --pu-warn-soft: var(--warn-soft);
+  --pu-ok: var(--ok);
+  --pu-ok-soft: var(--ok-soft);
+  --pu-shadow: var(--shadow);
   --pu-display: var(--font-display, "Bricolage Grotesque"), "Segoe UI", system-ui, sans-serif;
   --pu-body: var(--font-body, "IBM Plex Sans"), "Segoe UI", system-ui, sans-serif;
   --pu-mono: var(--font-mono, "IBM Plex Mono"), Consolas, monospace;
@@ -31,29 +36,6 @@
   line-height: 1.5;
   min-height: 100%;
   flex: 1;
-}
-
-@media (prefers-color-scheme: dark) {
-  .pu {
-    --pu-bg: #0f1420;
-    --pu-surface: #171d2c;
-    --pu-surface-2: #1f2637;
-    --pu-line: #2a3347;
-    --pu-line-strong: #3a455e;
-    --pu-ink: #eef1f7;
-    --pu-ink-2: #b9c2d4;
-    --pu-ink-3: #8590a6;
-    --pu-accent: #8ea0ff;
-    --pu-accent-ink: #0f1420;
-    --pu-accent-soft: #232c4d;
-    --pu-crit: #f08a8a;
-    --pu-crit-soft: #3a1f22;
-    --pu-warn: #f0b664;
-    --pu-warn-soft: #3a2d18;
-    --pu-ok: #7ad0a0;
-    --pu-ok-soft: #173226;
-    --pu-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
-  }
 }
 
 .pu button,
@@ -152,8 +134,16 @@
   width: 140px;
   color: var(--pu-ink);
 }
+/* Kotak cari: penanda fokus dipindah ke wadah agar terlihat rapi MENGELILINGI
+   kotak, bukan dimatikan. Sebelumnya `outline: none` di sini menang atas aturan
+   :focus-visible di atas (spesifisitas seri, aturan ini lebih belakang) sehingga
+   pengguna keyboard kehilangan penanda fokus sama sekali (WCAG 2.4.7). */
+.pu-field:focus-within {
+  outline: 2px solid var(--pu-accent);
+  outline-offset: 2px;
+}
 .pu-field input:focus {
-  outline: none;
+  outline: none; /* penandanya ada di .pu-field:focus-within — jangan digambar dua kali */
 }
 .pu-hint {
   font-size: 12px;
@@ -229,6 +219,29 @@
   font-size: 12.5px;
   margin: 0 0 14px;
 }
+/* Label sumber data (kepala panel): hijau bila DB Sectors, kuning bila fixture. */
+.pu-sumber {
+  display: inline-block;
+  margin: 0 0 8px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.pu-sumber.db {
+  background: var(--pu-ok-soft);
+  color: var(--pu-ok);
+}
+.pu-sumber.contoh {
+  background: var(--pu-warn-soft);
+  color: var(--pu-warn);
+}
+.pu-sumber-detail {
+  font-weight: 400;
+  font-family: var(--pu-mono);
+  font-size: 10.5px;
+}
+
 .pu-badge {
   display: inline-block;
   font-size: 11px;

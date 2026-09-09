@@ -31,8 +31,11 @@ export const TEKS = {
   disimpanLokal: "tersimpan di browser ini (server tanpa database)",
 } as const;
 
+// "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya
+// melaporkan apakah alarm yang KAMU rakit berbunyi. Sama dengan kalimat di
+// src/lib/jaga/penjelasan.ts.
 export const LABEL_STATUS: Record<StatusSaham, string> = {
-  hijau: "Aman",
+  hijau: "Aman menurut alarmmu",
   kuning: "1 tanda",
   merah: "Alarm berbunyi",
 };

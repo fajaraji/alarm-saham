@@ -1,7 +1,11 @@
 @import "tailwindcss";
 
 /* Token warna Alarm Saham (rasa visual yang disetujui pemilik).
-   Terang di :root; gelap lewat prefers-color-scheme dan data-theme="dark". */
+   Terang di :root; gelap lewat prefers-color-scheme dan data-theme="dark".
+   Semua pasangan teks/latar di bawah sudah diverifikasi ≥ 4.5:1 (WCAG AA teks
+   normal) di KEDUA tema — lihat tests/e2e/aksesibilitas.spec.ts. --ok-ink /
+   --crit-ink ada supaya teks di atas bidang --ok/--crit ikut berbalik saat token
+   latarnya berbalik menjadi pastel terang di mode gelap. */
 :root {
   --bg: #f3f5f9;
   --surface: #ffffff;
@@ -10,19 +14,21 @@
   --line-strong: #b9c2d2;
   --ink: #151c2b;
   --ink-2: #3f4a5f;
-  --ink-3: #6b7791;
+  --ink-3: #5c6880;
   --accent: #2c3f9e;
   --accent-ink: #ffffff;
   --accent-soft: #e3e8fb;
   --crit: #b93636;
   --crit-soft: #fbe6e6;
-  --warn: #b8771a;
+  --crit-ink: #ffffff;
+  --warn: #8a5709;
   --warn-soft: #fdf0dc;
   --ok: #25794b;
   --ok-soft: #e1f3e8;
+  --ok-ink: #ffffff;
   --b-if: #2c3f9e;
   --b-cond: #1f6f8b;
-  --b-then: #b8771a;
+  --b-then: #8a5709;
   --b-text: #ffffff;
   --shadow: 0 1px 2px rgba(21, 28, 43, 0.06), 0 8px 24px rgba(21, 28, 43, 0.08);
   color-scheme: light;
@@ -43,13 +49,15 @@
     --accent-soft: #232c4d;
     --crit: #f08a8a;
     --crit-soft: #3a1f22;
+    --crit-ink: #0f1420;
     --warn: #f0b664;
     --warn-soft: #3a2d18;
     --ok: #7ad0a0;
     --ok-soft: #173226;
+    --ok-ink: #0f1420;
     --b-if: #5468d6;
-    --b-cond: #2f8fb0;
-    --b-then: #c98a2a;
+    --b-cond: #1c6a85;
+    --b-then: #8a5b12;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
     color-scheme: dark;
   }
@@ -69,13 +77,15 @@
   --accent-soft: #232c4d;
   --crit: #f08a8a;
   --crit-soft: #3a1f22;
+  --crit-ink: #0f1420;
   --warn: #f0b664;
   --warn-soft: #3a2d18;
   --ok: #7ad0a0;
   --ok-soft: #173226;
+  --ok-ink: #0f1420;
   --b-if: #5468d6;
-  --b-cond: #2f8fb0;
-  --b-then: #c98a2a;
+  --b-cond: #1c6a85;
+  --b-then: #8a5b12;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
@@ -94,10 +104,12 @@
   --color-accent-soft: var(--accent-soft);
   --color-crit: var(--crit);
   --color-crit-soft: var(--crit-soft);
+  --color-crit-ink: var(--crit-ink);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
   --color-b-if: var(--b-if);
   --color-b-cond: var(--b-cond);
   --color-b-then: var(--b-then);

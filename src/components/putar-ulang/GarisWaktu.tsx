@@ -8,7 +8,9 @@ export function GarisWaktu({ kejadian, t }: { kejadian: Kejadian[]; t: string })
   const tersedia = kejadian.filter((k) => k.jenis === "laporan_tersedia");
   return (
     <div>
-      <div data-testid="garis-waktu">
+      {/* id dirujuk aria-describedby pada <svg> pita waktu (Grafik.tsx): daftar ini
+          adalah padanan tekstual grafik untuk pembaca layar. */}
+      <div data-testid="garis-waktu" id="garis-waktu-teks">
         {tanda.length === 0 && <p className="pu-sub">Tidak ada tanda untuk emiten ini di data kami.</p>}
         {tanda.map((k) => {
           const aktif = k.date <= t;

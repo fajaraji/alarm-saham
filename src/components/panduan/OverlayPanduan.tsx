@@ -61,8 +61,27 @@ export function OverlayPanduan() {
     kartu.current?.focus();
     const sebelumnya = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Jebak fokus di dalam kartu: `aria-modal` menyembunyikan latar dari pembaca
+    // layar tetapi TIDAK mengubah urutan Tab, sehingga tanpa ini pengguna
+    // keyboard bisa keluar ke tautan header yang tertutup lapisan gelap.
     function onKey(ev: KeyboardEvent) {
-      if (ev.key === "Escape") selesai();
+      if (ev.key === "Escape") {
+        selesai();
+        return;
+      }
+      if (ev.key !== "Tab" || !kartu.current) return;
+      const bisaFokus = [...kartu.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')];
+      if (bisaFokus.length === 0) return;
+      const pertama = bisaFokus[0];
+      const terakhir = bisaFokus[bisaFokus.length - 1];
+      const kini = document.activeElement;
+      if (ev.shiftKey && (kini === pertama || kini === kartu.current)) {
+        ev.preventDefault();
+        terakhir.focus();
+      } else if (!ev.shiftKey && kini === terakhir) {
+        ev.preventDefault();
+        pertama.focus();
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => {
