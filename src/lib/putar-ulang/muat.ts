@@ -31,6 +31,12 @@ export interface EmitenPutarUlang {
   kejadian: Kejadian[];
   /** Catatan jujur tentang keterbatasan data emiten ini. */
   catatan: string[];
+  /**
+   * true bila seluruh isi halaman berasal dari fixture contoh (server tanpa
+   * DATABASE_URL dan tanpa ./.pglite), bukan dari data Sectors. UI WAJIB
+   * menampilkannya sebagai label, karena angka fixture bersifat ilustratif.
+   */
+  sumberContoh: boolean;
 }
 
 /** 8 emiten yang endpoint `dates` Sectors-nya 404 saat tiket 07 (docs/universe-pull.md). */
@@ -51,9 +57,11 @@ interface BahanEmiten {
   baris: { companyName: string | null; group: Group; targetEventDate: string | null } | null;
   pdfUrl: Record<string, string | null>;
   events: EmitenEvents;
+  /** true bila bahan berasal dari fixture contoh (bukan DB Sectors). */
+  contoh?: boolean;
 }
 
-function kodeTidakSah(masukan: string, today: string): EmitenPutarUlang {
+function kodeTidakSah(masukan: string, today: string, contoh = false): EmitenPutarUlang {
   return {
     symbol: (masukan ?? "").trim().toUpperCase(),
     status: "tidak_ada",
@@ -64,13 +72,15 @@ function kodeTidakSah(masukan: string, today: string): EmitenPutarUlang {
     events: kosong(""),
     kejadian: [],
     catatan: ["Kode saham harus 2–5 huruf, mis. SRIL."],
+    sumberContoh: contoh,
   };
 }
 
 /** Susun hasil akhir dari bahan mentah (murni; dipakai kedua jalur). */
 export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
   const { symbol, today, baris, events } = b;
-  const kejadian = turunkanKejadian({ events, pdfUrl: b.pdfUrl, today });
+  const contoh = b.contoh === true;
+  const kejadian = turunkanKejadian({ events, pdfUrl: b.pdfUrl, today, contoh });
   const diUniverse = baris !== null;
   const adaData =
     events.suspensions.length +
@@ -100,6 +110,11 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
   } else {
     status = "tidak_ada";
   }
+  if (contoh && status !== "tidak_ada") {
+    catatan.push(
+      "Server ini belum terhubung ke database Sectors, jadi yang tampil adalah data CONTOH (fixture universe-kecil.json): tanggal suspensi dan daftar kuartal meniru data nyata, tetapi angka keuangan, rasio rights issue, dan filing bersifat ilustratif — bukan angka resmi.",
+    );
+  }
   if (status !== "tidak_ada" && events.filings.length === 0) {
     catatan.push("Tidak ada filing orang dalam untuk emiten ini di feed Sectors (feed filing baru dimulai 2024).");
   }
@@ -119,6 +134,7 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
     events,
     kejadian,
     catatan,
+    sumberContoh: contoh,
   };
 }
 
@@ -157,14 +173,15 @@ export async function muatEmiten(db: Db, symbolMasukan: string, today: string = 
 
 /** Jalur umum: DB bila ada, selain itu sumber kejadian + universe (fixture; tanpa pdf_url). */
 export async function muatEmitenDariSumber(
-  sumber: Pick<SumberKejadian, "db" | "source" | "universe">,
+  sumber: Pick<SumberKejadian, "db" | "source" | "universe"> & { jenis?: SumberKejadian["jenis"] },
   symbolMasukan: string,
   today: string = hariIni(),
 ): Promise<EmitenPutarUlang> {
   if (sumber.db) return muatEmiten(sumber.db, symbolMasukan, today);
+  const contoh = sumber.jenis === "fixture";
   const t = pastikanTanggal("today", today);
   const symbol = normalKode(symbolMasukan);
-  if (!symbol) return kodeTidakSah(symbolMasukan, t);
+  if (!symbol) return kodeTidakSah(symbolMasukan, t, contoh);
   const [events, universe] = await Promise.all([sumber.source.events(symbol), sumber.universe()]);
   const u: UniverseEntry | undefined = universe.find((x) => x.symbol === symbol);
   return susunEmiten({
@@ -173,5 +190,6 @@ export async function muatEmitenDariSumber(
     baris: u ? { companyName: null, group: u.group, targetEventDate: u.targetEventDate ?? null } : null,
     pdfUrl: {},
     events,
+    contoh,
   });
 }

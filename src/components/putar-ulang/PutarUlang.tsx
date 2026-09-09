@@ -23,7 +23,13 @@ const LABEL_STATUS: Record<EmitenPutarUlang["status"], string> = {
   tidak_ada: "belum ada di data kami",
 };
 
-export function PutarUlang({ emiten }: { emiten: EmitenPutarUlang }) {
+interface Props {
+  emiten: EmitenPutarUlang;
+  /** Keterangan sumber data yang benar-benar dipakai server (tanpa kredensial). */
+  keteranganSumber: string;
+}
+
+export function PutarUlang({ emiten, keteranganSumber }: Props) {
   const rentang = useMemo(
     () => rentangSlider(emiten.kejadian, emiten.today, emiten.targetEventDate ? [emiten.targetEventDate] : []),
     [emiten],
@@ -45,8 +51,20 @@ export function PutarUlang({ emiten }: { emiten: EmitenPutarUlang }) {
   );
 
   return (
-    <div className="pu-replay" data-testid="putar-ulang" data-symbol={emiten.symbol}>
+    <div
+      className="pu-replay"
+      data-testid="putar-ulang"
+      data-symbol={emiten.symbol}
+      data-sumber={emiten.sumberContoh ? "fixture" : "db"}
+    >
       <div className="pu-panel">
+        {/* Label sumber sama seperti layar Rakit & Pasang. `data-sumber` adalah
+            penanda mesin untuk tes (teks "bukan data Sectors nyata" memuat
+            substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks). */}
+        <p className={`pu-sumber ${emiten.sumberContoh ? "contoh" : "db"}`} data-testid="label-sumber" data-sumber={emiten.sumberContoh ? "fixture" : "db"}>
+          {emiten.sumberContoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors nyata"}
+          <span className="pu-sumber-detail"> · {keteranganSumber}</span>
+        </p>
         <h3>
           {emiten.companyName ? `${emiten.companyName} (${emiten.symbol})` : emiten.symbol}{" "}
           {emiten.group && <span className={`pu-badge ${emiten.group}`}>{LABEL_GROUP[emiten.group]}</span>}
