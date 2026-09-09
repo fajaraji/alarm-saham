@@ -1,14 +1,11 @@
 // E2E layar "Rakit alarm": klik-untuk-tambah, seret ke area buang, seret dari
 // palet ke papan, ATAU→DAN, uji ke masa lalu (PGlite bila ada, selain itu fixture), banner AI 503,
 // dan screenshot mode terang & gelap (folder ter-gitignore).
-import { existsSync } from "node:fs";
-import path from "node:path";
-
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { ADA_PGLITE, harapkanLabelSumber } from "./util";
+
 const FOLDER_SCREENSHOT = "tests/e2e/screenshots";
-/** Server e2e berjalan tanpa DATABASE_URL; bila ./.pglite ada, sumber = PGlite (data Sectors nyata). */
-const ADA_PGLITE = existsSync(path.resolve(process.cwd(), ".pglite"));
 
 /** Seret dengan penunjuk nyata (dnd-kit butuh gerakan bertahap melewati jarak aktivasi). */
 async function seret(page: Page, dari: Locator, ke: Locator) {
@@ -65,14 +62,16 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   await page.getByRole("button", { name: "Uji ke masa lalu" }).click();
   await expect(page.getByTestId("skor-tertangkap")).not.toHaveText("–");
   await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/\d+$/);
+  await harapkanLabelSumber(page.getByTestId("label-sumber"));
   if (ADA_PGLITE) {
-    await expect(page.getByTestId("label-sumber")).toContainText("data Sectors nyata");
     await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
     await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/30$/);
     // MENN, TGRA, WSKT tidak punya tanggal kejadian target → dilewati seperti CLI (docs/universe-pull.md catatan 4).
     await expect(page.getByTestId("dilewati")).toContainText("3 saham dilewati");
   } else {
-    await expect(page.getByTestId("label-sumber")).toContainText("data contoh");
+    // Fixture: 8 emiten, 4 kontrol; tidak ada emiten tanpa tanggal kejadian target.
+    await expect(page.getByTestId("hasil-uji")).toContainText("Diuji ke 8 saham");
+    await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/4$/);
   }
   await expect(page.getByTestId("kelompok-delisting")).toBeVisible();
   await expect(page.getByTestId("kelompok-control")).toBeVisible();

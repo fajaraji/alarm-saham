@@ -1,8 +1,14 @@
-// E2E layar putar ulang di atas data nyata (PGlite ./.pglite, tanpa panggilan API).
+// E2E layar putar ulang. Sebagian tes menuntut data nyata (PGlite ./.pglite):
+// nama perusahaan dan tautan PDF BEI hanya ada di jalur DB, dan COWL tidak ada
+// di fixture. Tes itu di-skip dengan pesan saat server berjalan pada jalur
+// fixture (E2E_TANPA_PGLITE=1 atau clone bersih) — bukan gagal.
 import { expect, test } from "@playwright/test";
+
+import { ADA_PGLITE, harapkanLabelSumber, PESAN_SKIP_PGLITE } from "./util";
 
 test.describe("/putar-ulang", () => {
   test("cari SRIL → garis waktu dari DB dengan ≥ 3 kejadian, sumber & tautan BEI, lampu", async ({ page }) => {
+    test.skip(!ADA_PGLITE, PESAN_SKIP_PGLITE);
     await page.goto("/putar-ulang");
     await page.getByTestId("kotak-kode").fill("sril");
     await page.getByTestId("tombol-lihat").click();
@@ -11,6 +17,7 @@ test.describe("/putar-ulang", () => {
     const wadah = page.getByTestId("putar-ulang");
     await expect(wadah).toHaveAttribute("data-symbol", "SRIL");
     await expect(page.getByRole("heading", { level: 3, name: /Sri Rejeki Isman/ })).toBeVisible();
+    await harapkanLabelSumber(page.getByTestId("label-sumber"));
 
     const kejadian = page.getByTestId("kejadian");
     expect(await kejadian.count()).toBeGreaterThanOrEqual(3);
@@ -28,6 +35,21 @@ test.describe("/putar-ulang", () => {
     await expect(page.getByTestId("ringkasan")).toContainText(/sudah ada \d+ tanda/);
     await expect(page.getByTestId("pelajaran")).toContainText("Tanda pertama muncul");
     await expect(page.getByTestId("disclaimer")).toContainText("bukan saran investasi");
+  });
+
+  test("jalur fixture jujur: label 'data contoh', catatan, dan sumber tidak mengaku Sectors", async ({ page }) => {
+    test.skip(ADA_PGLITE, "hanya berlaku saat server berjalan pada jalur fixture");
+    await page.goto("/putar-ulang?kode=SRIL");
+    await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "SRIL");
+    await harapkanLabelSumber(page.getByTestId("label-sumber"));
+    // Klaim "fakta dari data resmi" tidak boleh muncul saat datanya contoh.
+    await expect(page.locator("main")).not.toContainText("fakta dari data resmi");
+    await expect(page.getByTestId("catatan")).toContainText("data CONTOH");
+    for (const teks of await page.getByTestId("kejadian").allTextContents()) {
+      expect(teks).toMatch(/Sumber: data contoh — fixture/);
+      expect(teks).not.toMatch(/Sumber: Sectors/);
+    }
+    await expect(page.locator('[data-testid="kejadian"] a')).toHaveCount(0);
   });
 
   test("geser slider ke kiri → jumlah kejadian aktif berubah dan lampu ikut", async ({ page }) => {
@@ -66,6 +88,7 @@ test.describe("/putar-ulang", () => {
   });
 
   test("emiten 404 di sumber (COWL) → hanya suspensi + catatan data laporan tidak tersedia", async ({ page }) => {
+    test.skip(!ADA_PGLITE, PESAN_SKIP_PGLITE); // COWL tidak ada di fixture universe-kecil.json
     await page.goto("/putar-ulang?kode=COWL");
     await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "COWL");
     await expect(page.locator('[data-testid="kejadian"][data-jenis="suspensi"]')).toHaveCount(1);

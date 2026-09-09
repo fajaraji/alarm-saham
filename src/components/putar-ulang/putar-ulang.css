@@ -418,6 +418,9 @@
 }
 .pu-tl .src a {
   color: var(--pu-accent);
+  /* Garis bawah wajib: di dalam blok teks, warna saja bukan pembeda yang cukup
+     (WCAG 1.4.1 / axe link-in-text-block). */
+  text-decoration: underline;
 }
 .pu-details {
   margin-top: 10px;

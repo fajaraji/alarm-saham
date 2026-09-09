@@ -1,13 +1,36 @@
-// Playwright end-to-end: `next build` lalu `next start` di port 3100 agar tidak
+// Playwright end-to-end: `next build` lalu `next start` (port 3100) agar tidak
 // bentrok dengan `next dev`. Data: PGlite ./.pglite bila ada (DATABASE_URL kosong),
 // selain itu fixture — nol panggilan API Sectors. Kunci AI dikosongkan agar panel AI
 // diuji pada jalur 503.
+//
+// Env:
+//   E2E_PORT=3101        port lain (menimpa pilihan otomatis di bawah).
+//   E2E_SKIP_BUILD=1     pakai .next yang sudah ada.
+//   E2E_TANPA_PGLITE=1   paksa jalur fixture walau ./.pglite ada (meniru CI / clone
+//                        bersih): server dijalankan dengan TANPA_PGLITE=1 dan spec
+//                        yang butuh data nyata di-skip dengan pesan
+//                        (tests/e2e/util.ts → ADA_PGLITE, PESAN_SKIP_PGLITE).
+//
+// Dua varian memakai PORT BERBEDA secara otomatis karena `reuseExistingServer`
+// akan memakai ulang server yang masih hidup di port yang sama — dan server
+// varian sebelumnya dijalankan dengan env yang berbeda, sehingga suite bisa
+// hijau sambil menguji varian yang salah.
 //
 // Catatan PGlite: satu proses per folder; jangan jalankan e2e bersamaan dengan
 // `npm run backtest`/`next dev` yang membuka ./.pglite.
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = Number(process.env.E2E_PORT ?? 3100);
+const TANPA_PGLITE = Boolean(process.env.E2E_TANPA_PGLITE);
+const PORT = Number(process.env.E2E_PORT ?? (TANPA_PGLITE ? 3101 : 3100));
+
+/**
+ * Tanggal "hari ini" dipakukan di server e2e (src/lib/engine/dates.ts membaca
+ * ALARM_HARI_INI). Tanpa ini, blok `laporan_hilang` mulai berbunyi 120 hari
+ * setelah kuartal terakhir di fixture, sehingga emiten kontrol (BBCA/TLKM/ASII/
+ * UNVR) berubah hijau → kuning dengan sendirinya pada 2027-01-28 dan spec
+ * membusuk tanpa ada yang menyentuh kode. Nilainya = docs/skor-nyata.json.today.
+ */
+const HARI_INI = "2026-09-07";
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -38,6 +61,12 @@ export default defineConfig({
     timeout: 300_000,
     stdout: "ignore",
     stderr: "pipe",
-    env: { ANTHROPIC_API_KEY: "", DEEPSEEK_API_KEY: "", DATABASE_URL: "" },
+    env: {
+      ANTHROPIC_API_KEY: "",
+      DEEPSEEK_API_KEY: "",
+      DATABASE_URL: "",
+      ALARM_HARI_INI: HARI_INI,
+      TANPA_PGLITE: TANPA_PGLITE ? "1" : "",
+    },
   },
 });

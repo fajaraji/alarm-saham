@@ -103,7 +103,9 @@ describe.skipIf(!kind)(`skema & migrasi (basis: ${kind ?? "tidak ada"})`, () => 
     await t.db.insert(filings).values({
       symbol: "SRIL",
       timestamp: new Date("2021-02-15T03:00:00Z"),
-      holderName: "Iwan Setiawan",
+      // Nama pemegang saham selalu disamarkan di repo publik ini — nama orang
+      // yang plausibel di baris "sell" untuk emiten nyata terbaca sebagai tuduhan.
+      holderName: "Orang Dalam A (disamarkan)",
       holderType: "insider",
       transactionType: "sell",
       amountTransaction: 1_000_000,

@@ -86,8 +86,17 @@ export function labelKuartal(akhirPeriode: string): { fiscalYear: number; quarte
   return { fiscalYear: y, quarter: `q${Math.ceil(m / 3)}` };
 }
 
-/** Tanggal hari ini (UTC) sebagai YYYY-MM-DD. */
+/**
+ * Tanggal hari ini (UTC) sebagai YYYY-MM-DD.
+ *
+ * `ALARM_HARI_INI=YYYY-MM-DD` memakukan nilainya. Dipakai HANYA untuk tes/e2e
+ * (playwright.config.ts) supaya hasil layar tidak berubah seiring hari berjalan
+ * — mis. blok `laporan_hilang` yang mulai berbunyi 120 hari setelah akhir
+ * kuartal. Jangan diset di produksi.
+ */
 export function hariIni(): string {
+  const paksa = typeof process !== "undefined" ? process.env?.ALARM_HARI_INI?.trim() : undefined;
+  if (paksa && POLA_TANGGAL.test(paksa)) return paksa;
   return new Date().toISOString().slice(0, 10);
 }
 

@@ -40,6 +40,17 @@ export const SUMBER_BLOK_A: Record<BlockKind, string> = {
   insider_jual: "Sectors /v2/filings/ (di DB kami)",
 };
 
+/**
+ * Label sumber satu blok kelas A. Pada jalur fixture (server tanpa DATABASE_URL
+ * dan tanpa ./.pglite) angkanya ILUSTRATIF, jadi ia TIDAK boleh diatribusikan ke
+ * endpoint Sectors — pesan penjelasan ikut dikirim ke kotak masuk & Telegram.
+ */
+export function sumberBlokA(kind: BlockKind, contoh = false): string {
+  return contoh
+    ? `data contoh — fixture universe-kecil.json (bentuknya meniru ${SUMBER_BLOK_A[kind].replace(/^Sectors /, "").replace(/ \(.*\)$/, "")})`
+    : SUMBER_BLOK_A[kind];
+}
+
 export interface AlasanJaga {
   kind: BlockKind | BlokBKind;
   kelas: "A" | "B";
@@ -97,6 +108,8 @@ export interface OpsiCek {
   provider?: PenyediaKelasB | null;
   /** Keterangan sumber kelas A untuk laporan. */
   keteranganSumber?: string;
+  /** true bila sumber kelas A adalah fixture contoh (bukan data Sectors). */
+  sumberContoh?: boolean;
 }
 
 export interface InputCek {
@@ -197,6 +210,7 @@ async function jalankanKelasB(
 
 export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promise<HasilPortofolio> {
   const today = opts.today ?? hariIni();
+  const contoh = opts.sumberContoh === true;
   const daftar = [...new Set(symbols.map((s) => s.trim().toUpperCase()))];
   const alarmA = alarms.filter((a) => a.kelas === "A" && a.rule);
   const alarmB = alarms.filter((a) => a.kelas === "B" && a.blokB?.length);
@@ -233,7 +247,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
           threshold: alasan.threshold,
           detail: alasan.detail,
           tanggal: alasan.detail.match(POLA_TANGGAL)?.[0] ?? null,
-          sumber: SUMBER_BLOK_A[alasan.kind],
+          sumber: sumberBlokA(alasan.kind, contoh),
           alarm: r.fired ? [{ id: a.id, name: a.name }] : [],
         });
       }
@@ -245,7 +259,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
         label: LABEL_BLOK.suspensi,
         detail: `suspensi ${suspensi} masih aktif menurut data kami (feed tidak memuat tanggal pencabutan)`,
         tanggal: suspensi,
-        sumber: SUMBER_BLOK_A.suspensi,
+        sumber: sumberBlokA("suspensi", contoh),
         alarm: [],
       });
     }

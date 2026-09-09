@@ -130,6 +130,7 @@ export async function POST(req: Request): Promise<Response> {
         universe: await sumber.universe(),
         provider: provider ?? null,
         keteranganSumber: sumber.keterangan,
+        sumberContoh: sumber.jenis === "fixture",
       },
     });
     const penjelasan = await penjelasanPortofolio(hasil);
