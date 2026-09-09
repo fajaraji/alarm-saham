@@ -275,12 +275,14 @@ describe("Header, petunjuk, dan footer", () => {
     expect(dialog).toHaveAttribute("data-sumber", "fixture");
     expect(dialog).toHaveTextContent("data contoh");
     expect(dialog.textContent).not.toMatch(/fakta dari data resmi/);
-    // Janji "107 saham" juga tidak boleh muncul saat universenya data contoh.
-    expect(dialog.textContent).not.toMatch(/107 saham/);
+    // Angka universe NYATA tidak boleh muncul sama sekali saat universenya data
+    // contoh — dulu tesnya hanya melarang "107 saham", padahal teks jalur contoh
+    // berbunyi "bukan ke 107 emiten universe uji" dan lolos karena beda satuan.
+    expect(dialog.textContent).not.toMatch(/\b107\b/);
     expect(dialog).toHaveTextContent("bukan saran investasi");
   });
 
-  it("dialog panduan pada jalur data nyata tetap menyebut fakta dari data resmi & 107 saham", () => {
+  it("dialog panduan pada jalur data nyata tetap menyebut fakta dari data resmi & komposisi universe", () => {
     render(
       <PanduanProvider>
         <OverlayPanduan sumberNyata />
@@ -289,6 +291,7 @@ describe("Header, petunjuk, dan footer", () => {
     const dialog = screen.getByTestId("overlay-panduan");
     expect(dialog).toHaveAttribute("data-sumber", "db");
     expect(dialog).toHaveTextContent("fakta dari data resmi");
-    expect(dialog).toHaveTextContent("107 saham");
+    expect(dialog).toHaveTextContent("seluruh universe uji");
+    expect(dialog).toHaveTextContent("18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat");
   });
 });

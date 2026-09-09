@@ -12,7 +12,7 @@
 // E2E_TANPA_PGLITE=1) — jadi kedua arah klaim dijaga.
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanKlaimSumberJujur, KLAIM_SUMBER_RESMI } from "./util";
+import { ADA_PGLITE, harapkanKlaimSumberJujur, KLAIM_CAKUPAN_NYATA, KLAIM_SUMBER_RESMI } from "./util";
 
 const HALAMAN = ["/", "/putar-ulang", "/putar-ulang?kode=SRIL", "/rakit", "/pasang", "/kamus", "/cara-kami-menghitung"];
 
@@ -37,7 +37,9 @@ test.describe("klaim sumber data mengikuti sumber yang benar-benar dipakai", () 
     if (ADA_PGLITE) {
       expect(teks).toMatch(/fakta dari data resmi/i);
     } else {
-      for (const pola of KLAIM_SUMBER_RESMI) expect(teks, `dialog panduan: ${pola}`).not.toMatch(pola);
+      for (const pola of [...KLAIM_SUMBER_RESMI, ...KLAIM_CAKUPAN_NYATA]) {
+        expect(teks, `dialog panduan: ${pola}`).not.toMatch(pola);
+      }
       expect(teks).toMatch(/data contoh/i);
     }
     // Disclaimer wajib PLAN §2 ada di kedua jalur.

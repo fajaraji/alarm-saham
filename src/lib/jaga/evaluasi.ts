@@ -8,6 +8,7 @@
 //
 // Status: hijau = tidak ada blok terpenuhi; kuning = 1 blok; merah = >= 2 blok
 // atau suspensi aktif.
+import { catatanTidakAdaData } from "../cakupan";
 import { CreditReserveError, NotFoundError, SectorsApiError, type DataProvider } from "../data/provider";
 import type { Broker, FreeFloatEntry } from "../data/types";
 import type { PenyimpanLedger } from "../data/ledger";
@@ -309,7 +310,10 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     }
 
     if (!adaData(events)) {
-      catatan.push(`${symbol} tidak ada di data kami (107 emiten universe uji + feed suspensi BEI); blok kelas A tidak bisa dinilai.`);
+      // Cakupan mengikuti sumber yang benar-benar dipakai. Kalimat ini muncul di
+      // panel pesan /pasang; sebelumnya ia menjanjikan universe nyata walau
+      // server sedang berjalan di jalur data contoh.
+      catatan.push(catatanTidakAdaData(symbol, { jumlah: universe.size, contoh }));
     }
     const alasan = [...perKind.values()];
     saham.push({

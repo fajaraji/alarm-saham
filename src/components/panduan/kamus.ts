@@ -67,7 +67,11 @@ export const KAMUS: readonly EntriKamus[] = [
     definisi:
       "Bursa menghentikan perdagangan saham itu untuk sementara. Selama dibekukan, uang yang ada di saham itu tidak bisa dicairkan lewat bursa.",
     perumpamaan: "Seperti toko yang disegel petugas: barangmu masih di dalam, tapi tidak bisa diambil sampai segelnya dibuka.",
-    catatan: "Feed suspensi seluruh bursa tersedia sejak Desember 2018 (padat sejak 2020) dan tidak memuat tanggal pencabutan.",
+    // Kalimat ini menerangkan KEDALAMAN sumbernya, bukan mengaku server ini
+    // memegang feed sebursa: pada jalur data contoh yang ada hanya suspensi
+    // beberapa emiten fixture.
+    catatan:
+      "Di sumbernya (feed BEI lewat Sectors) data suspensi baru padat sejak 2020 dan tidak memuat tanggal pencabutan. Berapa emiten yang benar-benar ada tergantung sumber data yang sedang dipakai server ini.",
     lihat: [PUTAR_ULANG, RAKIT],
   },
   {

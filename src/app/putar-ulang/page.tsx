@@ -96,7 +96,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           </>,
         ]}
       />
-      <Pencarian kode={kode} />
+      <Pencarian kode={kode} cakupan={{ jumlah: jumlah.total, contoh }} />
       {isi ?? (
         <p className="pu-sub" data-testid="belum-cari">
           Pilih salah satu kasus nyata di atas, atau ketik kode saham lalu tekan Lihat.

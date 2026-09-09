@@ -3,6 +3,7 @@
 // (fixture) lewat `muatEmitenDariSumber`.
 import { asc, eq } from "drizzle-orm";
 
+import { catatanHanyaSuspensi } from "../cakupan";
 import type { Db } from "../db/client";
 import { suspensions, symbols } from "../db/schema";
 import { hariIni, pastikanTanggal } from "../engine/dates";
@@ -104,9 +105,9 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
     );
   } else if (adaData) {
     status = "hanya_suspensi";
-    catatan.push(
-      `${symbol} tidak termasuk 107 emiten universe uji, tetapi muncul di feed suspensi seluruh bursa (2018–2026). Data laporan, aksi korporasi, keuangan, dan filing tidak kami tarik untuk emiten ini.`,
-    );
+    // Cakupan mengikuti sumber yang benar-benar dipakai (lihat src/lib/cakupan.ts):
+    // angka universe tidak boleh dipakukan di kalimat.
+    catatan.push(catatanHanyaSuspensi(symbol, contoh));
   } else {
     status = "tidak_ada";
   }

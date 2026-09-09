@@ -1,9 +1,16 @@
 // Kotak cari kode saham (form GET, bekerja tanpa JS) + chip kasus nyata.
+//
+// Kalimat cakupan WAJIB datang dari sumber yang benar-benar dipakai server
+// (`kalimatCakupan`), bukan dari angka yang dipakukan di sini: pada jalur data
+// contoh kotak ini dulu menjanjikan "107 emiten universe uji + feed suspensi
+// seluruh bursa" tiga baris di bawah lede yang mengaku "data contoh (8 emiten)".
 import Link from "next/link";
+
+import { kalimatCakupan, type Cakupan } from "@/lib/cakupan";
 
 export const KASUS_NYATA = ["SRIL", "TELE", "WIKA", "INAF", "BTEL", "GOLL"] as const;
 
-export function Pencarian({ kode }: { kode: string | null }) {
+export function Pencarian({ kode, cakupan }: { kode: string | null; cakupan: Cakupan }) {
   return (
     <>
       <form className="pu-search" action="/putar-ulang" method="get" role="search">
@@ -24,9 +31,8 @@ export function Pencarian({ kode }: { kode: string | null }) {
             Lihat
           </button>
         </div>
-        <span className="pu-hint">
-          Kode apa pun boleh dicari. Yang tampil hanya data yang benar-benar ada di data kami (107 emiten universe
-          uji + feed suspensi seluruh bursa).
+        <span className="pu-hint" data-testid="cakupan-cari" data-sumber={cakupan.contoh ? "fixture" : "db"}>
+          Kode apa pun boleh dicari. {kalimatCakupan(cakupan)}
         </span>
       </form>
       <div className="pu-pick" data-testid="chip-kasus">

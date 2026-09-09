@@ -58,8 +58,37 @@ export const KLAIM_SUMBER_RESMI: RegExp[] = [
   /Sectors\s+Financial\s+API/i,
   /Alasan\s+resmi\s+BEI/i,
   /emiten\s+nyata/i,
-  /107\s+saham/i,
 ];
+
+/**
+ * Klaim CAKUPAN: seolah server ini memegang universe dan feed yang nyata.
+ *
+ * Terpisah dari daftar di atas karena satu halaman memang boleh menyebutnya:
+ * /cara-kami-menghitung adalah halaman metodologi yang seluruh angkanya
+ * SNAPSHOT yang di-commit, dan ia mengatakannya di paragraf pertama. Menghapus
+ * angka itu di jalur data contoh justru menyesatkan ke arah sebaliknya
+ * (menyembunyikan bahwa Sectors adalah sumber inti). Pengecualian itu hanya
+ * berlaku selama kalimat pembatasnya benar-benar ada — lihat PEMBATAS_METODOLOGI.
+ *
+ * Pola `/\b107\b/` sengaja tanpa satuan: daftar lama memuat "107 saham" tetapi
+ * tidak "107 emiten", sehingga kotak cari /putar-ulang yang berbunyi "107 emiten
+ * universe uji + feed suspensi seluruh bursa" lolos gerbang selama dua putaran.
+ */
+export const KLAIM_CAKUPAN_NYATA: RegExp[] = [
+  /\b107\b/,
+  // Klaim cakupan berkurung: "…ada di data kami (107 emiten universe uji + feed
+  // suspensi seluruh bursa)". Isi kurungnya bebas, jadi mengganti urutan kata
+  // tidak menolongnya lolos.
+  /data\s+kami\s*\(/i,
+  /feed\s+suspensi\s+(seluruh\s+bursa|BEI)\b/i,
+];
+
+/**
+ * Kalimat pembatas halaman metodologi. Selama ia ada, /cara-kami-menghitung
+ * boleh memuat angka universe nyata; kalau dihapus, gerbang ikut gagal.
+ */
+export const PEMBATAS_METODOLOGI =
+  /snapshot yang di-commit[\s\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini/i;
 
 /** Klaim yang WAJIB ada di jalur data nyata (footer memikul kalimat sumbernya). */
 export const KLAIM_WAJIB_JALUR_DB = /fakta resmi dari feed Sectors/i;
@@ -70,13 +99,23 @@ export const KLAIM_WAJIB_JALUR_DB = /fakta resmi dari feed Sectors/i;
  */
 export async function harapkanKlaimSumberJujur(page: Page, jalur: string): Promise<void> {
   const teks = await page.locator("body").innerText();
+  const metodologi = jalur.startsWith("/cara-kami-menghitung");
   await expect(page.getByTestId("disclaimer"), jalur).toHaveAttribute("data-sumber", ADA_PGLITE ? "db" : "fixture");
+  if (metodologi) {
+    // Pengecualian cakupan halaman metodologi hanya sah bila pembatasnya ada.
+    expect(teks, `${jalur}: pengecualian metodologi butuh kalimat pembatas snapshot`).toMatch(PEMBATAS_METODOLOGI);
+  }
   if (ADA_PGLITE) {
     expect(teks, `${jalur}: footer jalur DB harus menyebut sumbernya`).toMatch(KLAIM_WAJIB_JALUR_DB);
     return;
   }
   for (const pola of KLAIM_SUMBER_RESMI) {
     expect(teks, `${jalur}: klaim sumber resmi "${pola}" muncul padahal servernya jalur data contoh`).not.toMatch(pola);
+  }
+  if (!metodologi) {
+    for (const pola of KLAIM_CAKUPAN_NYATA) {
+      expect(teks, `${jalur}: klaim cakupan nyata "${pola}" muncul padahal servernya jalur data contoh`).not.toMatch(pola);
+    }
   }
   expect(teks, `${jalur}: jalur data contoh harus mengakui data contoh`).toMatch(/data contoh/i);
 }

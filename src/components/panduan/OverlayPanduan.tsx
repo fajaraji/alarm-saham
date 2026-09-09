@@ -27,8 +27,12 @@ function tandaiSelesai() {
 
 /**
  * Isi tiga langkah panduan MENGIKUTI sumber data server: pada jalur data contoh
- * dialog ini dulu tetap menjanjikan "data resmi" dan "107 saham", padahal
- * universenya 8 emiten contoh.
+ * dialog ini dulu tetap menjanjikan data resmi dan jumlah universe nyata,
+ * padahal universenya 8 emiten contoh.
+ *
+ * Angka universe nyata TIDAK ditulis sebagai satu jumlah gabungan di sini —
+ * komposisinya (18 + 59 + 30) yang disebut, supaya tidak ada lagi kalimat UI
+ * yang memakukan total universe (dijaga tests/unit/copy/cakupan.test.ts).
  */
 export function langkahPanduan(sumberNyata: boolean) {
   return [
@@ -39,8 +43,8 @@ export function langkahPanduan(sumberNyata: boolean) {
     {
       judul: "Rakit alarm.",
       teks: sumberNyata
-        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke 107 saham: 18 yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat."
-        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke 107 emiten universe uji.",
+        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke seluruh universe uji: 18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat."
+        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke universe uji yang kami tarik dari Sectors.",
     },
     {
       judul: "Pasang.",
