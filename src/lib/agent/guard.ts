@@ -2,10 +2,18 @@
 // model. Bila muncul, kata diganti "[dihapus]" dan keluaran ditandai
 // `perluTinjau` supaya UI bisa menampilkan peringatan.
 //
+// Dua lapis, karena mengganti KATA-nya saja masih menyisakan bingkai anjuran
+// yang utuh ("Sebaiknya [dihapus] sekarang" tetap terbaca sebagai saran):
+//   1. kata terlarang → "[dihapus]";
+//   2. bila kalimat/klausa yang sama juga memuat kata pembingkai anjuran
+//      ("sebaiknya", "disarankan", …), SELURUH kalimat itu dibuang.
+// Pemenggalan memakai . ! ? ; dan baris baru, sehingga klausa fakta di sebelah
+// klausa anjuran ("ekuitas negatif; akumulasi disarankan") tetap selamat.
+//
 // Frasa faktual yang memuat kata "jual" tetapi bukan rekomendasi (nama blok
 // `insider_jual`, "filing jual", "transaksi jual" dari mesin uji) dilindungi
 // agar tidak tersensor.
-import { KATA_TERLARANG } from "./instructions";
+import { KATA_ANJURAN, KATA_TERLARANG } from "./instructions";
 
 const FRASA_DILINDUNGI = [
   /insider_jual/gi,
@@ -18,6 +26,7 @@ const FRASA_DILINDUNGI = [
 ];
 
 const PENGGANTI = "[dihapus]";
+export const PENGGANTI_KALIMAT = "[kalimat saran dihapus]";
 // Penanda sementara untuk frasa terlindung; karakter kontrol tidak pernah
 // muncul di teks model sehingga tidak bentrok dengan angka biasa.
 const SENTINEL = String.fromCharCode(1);
@@ -35,6 +44,9 @@ function polaKata(kata: string): RegExp {
 }
 
 const POLA_TERLARANG = KATA_TERLARANG.map((k) => ({ kata: k, pola: polaKata(k) }));
+const POLA_ANJURAN = KATA_ANJURAN.map((k) => polaKata(k));
+/** Pemenggal kalimat/klausa: titik, tanya, seru, titik koma, baris baru. */
+const PEMENGGAL = /([.!?;\n]+)/;
 
 export interface HasilSensor {
   teks: string;
@@ -53,15 +65,34 @@ export function sensorTeks(teks: string): HasilSensor {
       return `${SENTINEL}${simpanan.length - 1}${SENTINEL}`;
     });
   }
-  // 2. Sensor kata terlarang.
+  // 2. Sensor per kalimat/klausa: kata terlarang diganti; bila kalimat itu juga
+  //    berbingkai anjuran, seluruh kalimatnya dibuang.
   const kena = new Set<string>();
-  for (const { kata, pola } of POLA_TERLARANG) {
-    kerja = kerja.replace(pola, () => {
-      kena.add(kata);
-      return PENGGANTI;
+  const bagian = kerja.split(PEMENGGAL);
+  const hasil = bagian.map((sepotong, i) => {
+    if (i % 2 === 1) return sepotong; // pemenggal (tanda baca) — biarkan
+    const kenaDiSini = new Set<string>();
+    let disensor = sepotong;
+    for (const { kata, pola } of POLA_TERLARANG) {
+      disensor = disensor.replace(pola, () => {
+        kenaDiSini.add(kata);
+        return PENGGANTI;
+      });
+    }
+    kenaDiSini.forEach((k) => kena.add(k));
+    if (kenaDiSini.size === 0) return sepotong;
+    const beranjuran = POLA_ANJURAN.some((p) => {
+      p.lastIndex = 0;
+      return p.test(sepotong);
     });
-  }
-  // 3. Kembalikan frasa terlindung.
+    if (!beranjuran) return disensor;
+    // Pertahankan spasi pembuka/penutup agar tanda baca tidak menempel aneh.
+    const depan = /^\s*/.exec(sepotong)![0];
+    const belakang = /\s*$/.exec(sepotong)![0];
+    return `${depan}${PENGGANTI_KALIMAT}${belakang}`;
+  });
+  kerja = hasil.join("");
+  // 3. Kembalikan frasa terlindung (yang kalimatnya tidak dibuang).
   kerja = kerja.replace(POLA_SENTINEL, (_, i: string) => simpanan[Number(i)]);
   return { teks: kerja, kata: [...kena] };
 }

@@ -200,5 +200,5 @@ export function istilahUntukBlok(kind: string): IdIstilah | null {
 /** Kunci localStorage: panduan 3 langkah sudah ditutup pengguna. */
 export const KUNCI_PANDUAN_SELESAI = "alarm-saham:panduan-selesai";
 
-/** Kalimat disclaimer footer (PLAN.md §2). */
-export const DISCLAIMER = "Alarm Saham adalah alat informasi dan analisis, bukan saran investasi.";
+/** Kalimat disclaimer footer (PLAN.md §2). Bunyinya dijaga di src/lib/disclaimer.ts. */
+export { DISCLAIMER_UI as DISCLAIMER } from "@/lib/disclaimer";

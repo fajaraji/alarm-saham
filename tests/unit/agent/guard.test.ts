@@ -1,13 +1,47 @@
 import { describe, expect, it } from "vitest";
 
 import { sensorObjek, sensorTeks } from "../../../src/lib/agent/guard";
-import { DISCLAIMER, INSTRUKSI_DASAR, INSTRUKSI_DIAGNOSIS, INSTRUKSI_PERAKIT, KATA_TERLARANG } from "../../../src/lib/agent/instructions";
+import {
+  DISCLAIMER,
+  INSTRUKSI_DASAR,
+  INSTRUKSI_DIAGNOSIS,
+  INSTRUKSI_PERAKIT,
+  KATA_ANJURAN,
+  KATA_TERLARANG,
+} from "../../../src/lib/agent/instructions";
 
 describe("sensorTeks", () => {
   it("mengganti kata rekomendasi dengan [dihapus] dan mencatatnya", () => {
+    const r = sensorTeks("Blok suspensi berbunyi 2021-05-18, lalu hold sampai jelas.");
+    expect(r.teks).toBe("Blok suspensi berbunyi 2021-05-18, lalu [dihapus] sampai jelas.");
+    expect(r.kata).toEqual(["hold"]);
+  });
+
+  it("membuang SELURUH kalimat bila kata terlarang dibingkai anjuran", () => {
+    // Mengganti katanya saja menyisakan "Sebaiknya [dihapus] sekarang" — masih
+    // terbaca sebagai saran, jadi kalimatnya harus hilang seluruhnya.
     const r = sensorTeks("Sebaiknya BELI sekarang lalu jual di target harga 500, atau hold.");
-    expect(r.teks).toBe("Sebaiknya [dihapus] sekarang lalu [dihapus] di [dihapus] 500, atau [dihapus].");
+    expect(r.teks).toBe("[kalimat saran dihapus].");
     expect(r.kata.sort()).toEqual(["beli", "hold", "jual", "target harga"]);
+  });
+
+  it("kalimat fakta di sebelah kalimat anjuran tetap selamat", () => {
+    const r = sensorTeks("Ekuitas negatif sejak 2023-09-30. Sebaiknya cut loss sekarang. Suspensi masih aktif.");
+    expect(r.teks).toBe("Ekuitas negatif sejak 2023-09-30. [kalimat saran dihapus]. Suspensi masih aktif.");
+    expect(r.kata).toEqual(["cut loss"]);
+  });
+
+  it("frasa larangan yang disebut instruksi sistem ikut tersensor", () => {
+    for (const frasa of ["cut loss", "take profit", "saatnya masuk", "layak dikoleksi"]) {
+      const r = sensorTeks(`Menurut data, ${frasa} untuk SRIL.`);
+      expect(r.kata.length, frasa).toBeGreaterThan(0);
+      expect(r.teks, frasa).toContain("[dihapus]");
+    }
+  });
+
+  it("kalimat disclaimer wajib tidak pernah ikut terbuang", () => {
+    const teks = "Alarm Saham adalah alat informasi, bukan saran investasi.";
+    expect(sensorTeks(teks)).toEqual({ teks, kata: [] });
   });
 
   it("membiarkan kata berimbuhan dan frasa faktual dari data", () => {
@@ -32,18 +66,21 @@ describe("sensorTeks", () => {
 describe("sensorObjek", () => {
   it("menyensor string bersarang, melewati kunci data, dan menandai perluTinjau", () => {
     const masukan = {
-      ringkasan: "Alarm bolong. Saran: sell sekarang.",
+      ringkasan: "Alarm bolong. Sebaiknya sell sekarang.",
       emitenDibahas: [{ symbol: "TELE", sebab: "ekuitas negatif; akumulasi disarankan", buktiTanggal: ["2024-12-27"] }],
       usulanBlok: [{ kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual" }],
     };
     const r = sensorObjek(masukan, ["kind", "threshold", "symbol", "buktiTanggal"]);
     expect(r.perluTinjau).toBe(true);
     expect(r.kataDisensor.sort()).toEqual(["akumulasi", "sell"]);
-    expect(r.hasil.ringkasan).toBe("Alarm bolong. Saran: [dihapus] sekarang.");
-    expect(r.hasil.emitenDibahas[0].sebab).toBe("ekuitas negatif; [dihapus] disarankan");
+    // "Alarm bolong." fakta → tetap; kalimat setelahnya berbingkai saran → dibuang.
+    expect(r.hasil.ringkasan).toBe("Alarm bolong. [kalimat saran dihapus].");
+    // Klausa fakta sebelum titik koma selamat, klausa anjuran dibuang.
+    expect(r.hasil.emitenDibahas[0].sebab).toBe("ekuitas negatif; [kalimat saran dihapus]");
     expect(r.hasil.usulanBlok[0]).toEqual({ kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual" });
     // masukan asli tidak diubah
     expect(masukan.ringkasan).toContain("sell");
+    expect(r.hasil.ringkasan).not.toContain("sell");
   });
 
   it("objek bersih → perluTinjau false", () => {
@@ -58,6 +95,7 @@ describe("instruksi sistem", () => {
       expect(teks).toContain(DISCLAIMER);
       expect(teks).toContain("Alarm Saham adalah alat informasi, bukan saran investasi");
       for (const k of KATA_TERLARANG) expect(teks).toContain(`"${k}"`);
+      for (const k of KATA_ANJURAN) expect(teks).toContain(`"${k}"`);
       expect(teks).toMatch(/perumpamaan/i);
       expect(teks).toMatch(/sumber/i);
     }

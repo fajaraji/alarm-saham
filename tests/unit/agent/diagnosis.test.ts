@@ -139,7 +139,9 @@ describe("diagnosis (model tiruan)", () => {
     const hasil = await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
     expect(hasil.perluTinjau).toBe(true);
     expect(hasil.kataDisensor.sort()).toEqual(["buy", "jual"]);
-    expect(hasil.ringkasan).toBe("Alarm bolong. Sebaiknya [dihapus] saham ini.");
+    // Kalimat "Sebaiknya [dihapus] saham ini" masih terbaca sebagai saran walau
+    // katanya sudah diganti, jadi kalimatnya dibuang seluruhnya.
+    expect(hasil.ringkasan).toBe("Alarm bolong. [kalimat saran dihapus].");
     expect(hasil.emitenDibahas[0].sebab).toBe("[dihapus] the dip");
     expect(hasil.usulanBlok[0]).toEqual({ kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual (filing jual)" });
     expect(hasil.runId).toBeUndefined();

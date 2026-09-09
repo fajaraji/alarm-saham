@@ -2,7 +2,14 @@
 //
 // Memindai src/**/*.ts|tsx dengan parser TypeScript: hanya isi string literal,
 // template literal, dan teks JSX (komentar & nama identifier tidak ikut), lalu
-// mencari pola \b(beli|jual|rekomendasi|gorengan|berbahaya|akan pailit)\b.
+// mencari POLA di bawah. Dua kelompok:
+//   - anjuran/saran investasi (aturan lomba (b)): beli, jual, rekomendasi,
+//     akumulasi, target harga, cut loss, take profit, layak dikoleksi/dibeli,
+//     aman dibeli, saatnya masuk, peluang cuan;
+//   - tuduhan/penilaian terhadap emiten: gorengan, berbahaya, akan pailit,
+//     akan bangkrut, bandar, manipulasi, digoreng, penipu, scam.
+// Kata "saran" sendiri TIDAK dilarang: kalimat disclaimer wajib berbunyi
+// "bukan saran investasi".
 //
 // Pengecualian EKSPLISIT (istilah faktual yang memang diperlukan):
 //   - "filing jual" / "transaksi jual" / "tipe jual" / "transaction_type=sell":
@@ -16,7 +23,8 @@ import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const POLA = /\b(beli|jual|rekomendasi|gorengan|berbahaya|akan pailit)\b/gi;
+const POLA =
+  /\b(beli|jual|rekomendasi|akumulasi|target harga|cut ?loss|take[ -]?profit|layak dikoleksi|layak dibeli|aman dibeli|saatnya masuk|peluang cuan|gorengan|berbahaya|akan pailit|akan bangkrut|bandar|manipulasi|digoreng|penipu|scam)\b/gi;
 
 /** Frasa faktual yang dihapus dari teks sebelum dicocokkan. */
 const PENGECUALIAN_FRASA: RegExp[] = [/filing jual/gi, /transaksi jual/gi, /tipe jual/gi, /transaction_type=sell/gi];
@@ -58,7 +66,7 @@ describe("copy UI tanpa kata terlarang (PLAN §5 Q5)", () => {
     expect(berkas.length).toBeGreaterThan(40);
   });
 
-  it("tidak ada string/teks JSX yang memuat beli|jual|rekomendasi|gorengan|berbahaya|akan pailit", () => {
+  it("tidak ada string/teks JSX yang memuat kata anjuran atau tuduhan", () => {
     const temuan: string[] = [];
     for (const f of berkas) {
       for (const { teks, baris } of teksDalamBerkas(f)) {

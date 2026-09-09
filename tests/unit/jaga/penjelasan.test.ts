@@ -111,7 +111,7 @@ describe("penjelasanSaham", () => {
     expect(p.teks).toBe(templatePenjelasan(HIJAU, "2026-09-07"));
   });
 
-  it("model tiruan merapikan → olehAi, kata rekomendasi disensor, disclaimer dipastikan ada", async () => {
+  it("keluaran model yang memuat kata terlarang DIBUANG: kembali ke template, ditandai perluTinjau", async () => {
     const model = modelTiruan([
       {
         content: [{ type: "text", text: "SRIL alarm berbunyi karena laporan hilang sejak 2024-12-31. Sebaiknya jual sekarang." }],
@@ -121,10 +121,15 @@ describe("penjelasanSaham", () => {
       },
     ]);
     const p = await penjelasanSaham(MERAH, { today: "2026-09-07", model });
-    expect(p.olehAi).toBe(true);
+    // Pesan ini dikirim ke kotak masuk & Telegram pengguna: teks model yang
+    // sempat memakai kata rekomendasi tidak dipakai sama sekali (bukan sekadar
+    // disensor), supaya tidak ada sisa bingkai anjuran yang lolos.
+    expect(p.olehAi).toBe(false);
     expect(p.perluTinjau).toBe(true);
-    expect(p.teks).not.toMatch(/\bjual\b/);
-    expect(p.teks).toContain("[dihapus]");
+    expect(p.teks).toBe(templatePenjelasan(MERAH, "2026-09-07"));
+    // "filing jual" adalah nama jenis laporan resmi di feed Sectors (dilindungi guard).
+    expect(p.teks.replace(/filing jual/g, "")).not.toMatch(/\bjual\b/);
+    expect(p.teks).not.toContain("[dihapus]");
     expect(p.teks.endsWith(DISCLAIMER)).toBe(true);
   });
 

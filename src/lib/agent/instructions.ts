@@ -2,19 +2,53 @@
 //
 // Teks ini menjadi konten yang di-cache (prompt caching) — jaga agar STABIL:
 // tidak ada tanggal, ID, atau data per-permintaan di sini.
+import { DISCLAIMER_PESAN } from "../disclaimer";
 import { BLOCK_KINDS, LABEL_BLOK, THRESHOLDS, type BlockKind } from "../engine/rules";
 
-export const DISCLAIMER = "Alarm Saham adalah alat informasi, bukan saran investasi.";
+/** Kalimat wajib di setiap pesan keluar (PLAN.md §2); dijaga di src/lib/disclaimer.ts. */
+export const DISCLAIMER = DISCLAIMER_PESAN;
 
-/** Kata/frasa rekomendasi yang dilarang muncul dalam keluaran agent. */
+/**
+ * Kata/frasa rekomendasi yang dilarang muncul dalam keluaran agent.
+ * Daftar ini WAJIB memuat setiap frasa yang dilarang oleh INSTRUKSI_DASAR di
+ * bawah — kalau tidak, larangan itu hanya imbauan ke model tanpa penyaring.
+ */
 export const KATA_TERLARANG = [
   "beli",
   "jual",
   "akumulasi",
+  "koleksi",
+  "dikoleksi",
   "buy",
   "sell",
   "hold",
   "target harga",
+  "cut loss",
+  "cutloss",
+  "take profit",
+  "take-profit",
+  "saatnya masuk",
+  "layak dikoleksi",
+  "layak dibeli",
+  "aman dibeli",
+] as const;
+
+/**
+ * Kata pembingkai anjuran. Bila salah satunya muncul di kalimat yang SAMA dengan
+ * kata terlarang, seluruh kalimat dibuang — mengganti katanya saja menyisakan
+ * bingkai anjuran yang utuh ("Sebaiknya [dihapus] sekarang").
+ */
+export const KATA_ANJURAN = [
+  "sebaiknya",
+  "disarankan",
+  "sarannya",
+  "saran saya",
+  "saran kami",
+  "lebih baik",
+  "hindari",
+  "segera",
+  "wajib",
+  "harus",
 ] as const;
 
 /** Penjelasan awam tiap blok (dipakai perakit & diagnosis). */
@@ -38,7 +72,7 @@ const daftarBlok = BLOCK_KINDS.map((k) => `- \`${k}\` (${LABEL_BLOK[k]}): ${PENJ
 export const INSTRUKSI_DASAR = `Kamu adalah asisten "Alarm Saham", alat bantu untuk investor awam di Bursa Efek Indonesia.
 
 ${DISCLAIMER} Kamu wajib mematuhi aturan ini:
-1. Kamu TIDAK PERNAH memberi rekomendasi jual-beli. Dilarang memakai kata atau kalimat rekomendasi seperti: ${KATA_TERLARANG.map((k) => `"${k}"`).join(", ")}, "cut loss", "take profit", "saatnya masuk", "layak dikoleksi". Kamu hanya menjelaskan peringatan (alarm) dan datanya.
+1. Kamu TIDAK PERNAH memberi rekomendasi jual-beli. Dilarang memakai kata atau kalimat rekomendasi seperti: ${KATA_TERLARANG.map((k) => `"${k}"`).join(", ")}. Dilarang juga membingkai kalimat sebagai anjuran (${KATA_ANJURAN.map((k) => `"${k}"`).join(", ")}) terhadap saham. Kamu hanya menjelaskan peringatan (alarm) dan datanya.
 2. Hanya sebutkan FAKTA yang benar-benar ada di data yang kamu terima dari tool, dan sebutkan sumbernya (nama tool + tanggal kejadian). Jangan mengarang tanggal, angka, atau kejadian. Kalau data tidak ada, katakan tidak ada.
 3. Gunakan Bahasa Indonesia yang santai dan awam. Setiap istilah keuangan dijelaskan dengan perumpamaan singkat (satu kalimat), misalnya "suspensi itu seperti toko yang disegel sementara".
 4. Ringkas dan jujur tentang keterbatasan data: data suspensi & tanggal laporan tersedia sejak 2020; data orang dalam (filing) hanya mulai 2024; pemindaian dilakukan tiap akhir bulan.

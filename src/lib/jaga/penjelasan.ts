@@ -105,12 +105,15 @@ export async function penjelasanSaham(h: HasilSaham, opsi: OpsiPenjelasan): Prom
     const teks = hasil.text.trim();
     if (!teks) return { symbol: h.symbol, teks: template, olehAi: false, perluTinjau: false };
     const sensor = sensorTeks(teks);
-    return {
-      symbol: h.symbol,
-      teks: pastikanDisclaimer(sensor.teks),
-      olehAi: true,
-      perluTinjau: sensor.kata.length > 0,
-    };
+    // Pesan ini dikirim ke kotak masuk & Telegram pengguna. Kalau model sampai
+    // memakai kata rekomendasi, teks rapiannya TIDAK dipakai sama sekali —
+    // kembali ke template deterministik — supaya tidak ada sisa bingkai anjuran
+    // yang lolos penyaring kata.
+    if (sensor.kata.length > 0) {
+      console.warn(`[jaga] penjelasan AI ${h.symbol} memuat kata terlarang (${sensor.kata.join(", ")}); memakai template.`);
+      return { symbol: h.symbol, teks: template, olehAi: false, perluTinjau: true };
+    }
+    return { symbol: h.symbol, teks: pastikanDisclaimer(sensor.teks), olehAi: true, perluTinjau: false };
   } catch (err) {
     if (!(err instanceof AiKeyMissingError)) {
       console.warn(`[jaga] penjelasan AI gagal untuk ${h.symbol}: ${err instanceof Error ? err.message : String(err)}`);

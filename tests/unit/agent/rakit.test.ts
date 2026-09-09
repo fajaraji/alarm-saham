@@ -116,7 +116,9 @@ describe("rakitAturan: pengaman", () => {
     expect(hasil.ditolak).toBe(false);
     if (hasil.ditolak) return;
     expect(hasil.rule.name).toBe("Sinyal [dihapus] murah");
-    expect(hasil.alasan).toBe("Kalau disuspensi sebaiknya [dihapus] dulu.");
+    // Kalimat beranjuran ("sebaiknya … jual") dibuang seluruhnya, bukan hanya katanya:
+    // mengganti kata saja menyisakan bingkai saran yang utuh.
+    expect(hasil.alasan).toBe("[kalimat saran dihapus].");
     expect(hasil.perluTinjau).toBe(true);
     expect(hasil.kataDisensor.sort()).toEqual(["beli", "jual"]);
   });
