@@ -133,6 +133,32 @@ describe("penjelasanSaham", () => {
     expect(p.teks.endsWith(DISCLAIMER)).toBe(true);
   });
 
+  it("keluaran model beranjuran TANPA kata terlarang juga dibuang (keberatan 5)", async () => {
+    // Kalimat ini tidak memuat satu pun kata terlarang (beli/jual/hold/…), jadi
+    // sebelum perbaikan tiket 15 ia lolos utuh ke kotak masuk & Telegram dengan
+    // perluTinjau = false. Sekarang penyaring membuang kalimatnya, dan
+    // pembuangan itu cukup untuk menolak seluruh teks model.
+    const model = modelTiruan([
+      {
+        content: [
+          {
+            type: "text",
+            text: "SRIL alarm berbunyi karena laporan hilang sejak 2024-12-31. Sebaiknya kamu kurangi eksposur di saham ini.",
+          },
+        ],
+        finishReason: { unified: "stop", raw: undefined },
+        usage: { inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: undefined }, outputTokens: { total: 1, text: 1, reasoning: undefined } },
+        warnings: [],
+      },
+    ]);
+    const p = await penjelasanSaham(MERAH, { today: "2026-09-07", model });
+    expect(p.olehAi).toBe(false);
+    expect(p.perluTinjau).toBe(true);
+    expect(p.teks).toBe(templatePenjelasan(MERAH, "2026-09-07"));
+    expect(p.teks).not.toMatch(/sebaiknya/i);
+    expect(p.teks).not.toContain("[kalimat saran dihapus]");
+  });
+
   it("model tiruan menjawab kosong → kembali ke template", async () => {
     const p = await penjelasanSaham(HIJAU, { today: "2026-09-07", model: modelTiruan([langkahTeks("")]) });
     // langkahTeks("") mengirim teks '""' (JSON) — bukan kosong; pakai model yang benar-benar kosong:

@@ -37,18 +37,82 @@ export const KATA_TERLARANG = [
  * Kata pembingkai anjuran. Bila salah satunya muncul di kalimat yang SAMA dengan
  * kata terlarang, seluruh kalimat dibuang — mengganti katanya saja menyisakan
  * bingkai anjuran yang utuh ("Sebaiknya [dihapus] sekarang").
+ *
+ * Sebagian kata di sini netral bila berdiri sendiri ("harus menyampaikan
+ * laporan", "segera setelah kuartal ditutup"), jadi kata-kata itu HANYA
+ * menggugurkan kalimat saat berbarengan dengan kata terlarang. Bingkai yang
+ * sudah beranjuran walau tanpa kata terlarang ada di POLA_ANJURAN_MANDIRI.
  */
 export const KATA_ANJURAN = [
   "sebaiknya",
+  "seharusnya",
   "disarankan",
+  "menyarankan",
+  "saran",
   "sarannya",
   "saran saya",
   "saran kami",
+  "rekomendasi",
+  "saya akan",
+  "aku akan",
+  "kalau saya jadi",
+  "kalau aku jadi",
+  "posisi terbaik",
+  "langkah terbaik",
+  "pilihan terbaik",
+  "mending",
   "lebih baik",
   "hindari",
   "segera",
   "wajib",
   "harus",
+] as const;
+
+/**
+ * Bingkai yang SUDAH menjadi anjuran walau tidak memuat satu pun kata terlarang
+ * ("Sebaiknya kamu kurangi eksposur", "Rekomendasi kami: kurangi porsinya").
+ * Kalimat yang kena salah satu pola ini dibuang seluruhnya, dan pembuangannya
+ * ikut ditandai `perluTinjau` supaya jalur pesan kembali ke template
+ * deterministik alih-alih mengirim teks model yang sudah bolong.
+ *
+ * Setiap pola di sini WAJIB juga ada di KATA_ANJURAN di atas agar instruksi
+ * sistem menyebutnya (dijaga tests/unit/agent/guard.test.ts).
+ */
+export const POLA_ANJURAN_MANDIRI = [
+  "sebaiknya",
+  "seharusnya",
+  "disarankan",
+  "menyarankan",
+  "saran",
+  "sarannya",
+  "saran saya",
+  "saran kami",
+  "rekomendasi",
+  "kalau saya jadi",
+  "kalau aku jadi",
+  "posisi terbaik",
+  "langkah terbaik",
+  "pilihan terbaik",
+  "mending",
+] as const;
+
+/**
+ * Penilaian dan prediksi harga. Bukan "anjuran" secara tata bahasa, tetapi
+ * dibaca persis seperti saran investasi ("saham ini masih menarik",
+ * "berpotensi naik") — dan PLAN §2 melarang alat ini menilai emiten. Kalimat
+ * yang kena dibuang seluruhnya, sama seperti anjuran.
+ *
+ * Ditulis sebagai regex (bukan kata tunggal) supaya kata netral seperti
+ * "menarik" pada "grafiknya menarik dilihat" tidak ikut kena.
+ */
+export const POLA_PENILAIAN: readonly RegExp[] = [
+  /\b(masih|makin|cukup|sangat|tetap)\s+menarik\b/i,
+  /\bmenarik\s+untuk\s+(jangka|investasi|dipegang|disimpan)\b/i,
+  /\bprospek\w*\s+(cerah|bagus|baik|menjanjikan|positif)\b/i,
+  /\bberpotensi\s+(naik|turun|untung|rugi|menguat|melemah|rebound|cuan)\b/i,
+  /\bpotensi\s+(naik|untung|cuan|rebound)\b/i,
+  /\b(akan|bakal)\s+(naik|turun|menguat|melemah|rebound|pulih|anjlok)\b/i,
+  /\b(undervalued|overvalued|murah banget|kemahalan)\b/i,
 ] as const;
 
 /** Penjelasan awam tiap blok (dipakai perakit & diagnosis). */
@@ -72,7 +136,7 @@ const daftarBlok = BLOCK_KINDS.map((k) => `- \`${k}\` (${LABEL_BLOK[k]}): ${PENJ
 export const INSTRUKSI_DASAR = `Kamu adalah asisten "Alarm Saham", alat bantu untuk investor awam di Bursa Efek Indonesia.
 
 ${DISCLAIMER} Kamu wajib mematuhi aturan ini:
-1. Kamu TIDAK PERNAH memberi rekomendasi jual-beli. Dilarang memakai kata atau kalimat rekomendasi seperti: ${KATA_TERLARANG.map((k) => `"${k}"`).join(", ")}. Dilarang juga membingkai kalimat sebagai anjuran (${KATA_ANJURAN.map((k) => `"${k}"`).join(", ")}) terhadap saham. Kamu hanya menjelaskan peringatan (alarm) dan datanya.
+1. Kamu TIDAK PERNAH memberi rekomendasi jual-beli. Dilarang memakai kata atau kalimat rekomendasi seperti: ${KATA_TERLARANG.map((k) => `"${k}"`).join(", ")}. Dilarang juga membingkai kalimat sebagai anjuran (${KATA_ANJURAN.map((k) => `"${k}"`).join(", ")}) terhadap saham. Dilarang menilai atau meramal harga ("masih menarik", "prospeknya cerah", "berpotensi naik", "akan rebound"). Kamu hanya menjelaskan peringatan (alarm) dan datanya. Kalimat yang melanggar akan dibuang seluruhnya oleh penyaring, bukan sekadar diganti katanya.
 2. Hanya sebutkan FAKTA yang benar-benar ada di data yang kamu terima dari tool, dan sebutkan sumbernya (nama tool + tanggal kejadian). Jangan mengarang tanggal, angka, atau kejadian. Kalau data tidak ada, katakan tidak ada.
 3. Gunakan Bahasa Indonesia yang santai dan awam. Setiap istilah keuangan dijelaskan dengan perumpamaan singkat (satu kalimat), misalnya "suspensi itu seperti toko yang disegel sementara".
 4. Ringkas dan jujur tentang keterbatasan data: data suspensi & tanggal laporan tersedia sejak 2020; data orang dalam (filing) hanya mulai 2024; pemindaian dilakukan tiap akhir bulan.
