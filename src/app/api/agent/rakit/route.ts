@@ -2,8 +2,13 @@
 import { z } from "zod";
 
 import { AiKeyMissingError, hasAiKey, rakitAturan, RakitError } from "@/lib/agent";
+import { jawabanTerlaluSering, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 
 export const maxDuration = 60;
+
+// Route ini memanggil LLM berbayar. Publik (produk tanpa akun), tetapi dibatasi
+// lajunya supaya URL deploy tidak bisa dipakai menguras saldo model pemilik.
+const PAGAR = { maks: 20, jendelaMs: 60_000 };
 
 const BodySchema = z.object({
   kalimat: z
@@ -36,6 +41,8 @@ export async function POST(req: Request): Promise<Response> {
   if (!hasAiKey()) {
     return galat(503, "AI_TIDAK_TERSEDIA", new AiKeyMissingError().message);
   }
+  const pagar = pagarLaju(kunciPemanggil(req), PAGAR);
+  if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
   try {
     const hasil = await rakitAturan(parsed.data.kalimat);
     return Response.json(hasil);

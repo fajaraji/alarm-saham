@@ -145,7 +145,11 @@ function pesanGalat(err: unknown): string {
   if (err instanceof CreditReserveError) return "dilewati: cadangan kredit";
   if (err instanceof NotFoundError) return "tidak ada data di Sectors (404)";
   if (err instanceof SectorsApiError) return `gagal: Sectors HTTP ${err.status}`;
-  return `gagal: ${err instanceof Error ? err.message : String(err)}`;
+  // Pesan mentah TIDAK diteruskan ke klien: galat sistem berkas di serverless
+  // memuat jalur absolut server (mis. "EROFS ... '/var/task/.cache/sectors'")
+  // dan detail itu dirender apa adanya di UI.
+  console.error("[jaga] blok kelas B gagal:", err);
+  return "gagal: kesalahan tak terduga di server";
 }
 
 async function jalankanKelasB(
@@ -252,7 +256,11 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     } else if (blokBAktif.length === 0) {
       kelasB = { status: "nonaktif", keterangan: "tidak ada alarm kelas B yang aktif", blok: [] };
     } else if (!opts.provider) {
-      kelasB = { status: "dilewati", keterangan: "dilewati: kunci Sectors tidak tersedia di server", blok: [] };
+      kelasB = {
+        status: "dilewati",
+        keterangan: "dilewati: server ini tidak menyediakan data terkini (butuh kunci Sectors dan database buku kredit)",
+        blok: [],
+      };
     } else if (suspensi) {
       kelasB = {
         status: "dilewati",

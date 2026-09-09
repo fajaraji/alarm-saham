@@ -34,9 +34,13 @@ export function isNeonUrl(url: string): boolean {
 /**
  * Kembalikan instance Drizzle untuk DATABASE_URL. Dilempar bila kosong —
  * pemanggil wajib mengecek `hasDb()` lebih dulu.
+ *
+ * `urlEksplisit` dipakai pemanggil yang membaca env dari objek suntikan (mis.
+ * `sectorsProviderDariEnv(envBuatan)`); tanpa itu pemeriksaan dan koneksi
+ * membaca sumber yang berbeda dan pesan galatnya menyesatkan.
  */
-export function getDb(): Db {
-  const url = process.env.DATABASE_URL?.trim();
+export function getDb(urlEksplisit?: string): Db {
+  const url = urlEksplisit?.trim() || process.env.DATABASE_URL?.trim();
   if (!url) {
     throw new Error("DATABASE_URL belum diset; gunakan hasDb() sebelum getDb()");
   }

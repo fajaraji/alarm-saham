@@ -6,6 +6,7 @@
 // `kreditTerpakai` dihitung dari ledger sebelum/sesudah (bukti, bukan taksiran).
 import { z } from "zod";
 
+import { jawabanTerlaluSering, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { alarmDariDb } from "@/lib/jaga/alarm-db";
 import { ALARM_BAWAAN, alarmDariKlien, AlarmKlienSchema, BlokBSchema, type AlarmJaga } from "@/lib/jaga/bawaan";
 import { cekPortofolio } from "@/lib/jaga/evaluasi";
@@ -42,6 +43,16 @@ function galat(status: number, kode: string, pesan: string, rincian?: unknown) {
   return Response.json({ error: { kode, pesan, ...(rincian !== undefined ? { rincian } : {}) } }, { status });
 }
 
+/**
+ * Route ini publik (produk memang tanpa akun), tetapi permintaan "data terkini"
+ * (kelas B) MEMBELANJAKAN kredit Sectors tim. Karena itu kelas B dibatasi:
+ * wajib membawa tautan rahasia (x-owner-token), maksimum MAKS_SAHAM_KELAS_B
+ * saham per permintaan, dan jauh lebih jarang daripada kelas A yang nol kredit.
+ */
+const MAKS_SAHAM_KELAS_B = 10;
+const PAGAR_KELAS_A = { maks: 60, jendelaMs: 60_000 };
+const PAGAR_KELAS_B = { maks: 6, jendelaMs: 10 * 60_000 };
+
 export async function POST(req: Request): Promise<Response> {
   let body: unknown;
   try {
@@ -69,6 +80,32 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const token = tokenDariHeader(req);
+  const kelasB = parsed.data.kelasB;
+  if (kelasB) {
+    if (!token) {
+      return galat(
+        401,
+        "BUTUH_TAUTAN_RAHASIA",
+        "Data terkini (yang memakai kredit Sectors) hanya untuk portofolio yang tersimpan. Buka layar Pasang lebih dulu agar tautan rahasianya dibuat.",
+      );
+    }
+    if (symbols.length > MAKS_SAHAM_KELAS_B) {
+      return galat(
+        400,
+        "TERLALU_BANYAK_SAHAM",
+        `Data terkini dibatasi ${MAKS_SAHAM_KELAS_B} saham sekali cek (setiap saham memakai kredit Sectors). Kamu mengirim ${symbols.length}.`,
+      );
+    }
+  }
+  const pagar = pagarLaju(kunciPemanggil(req, token), kelasB ? PAGAR_KELAS_B : PAGAR_KELAS_A);
+  if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
+
+  // `today` dari klien hanya untuk tes deterministik. Di produksi ia diabaikan
+  // supaya tidak bisa dipakai menggeser jendela tanggal sehari demi sehari untuk
+  // melewati cache 24 jam dan membeli kredit baru tiap permintaan. Di server,
+  // tanggal dipakukan lewat env ALARM_HARI_INI (lihat src/lib/engine/dates.ts).
+  const today = process.env.NODE_ENV === "production" ? undefined : parsed.data.today;
+
   try {
     const sumber = await sumberJaga();
     const db = sumber.db;
@@ -81,14 +118,14 @@ export async function POST(req: Request): Promise<Response> {
     const aktif = ids ? kandidat.filter((a) => ids.has(a.id)) : kandidat.filter((a) => a.bawaan);
     const unik = [...new Map(aktif.map((a) => [`${a.id}:${a.name}`, a])).values()];
 
-    const provider = parsed.data.kelasB ? providerKelasB(db) : undefined;
+    const provider = kelasB ? providerKelasB(db) : undefined;
     const hasil = await cekPortofolio({
       symbols,
       alarms: unik,
       opts: {
-        kelasB: parsed.data.kelasB,
+        kelasB,
         blokB: parsed.data.blokB,
-        today: parsed.data.today,
+        today,
         source: sumber.source,
         universe: await sumber.universe(),
         provider: provider ?? null,
@@ -111,7 +148,7 @@ export async function POST(req: Request): Promise<Response> {
       kreditTerpakai: hasil.kreditTerpakai,
       panggilanApi: hasil.panggilanApi,
       cacheHit: hasil.cacheHit,
-      kelasB: parsed.data.kelasB && Boolean(provider),
+      kelasB: kelasB && Boolean(provider),
       ...(runId ? { runId } : {}),
     });
   } catch (err) {

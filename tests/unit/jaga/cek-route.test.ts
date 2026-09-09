@@ -12,10 +12,12 @@ vi.mock("../../../src/lib/jaga/penyedia", () => ({
 
 const { POST } = await import("../../../src/app/api/portofolio/cek/route");
 
-function req(body: unknown): Request {
+const TOKEN = "11111111-2222-4333-8444-555555555555";
+
+function req(body: unknown, token?: string): Request {
   return new Request("http://localhost/api/portofolio/cek", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(token ? { "x-owner-token": token } : {}) },
     body: JSON.stringify(body),
   });
 }
@@ -42,11 +44,24 @@ describe("POST /api/portofolio/cek (fixture, tanpa DB/kunci)", () => {
     expect(teks).toMatch(/bukan saran investasi\.$/);
   });
 
-  it("kelasB=true tanpa kunci → dilewati dengan keterangan, tetap 200", async () => {
-    const json = await (await POST(req({ symbols: ["BBCA"], kelasB: true, today: "2026-09-07" }))).json();
+  it("kelasB=true tanpa tautan rahasia → 401 (permintaan berbayar tidak boleh anonim)", async () => {
+    const res = await POST(req({ symbols: ["BBCA"], kelasB: true, today: "2026-09-07" }));
+    expect(res.status).toBe(401);
+    expect((await res.json()).error.kode).toBe("BUTUH_TAUTAN_RAHASIA");
+  });
+
+  it("kelasB=true dengan token tapi tanpa kunci → dilewati dengan keterangan, tetap 200", async () => {
+    const json = await (await POST(req({ symbols: ["BBCA"], kelasB: true, today: "2026-09-07" }, TOKEN))).json();
     expect(json.saham[0].kelasB.status).toBe("dilewati");
     expect(json.saham[0].kelasB.keterangan).toMatch(/kunci Sectors/);
     expect(json.kelasB).toBe(false);
+  });
+
+  it("kelasB=true dengan lebih dari 10 saham → 400 (setiap saham memakai kredit)", async () => {
+    const banyak = ["AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK"];
+    const res = await POST(req({ symbols: banyak, kelasB: true, today: "2026-09-07" }, TOKEN));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.kode).toBe("TERLALU_BANYAK_SAHAM");
   });
 
   it("alarmIds mengendalikan alarm aktif; alarm lokal dari klien ikut dinilai", async () => {

@@ -16,7 +16,18 @@ export async function dbJaga(): Promise<Db | null> {
   return (await sumberJaga()).db;
 }
 
-/** Provider Sectors untuk kelas B; undefined bila SECTORS_API_KEY kosong. */
+/**
+ * Provider Sectors untuk kelas B; undefined bila SECTORS_API_KEY kosong ATAU
+ * server tidak punya database.
+ *
+ * Tanpa DB, ledger & cache jatuh ke berkas `.cache/sectors/…`. Di serverless
+ * (Vercel) sistem berkasnya hanya-baca dan tiap invocation mulai dari nol,
+ * sehingga `sisaKredit()` selalu = anggaran penuh: pagar SECTORS_CREDIT_RESERVE
+ * tidak pernah menolak, pemakaian kredit tidak pernah tercatat, dan cache 24 jam
+ * tidak pernah kena. Lebih baik kelas B dilewati dengan jujur daripada
+ * membelanjakan kredit tim tanpa buku.
+ */
 export function providerKelasB(db: Db | null): SectorsProvider | undefined {
-  return sectorsProviderDariEnv(process.env, db ? { ledger: new LedgerDb(db), cache: new CacheDb(db) } : {});
+  if (!db) return undefined;
+  return sectorsProviderDariEnv(process.env, { ledger: new LedgerDb(db), cache: new CacheDb(db) });
 }
