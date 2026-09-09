@@ -9,15 +9,23 @@ Alarm Saham membuat investor biasa bisa melihat tanda bahaya struktural yang sud
 ## Untuk juri — 60 detik
 
 - **Masalah:** tanda-tanda resmi (suspensi, laporan kuartal yang berhenti, ekuitas negatif, rights issue) sudah dipublikasikan bursa jauh sebelum sebuah saham dihapus, tetapi tidak terbaca oleh investor ritel.
-- **Yang dibuat:** (1) *putar ulang* rekaman tanda resmi sebuah emiten, (2) *rakit* alarm dari blok syarat dan **uji ke masa lalu** pada 107 emiten nyata, (3) *pasang* alarm ke portofolio (sedang dikerjakan).
+- **Yang dibuat:** (1) *putar ulang* rekaman tanda resmi sebuah emiten, (2) *rakit* alarm dari blok syarat dan **uji ke masa lalu** pada 107 emiten nyata, (3) *pasang* alarm ke portofolio dengan pengecekan pagi otomatis dan notifikasi.
 - **Agent:** loop tool-use buatan sendiri (Vercel AI SDK 7) yang menyelidiki **kenapa alarm bolong di emiten tertentu** dengan 7 tool di atas database Sectors, lalu mengusulkan blok — trace tool disusun dari langkah SDK, bukan karangan model. Perakit blok memakai structured output ke skema Zod yang sama dengan mesin uji.
 - **Skor nyata (bukan demo palsu):** aturan bawaan menangkap **26/74** emiten kena rata-rata **9 bulan** sebelum kejadian dengan **1/30** alarm palsu — direproduksi oleh `npm run backtest` dan dijaga tes otomatis. Keterbatasannya ditulis jujur di halaman `/cara-kami-menghitung`.
-- **Sectors adalah inti:** 463 dari 1.000 kredit dipakai untuk menarik universe uji ke database; tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang.
-- **Status:** layar 1–2, mesin uji, agent, lapisan data selesai dan teruji (268 tes unit/integrasi, 11 e2e). Layar 3, cron, dan deploy sedang dikerjakan; blocker: `DATABASE_URL` Neon dan kunci LLM (detail di [Status jujur](#status-jujur)).
+- **Sectors adalah inti:** **395** dari 1.000 kredit dipakai untuk menarik universe uji 107 emiten ke database (buku kredit total **467**, termasuk 68 kredit pembuktian data dan 4 kredit satu uji kelas B nyata); tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang.
+- **Status:** ketiga layar, mesin uji, agent, lapisan data, cron harian, dan notifikasi selesai dan teruji (**397 tes** unit/integrasi di 51 berkas, **44 e2e** termasuk smoke alur 1→2→3 dan axe-core di dua mode tema). Yang tersisa hanya deploy; blocker: `DATABASE_URL` Neon dan kunci LLM (detail di [Status jujur](#status-jujur)).
 
 ## Masalah dan pengguna
 
-Pengguna kami adalah investor ritel yang pernah "nyangkut": membeli karena tip di grup, lalu sahamnya disuspensi berbulan-bulan sampai akhirnya dihapus dari bursa. Pada 10 November 2026 BEI menghapus **18 emiten** sekaligus — 7 karena pailit (COWL, MTRA, SRIL, TOYS, SBAT, TDPM, TELE) dan 11 karena suspensi lebih dari 50 bulan (LCGP, SUGI, MABA, LMAS, SKYB, ENVY, GOLL, PLAS, TRIL, UNIT, DUCK). Untuk hampir semuanya, tanda resminya sudah ada bertahun-tahun sebelumnya di data yang sama yang kini kami tarik dari Sectors. Bagian yang tidak dimiliki BEI, Stockbit, maupun Ajaib adalah **langkah 2: merakit alarm sendiri dan mengujinya ke masa lalu** — itulah inti produk ini.
+Pengguna kami adalah investor ritel yang pernah "nyangkut": membeli karena tip di grup, lalu sahamnya disuspensi berbulan-bulan sampai akhirnya dihapus dari bursa.
+
+Fakta yang melatarbelakangi produk ini, dengan sumbernya:
+
+- **18 emiten dihapus dari Bursa Efek Indonesia efektif 10 November 2026**, dengan jendela pembelian kembali (buyback) oleh emiten 11 Mei – 9 November 2026 — 7 karena pailit (COWL, MTRA, SRIL, TOYS, SBAT, TDPM, TELE) dan 11 karena suspensi lebih dari 50 bulan (LCGP, SUGI, MABA, LMAS, SKYB, ENVY, GOLL, PLAS, TRIL, UNIT, DUCK). Sumber: [Bareksa, 13 April 2026](https://www.bareksa.com/berita/saham/2026-04-13/18-emiten-akan-dihapus-dari-bursa-efek-indonesia-mulai-10-november-2026-ini-daftarnya).
+- **59 emiten berada di Papan Pemantauan Khusus per 30 Juni 2026** — papan yang menandai perusahaan dengan kondisi tertentu, termasuk yang berpotensi terkena penghapusan paksa. Sumber: [Kontan](https://amp.kontan.co.id/news/bei-umumkan-59-emiten-berpotensi-delisting-paksa-dua-bumn-masuk-daftar). Daftar inilah yang kami pakai sebagai universe skor utama.
+- **45.866 investor tercatat memegang saham Sritex (SRIL)** saat saham itu dinyatakan akan dihapus, termasuk satu pemegang dengan porsi lebih dari 1 persen senilai Rp30,56 miliar. Sumber: [hargasaham.id](https://www.hargasaham.id/delisting-sritex-investor-terdampak-lo-kheng-hong/).
+
+Untuk hampir semua emiten itu, tanda resminya sudah terbit bertahun-tahun sebelumnya di data yang sama yang kini kami tarik dari Sectors — silakan buka `/putar-ulang?kode=SRIL` dan geser slider waktunya. Bagian yang tidak dimiliki BEI, Stockbit, maupun Ajaib adalah **langkah 2: merakit alarm sendiri dan mengujinya ke masa lalu** — itulah inti produk ini.
 
 ## Apa yang dibuat — tiga langkah
 
@@ -25,8 +33,9 @@ Pengguna kami adalah investor ritel yang pernah "nyangkut": membeli karena tip d
 |---|---|---|---|
 | 1. Putar ulang | `/putar-ulang?kode=SRIL` | Garis waktu tanda resmi satu emiten (suspensi + PDF BEI, kuartal laporan yang hilang, ekuitas negatif, rights issue) dengan slider waktu; setiap kejadian menyebut endpoint sumbernya | selesai, data nyata |
 | 2. Rakit alarm | `/rakit` | Papan drag-and-drop (dnd-kit): 5 blok kelas A, ambang longgar/ketat, ATAU/DAN → **Uji ke masa lalu** → skor tertangkap / lebih awal / alarm palsu per emiten → panel AI (perakit dari kalimat, diagnosis "kenapa bolong") | selesai; AI menunggu kunci |
-| 3. Pasang & jaga | `/pasang` | Portofolio per tautan rahasia, evaluasi harian kelas A dari DB + kelas B (broker, free float, harga 90 hari) dari Sectors dengan cache 24 jam, notifikasi in-app/Telegram | **sedang dikerjakan** (tiket 11–12) |
+| 3. Pasang & jaga | `/pasang` | Portofolio per tautan rahasia, evaluasi harian kelas A dari DB + kelas B (broker, free float, harga 90 hari) dari Sectors dengan cache 24 jam, pengecekan pagi otomatis 06:30 WIB, notifikasi kotak masuk in-app (Telegram bila token diisi) | selesai; notifikasi Telegram teruji dengan mock karena token kosong |
 | Metodologi | `/cara-kami-menghitung` | Definisi blok & ambang dari konstanta mesin, cara skor dihitung, universe, anti-lookahead, keterbatasan, kredit terpakai, tabel per emiten | selesai |
+| Kamus & panduan | `/kamus` | Arti tiap istilah dengan bahasa awam; tooltip `<Istilah>` di semua layar dan overlay panduan 3 langkah saat kunjungan pertama | selesai |
 
 ## Kenapa ini "agent", bukan sekadar prompt
 
@@ -68,7 +77,7 @@ Provider LLM dipilih lewat env (`LLM_PROVIDER`): **DeepSeek** (`deepseek-v4-flas
 
 ```mermaid
 flowchart LR
-    UI["Next.js 16 App Router (React 19, Tailwind 4)<br/>/putar-ulang · /rakit · /cara-kami-menghitung"] --> API["Route handlers<br/>/api/backtest · /api/emiten · /api/alarms · /api/agent/rakit · /api/agent/diagnosis"]
+    UI["Next.js 16 App Router (React 19, Tailwind 4)<br/>/ · /putar-ulang · /rakit · /pasang · /cara-kami-menghitung · /kamus"] --> API["Route handlers<br/>/api/backtest · /api/emiten · /api/alarms · /api/agent/rakit · /api/agent/diagnosis<br/>/api/portofolio · /api/portofolio/cek · /api/cron/jaga · /api/inbox · /api/telegram/webhook"]
     API --> ENGINE["src/lib/engine<br/>rules (Zod) · evaluate (murni) · score"]
     API --> AGENT["src/lib/agent<br/>Vercel AI SDK 7 → DeepSeek | Anthropic"]
     AGENT --> ENGINE
@@ -84,7 +93,8 @@ flowchart LR
 - **Lapisan data:** satu antarmuka `DataProvider` dengan dua implementasi — `SectorsProvider` (API asli + **buku kredit** setiap panggilan, **cache** permanen untuk data historis / TTL untuk data harian / 30 hari untuk 404, **penolakan otomatis** bila sisa kredit < 250 kecuali `ALLOW_RESERVE=1`) dan `FixtureProvider` (JSON kecil). **Semua uji ke masa lalu berjalan dari database, bukan API.**
 - **Database:** Drizzle ORM + Postgres. Produksi: Neon (`DATABASE_URL`). Tanpa `DATABASE_URL`, skrip dan halaman otomatis memakai **PGlite** (Postgres asli via WASM) di `./.pglite` dengan migrasi yang sama — inilah kondisi mesin pengembangan saat ini. `npm run db:sync -- --from=pglite --to=neon` memindahkan semua tabel tanpa kredit.
 - **Mesin uji** (`src/lib/engine`): `fires(rule, events, t)` fungsi murni yang hanya melihat baris bertanggal ≤ t; `runBacktest` memindai akhir bulan dan menghasilkan skor deterministik. Asumsi ditulis di `docs/mesin-uji.md`.
-- **Keamanan:** kunci hanya di `.env.local` (di-gitignore); pre-commit `scripts/check-secrets.mjs` menolak commit yang memuat pola kunci; kunci tidak pernah dicetak ke log.
+- **Keamanan:** kunci hanya di `.env.local` (di-gitignore). Dua gerbang memakai pola yang sama (`scripts/pola-rahasia.mjs`): pre-commit `scripts/check-secrets.mjs` menolak commit yang memuat pola kunci, dan `npm run scan:history` memindai **seluruh riwayat git** (semua blob, termasuk yang sudah tidak terjangkau ref mana pun) di CI — karena hook lokal bisa dilewati `--no-verify` dan kunci yang sempat ter-commit tetap terbaca dari riwayat repo publik. Kunci tidak pernah dicetak ke log, dan pemindai pun hanya mencetak nama berkas + nama pola, tidak pernah isi barisnya.
+- **Pagar endpoint publik:** semua route yang bisa membelanjakan kredit atau saldo LLM dibatasi laju per IP/token (`src/lib/api/pagar.ts`, tanpa dependensi baru); cek kelas B (yang memakai kredit Sectors) wajib membawa tautan rahasia pemilik, maksimum 10 saham sekali cek, dan hanya berjalan bila ada database sehingga setiap kredit tercatat di buku kredit.
 
 ## Endpoint Sectors yang dipakai dan alasannya
 
@@ -111,22 +121,22 @@ git clone https://github.com/fajaraji/alarm-saham.git
 cd alarm-saham
 npm ci
 cp .env.example .env.local     # PowerShell: Copy-Item .env.example .env.local
-npm test                       # 340 tes (1 di-skip bila ./.pglite tidak ada); tanpa kunci, tanpa jaringan
+npm test                       # 397 tes di 51 berkas (1 di-skip bila ./.pglite tidak ada); tanpa kunci, tanpa jaringan
 npm run dev                    # http://localhost:3000
 ```
 
 Tiga tingkat, tergantung apa yang Anda punya:
 
-1. **Tanpa kunci apa pun** — `/putar-ulang`, `/rakit` (uji ke masa lalu dari fixture 8 emiten), dan `/cara-kami-menghitung` (snapshot skor nyata yang di-commit) berjalan. Endpoint `/api/agent/*` menjawab 503 dan UI menampilkan banner "AI belum aktif".
-2. **Dengan `SECTORS_API_KEY`** — bangun database lokal PGlite (≈ 405 kredit sekali jalan, idempoten; jalankan `--dry` dulu untuk melihat berapa yang belum ter-cache):
+1. **Tanpa kunci apa pun** — semua halaman berjalan dari **data contoh 8 emiten**, dan setiap layar yang menampilkan angka memberi label `data contoh (bukan data Sectors nyata)` supaya tidak ada satu angka pun yang bisa disalahartikan sebagai data resmi. `/cara-kami-menghitung` tetap menampilkan skor nyata dari snapshot yang di-commit. Endpoint `/api/agent/*` menjawab 503 dan UI menampilkan banner "AI belum aktif"; `/pasang` bisa dibuka tetapi menyimpan portofolio butuh database.
+2. **Dengan `SECTORS_API_KEY`** — bangun database lokal PGlite (perkiraan `--dry` dari cache kosong ≈ **417 kredit**; realisasi kami **395 kredit** karena sebagian sudah ter-cache dari pembuktian data — `docs/universe-pull.md` §1. Sekali jalan, idempoten: run kedua 0 kredit):
    ```bash
    npm run pull-universe -- --dry --pglite
    npm run pull-universe -- --pglite
    ```
-   Setelah itu `/putar-ulang` dan `npm run backtest` memakai 107 emiten nyata. Catatan jujur: tombol "Uji ke masa lalu" di `/rakit` memakai database hanya bila `DATABASE_URL` terisi; tanpa itu ia memakai fixture.
-3. **Dengan `DATABASE_URL` (Neon)** — `npm run db:migrate` lalu `npm run db:sync -- --from=pglite --to=neon`; semua halaman dan API memakai Neon. Tambahkan `DEEPSEEK_API_KEY` (atau `ANTHROPIC_API_KEY`) untuk mengaktifkan perakit blok dan agent diagnosis.
+   Setelah itu `/putar-ulang`, tombol **Uji ke masa lalu** di `/rakit`, `/pasang`, dan `npm run backtest` sama-sama memakai 107 emiten nyata dari `./.pglite` lewat satu pintu `getEventSource()` (Neon → PGlite → data contoh), dan labelnya berubah menjadi `data Sectors nyata`.
+3. **Dengan `DATABASE_URL` (Neon)** — `npm run db:migrate` lalu `npm run db:sync -- --from=pglite --to=neon`; semua halaman dan API memakai Neon. Tambahkan `DEEPSEEK_API_KEY` (atau `ANTHROPIC_API_KEY`) untuk mengaktifkan perakit blok dan agent diagnosis. Urutan lengkap untuk produksi ada di [Deploy ke Vercel](#deploy-ke-vercel).
 
-Uji end-to-end (Playwright, membangun build production di port 3100; memakai `./.pglite` bila ada, selain itu fixture): `npm run test:e2e`.
+Uji end-to-end (Playwright; membangun build production lalu menjalankannya): `npm run test:e2e`. Suite ini punya dua varian dan keduanya harus hijau — `npm run test:e2e` memakai `./.pglite` bila ada (port 3100), `E2E_TANPA_PGLITE=1 npm run test:e2e` memaksa jalur data contoh seperti CI/clone bersih (port 3101) dan men-*skip* dengan pesan spec yang memang butuh data nyata.
 
 ## Cara mereproduksi skor
 
@@ -162,41 +172,71 @@ Kenapa 12 dari 18 delisting terlewat, universe 18 + 59 + 30, cara memilih kontro
 
 ## Verifikasi dari clone bersih
 
-Dijalankan 7 September 2026 di Windows 11 (Node 24) dari `git clone` lokal ke folder sementara di luar repo, tanpa `.env.local`, tanpa `./.pglite`:
+Dijalankan **10 September 2026** di Windows 11 (Node 24, npm 11) dari `git clone` repo ini ke folder sementara di luar repo — tanpa `.env.local`, tanpa `./.pglite`, tanpa satu kunci pun. Angka di bawah adalah keluaran nyata run itu, bukan perkiraan:
 
 | Perintah | Hasil |
 |---|---|
-| `npm ci` | exit 0 |
-| `npm test` | exit 0 — 33 berkas, 267 tes lulus + 1 di-skip dengan pesan (hitung ulang PGlite; folder `./.pglite` tidak ada) |
-| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture --today=2026-09-07` | exit 0 — `Sumber: fixture universe-kecil.json (dipaksa)`; tertangkap 2/4 (delisting 2/3, watchlist 0/1), rata-rata 23 bln |
-| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07` | exit 0 — jatuh ke fixture dengan pesan `DATABASE_URL kosong dan ./.pglite tidak ada` |
+| `npm ci` | exit 0 — 500 paket |
+| `npm test` | exit 0 — **51 berkas, 396 tes lulus + 1 di-skip** dengan pesan (hitung ulang snapshot skor butuh `./.pglite`, yang memang tidak ada di clone) |
+| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture` | exit 0 — `Sumber: fixture universe-kecil.json (dipaksa)`; tertangkap 2/4 (delisting 2/3, watchlist 0/1), rata-rata 23 bln, alarm palsu 0/4 |
+| `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07` | exit 0 — tanpa `--fixture` pun berjalan: jatuh ke data contoh sambil **mengatakan alasannya**, `Sumber: fixture universe-kecil.json (DATABASE_URL kosong dan ./.pglite tidak ada)` |
+| `npm run scan:history` | exit 0 — `0 temuan. 477 blob teks dipindai (1 dilewati: biner/besar) pada 52 commit` (nol dependensi: hanya Node + git, jadi bisa dijalankan sebelum `npm ci`) |
 
-Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) `npm test` menjalankan 268 tes penuh termasuk hitung ulang snapshot; `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run test:e2e` (11 tes) exit 0.
+Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) angka penuhnya: `npm test` **397 tes di 51 berkas** (tidak ada yang di-skip — hitung ulang snapshot ikut berjalan); `npm run test:e2e` **44 tes** (43 lulus + 1 di-skip pada jalur data nyata; 41 lulus + 3 di-skip berpesan pada varian `E2E_TANPA_PGLITE=1` yang meniru CI); `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run scan:history` exit 0.
+
+## Deploy ke Vercel
+
+Urutannya penting: **isi env dulu, migrasi, salin data, baru deploy** — kalau tidak, aplikasi hidup tanpa data.
+
+1. **Isi variabel lingkungan** di Vercel (Project → Settings → Environment Variables), untuk Production *dan* Preview. Nama dan penjelasan lengkapnya ada di `.env.example`:
+
+   | Variabel | Wajib? | Kalau kosong |
+   |---|---|---|
+   | `SECTORS_API_KEY` | wajib untuk penarikan data & blok kelas B | tidak bisa menarik data baru; halaman tetap jalan dari data yang sudah di database |
+   | `DATABASE_URL` (Neon, `?sslmode=require`) | **wajib** | **produksi menyajikan data contoh 8 emiten** (berlabel "data contoh"), portofolio tidak bisa disimpan, kelas B dilewati |
+   | `DEEPSEEK_API_KEY` **atau** `ANTHROPIC_API_KEY` | untuk fitur AI | `/api/agent/*` menjawab 503 dan UI menampilkan banner "AI belum aktif"; sisa produk berjalan |
+   | `CRON_SECRET` | untuk pengecekan pagi | `/api/cron/jaga` menjawab 503 (endpoint tidak pernah terbuka tanpa rahasia) |
+   | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET` | opsional | notifikasi tetap masuk **kotak masuk in-app** di `/pasang` (PLAN §7.5) |
+
+2. **Siapkan database Neon**, lalu pindahkan data yang sudah ditarik — **tanpa satu kredit Sectors pun**:
+   ```bash
+   npm run db:migrate                              # buat tabel di Neon (drizzle-kit migrate)
+   npm run db:sync -- --from=pglite --to=neon      # salin isi ./.pglite ke Neon
+   npm run pull-universe -- --dry                  # verifikasi: harus "0 langkah belum ter-cache"
+   ```
+3. **Deploy**, lalu daftarkan webhook Telegram sekali (hanya bila tokennya diisi):
+   ```bash
+   npm run telegram:set-webhook -- https://<app>.vercel.app
+   ```
+4. **Periksa setelah deploy:** buka `/putar-ulang?kode=SRIL` dan pastikan labelnya berbunyi `data Sectors nyata`, bukan `data contoh`.
+
+> **Peringatan yang paling penting sebelum deploy:** folder `./.pglite` ada di `.gitignore`, jadi **data tidak pernah ikut ter-deploy**. Server yang hidup tanpa `DATABASE_URL` akan jatuh ke data contoh 8 emiten yang angka keuangan, rasio rights issue, dan filing-nya ilustratif — untuk kode emiten nyata. Sejak tiket 15 kondisi itu tidak lagi bisa menyesatkan: setiap layar memasang label `data contoh (bukan data Sectors nyata)`, tidak ada satu kejadian pun yang diberi atribusi "Sumber: Sectors …" pada jalur itu, dan lede `/putar-ulang` berubah menjadi pengakuan bahwa server belum terhubung ke database. Tetap saja: **jangan tunjukkan instans tanpa `DATABASE_URL` kepada juri.**
 
 ## Status jujur
 
-**Selesai dan teruji** (tiket 02–10): bootstrap + CI; klien Sectors + buku kredit + cache + `FixtureProvider`; pembuktian data; skema DB + migrasi; mesin uji; penarikan universe 107 emiten (395 kredit, run ulang 0); agent diagnosis + perakit (model tiruan); provider DeepSeek/Anthropic; layar 2 papan alarm; layar 1 putar ulang; halaman metodologi + README ini (tiket 14).
+**Selesai dan teruji** (tiket 02–15): bootstrap + CI; klien Sectors + buku kredit + cache + `FixtureProvider`; pembuktian data; skema DB + migrasi; mesin uji; penarikan universe 107 emiten (395 kredit, run ulang 0); agent diagnosis + perakit (model tiruan); provider DeepSeek/Anthropic; layar 2 papan alarm; layar 1 putar ulang; **layar 3 pasang & mode jaga (tiket 11)**; **cron harian 06:30 WIB + notifikasi kotak masuk in-app dan Telegram (tiket 12)**; **panduan, kamus istilah, disclaimer di semua layar (tiket 13)**; halaman metodologi + README ini (tiket 14); **pengerasan: kontras AA di kedua tema, pagar endpoint publik, label sumber jujur, smoke test alur 1→2→3, pemindai rahasia seluruh riwayat di CI (tiket 15)**.
 
-**Sedang dikerjakan:** layar 3 pasang & mode jaga (tiket 11), cron harian + notifikasi (tiket 12), panduan/kamus/disclaimer di semua layar (tiket 13), pengerasan & smoke test (tiket 15), deploy production (tiket 16). Bagikan alarm lewat tautan (tiket 17) hanya bila waktu tersisa.
+**Belum selesai:** deploy production (tiket 16). Bagikan alarm lewat tautan (tiket 17) hanya bila waktu tersisa.
 
-**Blocker yang butuh manusia** (status 7 September 2026, dicek keberadaan nilainya saja):
+**Blocker yang butuh manusia** (status 10 September 2026, dicek keberadaan nilainya saja):
 
 | Kebutuhan | Status | Dampak |
 |---|---|---|
 | `DATABASE_URL` Neon | kosong | data universe hanya di PGlite lokal (tidak di-track git); produksi belum punya data — langkah pindah tanpa kredit sudah siap (`db:migrate` → `db:sync`) |
 | `DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` | kosong | perakit & diagnosis **belum pernah diuji dengan model sungguhan**; semua bukti dari model tiruan |
-| `TELEGRAM_BOT_TOKEN` | kosong | aturan cadangan PLAN §7.5: notifikasi in-app jadi jalur utama |
+| `TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET` | kosong | aturan cadangan PLAN §7.5: notifikasi in-app jadi jalur utama; jalur Telegram teruji dengan mock |
+| `CRON_SECRET` | diisi saat deploy | tanpa itu `/api/cron/jaga` menjawab 503 |
 | `vercel login` | belum diverifikasi | sebelum deploy |
 
-Yang **belum** ada dan tidak kami klaim: mode pasang, notifikasi, cron, deploy hidup, uji AI nyata.
+Yang **belum** ada dan tidak kami klaim: deploy hidup; uji AI dengan model sungguhan (semua bukti AI dari model tiruan); notifikasi Telegram yang benar-benar terkirim ke chat nyata (semua bukti Telegram dari mock); pagar laju lintas-instance (pagar yang ada hidup di memori tiap instance, dan pagar kredit yang sesungguhnya adalah buku kredit + cadangan 250).
 
 ## Kepatuhan aturan lomba
 
-- Data Sectors adalah inti: tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang. Setiap panggilan tercatat di buku kredit; 463 dari 1.000 kredit terpakai, 250 cadangan tidak disentuh kode.
+- Data Sectors adalah inti: tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang. Setiap panggilan tercatat di buku kredit; **467** dari 1.000 kredit terpakai (395 penarikan universe + 68 pembuktian data + 4 uji kelas B nyata), 250 cadangan tidak disentuh kode. Bila sumber data bukan Sectors (jalur data contoh), setiap layar mengatakannya dengan label dan tidak ada kejadian yang diberi atribusi "Sumber: Sectors …".
 - Logika agent buatan sendiri (loop tool-use + structured output di atas mesin uji), bukan sekadar prompt.
 - **Tidak ada eksekusi order beli/jual**; tidak ada blok aksi "beli/jual"; agent menolak kata rekomendasi.
 - **Bukan saran investasi**: disclaimer di footer setiap layar dan di system prompt agent; emiten nyata hanya disebut dengan fakta resmi + tautan sumber.
-- Kunci hanya di `.env.local` (`.gitignore`), pre-commit secret scan, tidak pernah dicetak.
+- Kunci hanya di `.env.local` (`.gitignore`), tidak pernah dicetak ke log. Dua gerbang: pemindai pre-commit dan `npm run scan:history` yang memeriksa **seluruh riwayat git** di CI pada setiap push — hook lokal saja tidak cukup karena bisa dilewati.
 - Repo dibuat setelah onboarding tim; setelah submit, repo dan aplikasi **dibekukan** (tidak ada commit) dan tetap publik ≥ 90 hari.
 
 ## Perintah
@@ -206,7 +246,8 @@ Yang **belum** ada dan tidak kami klaim: mode pasang, notifikasi, cron, deploy h
 | `npm run dev` | server pengembangan |
 | `npm run lint` · `npm run typecheck` | ESLint · TypeScript |
 | `npm test` | Vitest (unit + integrasi PGlite in-memory) |
-| `npm run test:e2e` | Playwright di build production lokal |
+| `npm run test:e2e` · `E2E_TANPA_PGLITE=1 npm run test:e2e` | Playwright di build production lokal: varian data nyata (port 3100) dan varian data contoh seperti CI (port 3101) |
+| `npm run scan:history` | pindai pola kunci/kredensial di seluruh riwayat git (nol dependensi, dipakai CI) |
 | `npm run build` | build produksi |
 | `npm run backtest -- <aturan.json> [--fixture] [--pglite[=dir]] [--json] [--today=YYYY-MM-DD]` | uji ke masa lalu dari DB/PGlite/fixture, nol API |
 | `npm run pull-universe -- [--dry] [--pglite]` | tarik universe uji ke DB (butuh `SECTORS_API_KEY`; `--dry` = tanpa API) |
