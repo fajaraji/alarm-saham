@@ -19,7 +19,9 @@ export function HeaderNav() {
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-surface text-ink" data-testid="header">
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3">
-        <Link href="/putar-ulang" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham — beranda">
+        {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya) — sebelumnya ke
+            /putar-ulang, sehingga beranda tidak tertaut dari halaman mana pun. */}
+        <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham — beranda">
           <span
             aria-hidden="true"
             className="grid h-8 w-8 place-items-center rounded-lg bg-accent font-display font-extrabold text-accent-ink"

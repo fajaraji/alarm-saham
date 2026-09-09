@@ -10,9 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "e2e": "playwright test",
     "prepare": "husky",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs migrate",
     "sectors": "node --env-file-if-exists=.env.local --import tsx scripts/sectors.ts",
     "data-proof": "node --env-file-if-exists=.env.local --import tsx scripts/data-proof.ts",
@@ -40,6 +39,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@electric-sql/pglite": "^0.5.8",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",

@@ -89,8 +89,12 @@ function dariDb(t: DbTerbuka): SumberKejadian {
   };
 }
 
-/** Folder PGlite yang akan dipakai bila DATABASE_URL kosong; null bila tidak ada. */
-export function folderPglite(opsi: OpsiSumber = {}): string | null {
+/** Folder PGlite yang akan dipakai bila DATABASE_URL kosong; null bila tidak ada.
+ *  `TANPA_PGLITE=1` (dipakai e2e/CI untuk meniru clone bersih, dan oleh
+ *  `npm test` untuk membuktikan jalur skip) mengabaikan ./.pglite walau
+ *  foldernya ada — kecuali pemanggil menyebut folder eksplisit. */
+function folderPglite(opsi: OpsiSumber = {}): string | null {
+  if (opsi.pglite === undefined && process.env.TANPA_PGLITE === "1") return null;
   // Folder ditentukan saat runtime (opsi CLI) — jangan ditelusuri Turbopack sebagai aset.
   const absolut =
     typeof opsi.pglite === "string"
