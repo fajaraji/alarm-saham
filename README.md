@@ -13,7 +13,7 @@ Alarm Saham membuat investor biasa bisa melihat tanda bahaya struktural yang sud
 - **Agent:** loop tool-use buatan sendiri (Vercel AI SDK 7) yang menyelidiki **kenapa alarm bolong di emiten tertentu** dengan 7 tool di atas database Sectors, lalu mengusulkan blok — trace tool disusun dari langkah SDK, bukan karangan model. Perakit blok memakai structured output ke skema Zod yang sama dengan mesin uji.
 - **Skor nyata (bukan demo palsu):** aturan bawaan menangkap **26/74** emiten kena rata-rata **9 bulan** sebelum kejadian dengan **1/30** alarm palsu — direproduksi oleh `npm run backtest` dan dijaga tes otomatis. Keterbatasannya ditulis jujur di halaman `/cara-kami-menghitung`.
 - **Sectors adalah inti:** **395** dari 1.000 kredit dipakai untuk menarik universe uji 107 emiten ke database (buku kredit total **467**, termasuk 68 kredit pembuktian data dan 4 kredit satu uji kelas B nyata); tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang.
-- **Status:** ketiga layar, mesin uji, agent, lapisan data, cron harian, dan notifikasi selesai dan teruji (**397 tes** unit/integrasi di 51 berkas, **44 e2e** termasuk smoke alur 1→2→3 dan axe-core di dua mode tema). Yang tersisa hanya deploy; blocker: `DATABASE_URL` Neon dan kunci LLM (detail di [Status jujur](#status-jujur)).
+- **Status:** ketiga layar, mesin uji, agent, lapisan data, cron harian, dan notifikasi selesai dan teruji (**456 tes** unit/integrasi di 57 berkas, **52 e2e** termasuk smoke alur 1→2→3 dan axe-core di dua mode tema, dijalankan CI pada **dua** konfigurasi data: jalur database dan jalur data contoh). Yang tersisa hanya deploy; blocker: `DATABASE_URL` Neon dan kunci LLM (detail di [Status jujur](#status-jujur)).
 
 ## Masalah dan pengguna
 
@@ -121,7 +121,7 @@ git clone https://github.com/fajaraji/alarm-saham.git
 cd alarm-saham
 npm ci
 cp .env.example .env.local     # PowerShell: Copy-Item .env.example .env.local
-npm test                       # 397 tes di 51 berkas (1 di-skip bila ./.pglite tidak ada); tanpa kunci, tanpa jaringan
+npm test                       # 456 tes di 57 berkas (3 di-skip pada clone bersih tanpa ./.pglite); tanpa kunci, tanpa jaringan
 npm run dev                    # http://localhost:3000
 ```
 
@@ -188,12 +188,14 @@ Dijalankan **10 September 2026** di Windows 11 (Node 24, npm 11) dari `git clone
 | Perintah | Hasil |
 |---|---|
 | `npm ci` | exit 0 — 500 paket |
-| `npm test` | exit 0 — **51 berkas, 396 tes lulus + 1 di-skip** dengan pesan (hitung ulang snapshot skor butuh `./.pglite`, yang memang tidak ada di clone) |
+| `npm test` | exit 0 — **57 berkas, 453 tes lulus + 3 di-skip** dengan pesan (hitung ulang snapshot skor & buku kredit butuh `./.pglite`, yang memang tidak ada di clone) |
+| `npm run e2e:seed -- --dir=.pglite-e2e` | exit 0 — `107 emiten (583 suspensi, 1901 kuartal, 248 filing, 963 aksi korporasi, 91 keuangan) ditanam`; database e2e dibangun dari benih yang di-commit, nol panggilan API |
+| `E2E_PGLITE_DIR=.pglite-e2e npm run test:e2e` | exit 0 — **51 lulus + 1 di-skip** (yang di-skip justru spec khusus jalur data contoh). Ini persis resep job CI `e2e-db`: jalur database — bentuk yang dideploy — berjalan dari clone bersih tanpa satu kunci pun |
 | `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture` | exit 0 — `Sumber: fixture universe-kecil.json (dipaksa)`; tertangkap 2/4 (delisting 2/3, watchlist 0/1), rata-rata 23 bln, alarm palsu 0/4 |
 | `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07` | exit 0 — tanpa `--fixture` pun berjalan: jatuh ke data contoh sambil **mengatakan alasannya**, `Sumber: fixture universe-kecil.json (DATABASE_URL kosong dan ./.pglite tidak ada)` |
-| `npm run scan:history` | exit 0 — `0 temuan. 477 blob teks dipindai (1 dilewati: biner/besar) pada 52 commit` (nol dependensi: hanya Node + git, jadi bisa dijalankan sebelum `npm ci`) |
+| `npm run scan:history` | exit 0 — `0 temuan. 533 blob teks dipindai (1 dilewati: biner/besar) pada 59 commit` (nol dependensi: hanya Node + git, jadi bisa dijalankan sebelum `npm ci`) |
 
-Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) angka penuhnya: `npm test` **397 tes di 51 berkas** (tidak ada yang di-skip — hitung ulang snapshot ikut berjalan); `npm run test:e2e` **44 tes** (43 lulus + 1 di-skip pada jalur data nyata; 41 lulus + 3 di-skip berpesan pada varian `E2E_TANPA_PGLITE=1` yang meniru CI); `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run scan:history` exit 0.
+Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) angka penuhnya: `npm test` **456 tes di 57 berkas** (tidak ada yang di-skip — hitung ulang snapshot ikut berjalan); `npm run test:e2e` **52 tes** pada dua varian yang dua-duanya dijalankan CI — jalur database 51 lulus + 1 di-skip, jalur data contoh (`E2E_TANPA_PGLITE=1`) 49 lulus + 3 di-skip berpesan; `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run scan:history` exit 0.
 
 ## Deploy ke Vercel
 
