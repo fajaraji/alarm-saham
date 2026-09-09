@@ -45,7 +45,7 @@ describe("sensorTeks", () => {
 
   it("kalimat disclaimer wajib tidak pernah ikut terbuang", () => {
     const teks = "Alarm Saham adalah alat informasi, bukan saran investasi.";
-    expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0 });
+    expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0, kalimatRagu: 0 });
   });
 
   it("membiarkan kata berimbuhan dan frasa faktual dari data", () => {
@@ -63,7 +63,7 @@ describe("sensorTeks", () => {
 
   it("teks bersih dikembalikan apa adanya", () => {
     const teks = "Suspensi 2024-12-27 karena belum menyampaikan laporan keuangan.";
-    expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0 });
+    expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0, kalimatRagu: 0 });
   });
 
   // ---------------------------------------------------------------------
@@ -134,7 +134,7 @@ describe("sensorTeks", () => {
 
   it("kalimat fakta yang memakai kata netral ('harus', 'segera') tetap utuh tanpa kata terlarang", () => {
     const teks = "Emiten harus menyampaikan laporan kuartal 120 hari setelah periode berakhir.";
-    expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0 });
+    expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0, kalimatRagu: 0 });
   });
 
   // =====================================================================
@@ -210,7 +210,7 @@ describe("sensorTeks", () => {
     // "akan naik" sebagai objek penolakan, bukan sebagai ramalan.
     const tolak =
       "Alarm Saham hanya membuat peringatan berbasis data, bukan saran investasi, jadi saya tidak bisa menebak saham yang akan naik.";
-    expect(sensorTeks(tolak)).toEqual({ teks: tolak, kata: [], kalimatDibuang: 0 });
+    expect(sensorTeks(tolak)).toEqual({ teks: tolak, kata: [], kalimatDibuang: 0, kalimatRagu: 0 });
     // Begitu ada kata sambung pertentangan, pengecualiannya batal.
     const curang = sensorTeks("Saya tidak bisa meramal, tapi SRIL akan naik bulan depan.");
     expect(curang.teks).toBe(`${PENGGANTI_KALIMAT}.`);
@@ -255,6 +255,7 @@ describe("sensorObjek", () => {
       perluTinjau: false,
       kataDisensor: [],
       kalimatDibuang: 0,
+      kalimatRagu: 0,
     });
   });
 

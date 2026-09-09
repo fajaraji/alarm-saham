@@ -118,39 +118,240 @@ export const POLA_ANJURAN_BINGKAI: readonly RegExp[] = [
   /\b(ayo|yuk|silakan|silahkan)\b/i,
 ] as const;
 
+// ===========================================================================
+// SUBJEK klausa — inti penyensor saran investasi (tiket 15 putaran 4).
+//
+// Yang menentukan sebuah klausa dibuang atau tidak HANYA subjeknya, bukan
+// ada-tidaknya kata pembingkai ("sebaiknya", "saran", "kamu harus"). Sampai
+// putaran 3 syarat bingkai masih wajib (`bingkai && pasar`), dan akibatnya
+// bentuk anjuran yang PALING lazim dalam Bahasa Indonesia santai — register
+// yang justru diminta INSTRUKSI_DASAR butir 3 — lolos utuh, karena bentuk itu
+// adalah perintah telanjang tanpa satu pun kata bingkai: "lepas saja selagi
+// bisa", "kurangi bobotnya", "keluar dulu dari posisi ini", "alihkan dananya
+// ke yang lain".
+//
+// Tiga keluarga pola bekerja bersama-sama (lihat guard.ts `nilaiKlausa`):
+//   POLA_SUBJEK_PASAR → klausa tentang EFEK/POSISI/UANG PENGGUNA → DIBUANG
+//   POLA_SUBJEK_ALARM → klausa tentang KONFIGURASI ALARM/PEMERIKSAAN → SELAMAT
+//   POLA_PELAKU_DATA  → klausa LAPORAN FAKTA berpelaku pihak ketiga → SELAMAT
+// ===========================================================================
+
 /**
- * SUBJEK "efek/posisi/uang": anjuran yang subjeknya ini adalah saran investasi
- * dan WAJIB dibuang (aturan lomba (b)), termasuk bila kalimatnya didahului
- * pengingkar ("ini bukan saran, tapi sebaiknya lepas saham ini").
+ * Objek yang HANYA masuk akal sebagai milik pengguna: posisi, porsi, dan uang.
+ * Kata-kata ini tidak muncul di kalimat fakta pemindai, sehingga aman
+ * dipasangkan bahkan dengan verba netral.
+ */
+const OBJEK_MILIK =
+  "posisi|eksposur|porsi|bobot|kepemilikan|portofolio|dana|modal|uang|duit|cuan|lot|deposito|obligasi|reksadana";
+
+/**
+ * Objek efek secara umum. "saham" dan "emiten" (termasuk kode emiten yang
+ * dinormalkan guard.ts) SANGAT sering muncul di kalimat fakta dan usulan blok
+ * ("emiten TELE tertangkap 4 bulan lebih awal"), jadi keduanya hanya sah
+ * sebagai bukti bila dipasangkan dengan verba yang murni transaksi.
+ */
+const OBJEK_EFEK = `saham|emiten|${OBJEK_MILIK}`;
+
+/**
+ * Verba yang murni transaksi efek — di domain ini tidak punya pemakaian lain.
+ * Bentuk berimbuhan me-/di- ikut karena anjuran pasif juga lazim ("sahamnya
+ * sebaiknya dilepas"); kalimat BERITA yang memakai bentuk yang sama
+ * ("orang dalam melepas sahamnya") diselamatkan POLA_PELAKU_DATA.
+ */
+const VERBA_PASAR =
+  "lepas|lepaskan|melepas|dilepas|jual|menjual|dijual|beli|membeli|dibeli|serok|borong|memborong|" +
+  "akumulasi|akumulasikan|distribusikan|pegang|memegang|dipegang|tahan|menahan|ditahan|buang|buangkan";
+
+/**
+ * Verba netral: sah dipakai untuk menyetel alarm ("tambah satu blok",
+ * "kurangi ambangnya"), jadi hanya berarti anjuran investasi bila objeknya
+ * milik pengguna. Hanya bentuk perintah/akar yang didaftar — bentuk pasif
+ * ("setelah blok ditambah, TELE tertangkap lebih awal") justru kalimat kerja
+ * agent diagnosis dan tidak boleh ikut kena.
  *
- * Ditulis sebagai pola, bukan daftar kata, supaya yang dinilai adalah OBJEK
- * anjurannya (posisi, porsi, alokasi dana, waktu transaksi, harga) — bukan kata
- * kerjanya. Kata kerja yang sama ("tambah", "kurangi", "periksa") boleh dipakai
- * untuk menyetel alarm dan di sana justru harus selamat.
+ * "tambahkan"/"menambahkan" tidak ikut dengan sendirinya: `\btambah\b` tidak
+ * cocok dengan "tambahkan", sehingga "tambahkan blok suspensi" — usulan alarm
+ * yang paling sering ditulis agent diagnosis — aman.
+ */
+/**
+ * Bentuk me- dari verba netral. Bentuk ini dipakai baik untuk aturan alarm
+ * ("kalau kamu menambah blok suspensi") maupun untuk posisi ("sebaiknya kamu
+ * tidak menambah SRIL lagi"), jadi ia hanya jadi bukti lewat pola P2c yang
+ * memeriksa objek TERDEKATNYA.
+ */
+const VERBA_NETRAL_ME =
+  "menambah|mengurangi|memotong|memindahkan|mengalihkan|menyimpan|mempertahankan|menaruh|menempatkan|memarkir";
+
+const VERBA_NETRAL =
+  "kurangi|tambah|naikkan|turunkan|potong|alihkan|pindahkan|pertahankan|amankan|realisasikan|cairkan|geser|" +
+  // Menempatkan uang: "jangan menaruh uang di emiten seperti ini", "taruh
+  // dananya di deposito". Objeknya wajib milik pengguna, jadi "menaruh catatan"
+  // atau "tempatkan blok" tidak ikut kena.
+  "taruh|menaruh|tempatkan|menempatkan|parkir|memarkir";
+
+/**
+ * Verba yang HANYA masuk akal untuk transaksi efek, sehingga sebagai perintah
+ * telanjang di awal klausa ia sudah cukup jadi bukti — tanpa objek sekalipun
+ * ("Lepas saja pelan-pelan sebelum laporan kuartal berikutnya.").
+ */
+const VERBA_PERINTAH_PASAR =
+  "lepas|lepaskan|jual|juallah|beli|belilah|serok|borong|akumulasi|akumulasikan|distribusikan|amankan|realisasikan|cairkan|sikat";
+
+/**
+ * Awal klausa: spasi, tanda kutip/kurung, penanda daftar berpoin ("- ", "• ",
+ * "1. "), dan kata sambung/partikel yang lazim mendahului perintah telanjang.
+ * Tanpa ini, anjuran di dalam daftar berpoin dan sesudah pengingkar ("…, tapi
+ * lepas saja") tidak terbaca sebagai perintah.
+ */
+const SAMBUNG =
+  "tapi|tetapi|namun|melainkan|lalu|kemudian|terus|baru|jadi|maka|dan|atau|sekalian|mending|mendingan|" +
+  "langsung|pokoknya|ya|nah|coba|tolong|segera|sebaiknya|silakan|silahkan|ayo|yuk|jangan|mungkin";
+const AWAL_KLAUSA = `^[\\s"'“”(\\[•*·—–-]*(?:\\d+[.)]\\s*)?(?:(?:${SAMBUNG})[\\s,]+)*`;
+
+/**
+ * Posisi tempat perintah telanjang boleh muncul: awal klausa, atau sesudah
+ * koma/titik dua yang diikuti kata sambung ("Perketat ambangnya, lalu lepas
+ * sisanya"). Tanpa cabang kedua, anjuran yang ditempel di belakang usulan
+ * alarm yang sah tidak terbaca sebagai perintah.
+ */
+const PEMBUKA_PERINTAH = `(?:${AWAL_KLAUSA}|[,:]\\s*(?:(?:${SAMBUNG})[\\s,]+)+)`;
+
+/** Jendela antar-kata di dalam SATU klausa (pemenggal tidak boleh terlompati). */
+const JEDA = "[^.!?;\\n]{0,45}?";
+
+/**
+ * Dua kelompok kata yang muncul di klausa yang sama, urutan bebas — dipakai
+ * untuk "verba transaksi + objek pasar". Urutan bebas karena keduanya lazim:
+ * "kurangi porsimu" dan "porsimu sebaiknya dikurangi".
+ */
+function pasangan(verba: string, objek: string): RegExp {
+  const o = `\\b(?:${objek})(?:nya|mu|ku)?\\b`;
+  const v = `\\b(?:${verba})\\b`;
+  return new RegExp(`${v}${JEDA}${o}|${o}${JEDA}${v}`, "i");
+}
+
+/**
+ * PERINTAH/AJAKAN bertransaksi: klausa yang BENTUKNYA sendiri sudah anjuran
+ * kepada pengguna. Dipisah dari daftar besar karena punya satu kewenangan
+ * tambahan di guard.ts: ia membatalkan pengecualian POLA_PELAKU_DATA. Kalimat
+ * "orang dalam sudah keluar, jadi lepas saja punyamu" menyebut pelaku pihak
+ * ketiga, tetapi jelas bukan laporan data.
+ */
+export const POLA_PERINTAH_PASAR: readonly RegExp[] = [
+  // (P1) Perintah transaksi telanjang. Bentuk anjuran paling ringkas dalam
+  //      bahasa sehari-hari, dan bentuk yang lolos utuh sampai putaran 3.
+  //      "lepas dari itu" (idiom "selain itu") dikecualikan supaya kalimat
+  //      pengantar tidak ikut kena.
+  new RegExp(`${PEMBUKA_PERINTAH}(?:${VERBA_PERINTAH_PASAR})\\b(?!\\s+dari\\s+itu)`, "i"),
+  // (P3) Larangan/perintah negatif: "jangan simpan SRIL lagi", "jangan dilepas",
+  //      "tidak usah tambah dulu".
+  /\b(jangan|tidak usah|nggak usah|gak usah|stop|berhenti)\s+(simpan|menyimpan|disimpan|pegang|memegang|dipegang|tahan|menahan|ditahan|beli|membeli|dibeli|jual|menjual|dijual|tambah|menambah|nambah|masuk|keluar|lepas|melepas|dilepas|borong|serok)\b/i,
+  // (P4) Menahan posisi — "tahan dulu", "tahan sampai pulih", "simpan saja
+  //      dulu". "tunggu/menunggu" dipisah dan TIDAK boleh dipasangkan dengan
+  //      "sampai": "menunggu sampai laporan terbit" kalimat fakta, bukan
+  //      anjuran. Bentuk pasif "disimpan" juga tidak ikut, supaya kalimat
+  //      teknis ("data disimpan sementara") tidak kena.
+  /\b(tahan|ditahan|menahan|nahan|pegang|dipegang|simpan)\s+(dulu|saja|aja|sampai|sementara)\b/i,
+  /\b(tunggu|menunggu|wait)\s+(dulu|saja|aja|di\s+luar)\b/i,
+  // (P5) Masuk/keluar posisi berikut waktunya. "keluar dulu", "masuk sekarang".
+  //      Lookbehind menahan kalimat fakta yang subjeknya dokumen, bukan posisi
+  //      ("laporan kuartal 2 baru keluar sekarang"); jendela 3 kata menampung
+  //      keterangan di antaranya. "lagi", "besok", dan "minggu ini" tidak
+  //      didaftar karena "laporannya tidak keluar lagi" jauh lebih sering
+  //      daripada "masuk lagi" — bentuk anjurannya sudah tertangkap "keluar
+  //      dulu"/"masuk sekarang" di kalimat yang sama.
+  /(?<!\b(?:laporan|laporannya|pengumuman|filing|hasil|data|angka|kabar|berita|uji)\s(?:\w+\s){0,3})\b(masuk|keluar)\s+(sekarang|dulu|saja|aja|bertahap|pelan|selagi)\b/i,
+  /\b(masuk|keluar|cabut|menyingkir|hengkang|angkat kaki)\s+(dari|ke)\s+(saham|posisi|pasar|emiten)\b/i,
+  // (P6) Pindah ke efek lain — "cari saham lain", "pindahkan ke saham bank yang
+  //      lebih aman". Ekornya wajib "lain/lainnya/pengganti" atau "yang lebih"
+  //      + kata sifat penilaian; tanpa syarat itu, langkah pemeriksaan yang sah
+  //      ("cari emiten pembanding", "emiten yang lebih dulu disuspensi") ikut
+  //      termakan.
+  /\b(cari|mencari|pindah|pindahkan|memindahkan|dipindahkan|beralih|ganti|tukar|alihkan|mengalihkan|dialihkan|taruh|menaruh|tempatkan|switching|switch)\b[^.!?;\n]{0,30}\b(saham|emiten)(nya)?\s+[^.!?;\n]{0,15}?(lain|lainnya|pengganti|yang\s+lebih\s+(sehat|aman|baik|bagus|tertib|likuid|murah|kuat))\b/i,
+  // (P12) Menghindari efek tertentu ("hindari SRIL", "hindari emiten seperti
+  //       ini") — berbeda dari "hindari ambang terlalu ketat" yang soal alarm.
+  /\bhindari\b[^.!?;\n]{0,25}\b(saham|emiten)\b/i,
+  // (P13) "Kalau saya jadi kamu …" selalu tentang keputusan posisi orang lain.
+  /\bkalau\s+(saya|aku)\s+jadi\s+(kamu|anda|kalian)\b/i,
+] as const;
+
+/**
+ * SUBJEK "efek/posisi/uang pengguna": klausa yang subjeknya ini adalah saran
+ * investasi dan WAJIB dibuang (aturan lomba (b)) — apa pun bentuk kalimatnya:
+ * imperatif telanjang, deklaratif, pertanyaan retoris, sesudah pengingkar, atau
+ * satu butir di dalam daftar berpoin. Pengingkar tidak pernah menyelamatkan
+ * klausa bersubjek pasar; ia hanya melindungi dirinya sendiri (guard.ts
+ * FRASA_DILINDUNGI).
  */
 export const POLA_SUBJEK_PASAR: readonly RegExp[] = [
-  // Posisi, porsi, dan besaran kepemilikan.
-  /\b(posisi|eksposur|porsi|kepemilikan)(nya|mu|ku)?\b/i,
-  /\balokasi\s+(dana|modal|aset|portofolio)\b/i,
-  /\b(dana|modal|uang)(nya|mu)?\s+(kamu|anda|yang|itu|ini|dipindah|dialih)/i,
-  // Aksi transaksi dan waktunya.
-  /\b(lepas|lepaskan|melepas|dilepas)\b/i,
-  /\b(tahan|ditahan|menahan|nahan)\s+(dulu|saja|sampai|sementara)\b/i,
-  /\b(kurangi|mengurangi|tambah|menambah|naikkan|turunkan|potong)\s+\S*\s*(posisi|eksposur|porsi|kepemilikan|saham|lot)\b/i,
-  /\b(masuk|keluar)\s+(sekarang|dulu|saja|bertahap|pelan|hari ini|besok)\b/i,
-  /\b(masuk|keluar)\s+(dari|ke)\s+(saham|posisi|pasar|emiten)\b/i,
+  ...POLA_PERINTAH_PASAR,
+  // (P2a) Verba murni transaksi + objek efek: "memegang SRIL", "sahamnya
+  //       sebaiknya dilepas". Kalimat berita berpelaku pihak ketiga tetap aman
+  //       lewat POLA_PELAKU_DATA.
+  pasangan(VERBA_PASAR, OBJEK_EFEK),
+  // (P2b) Verba netral + objek MILIK PENGGUNA: "kurangi bobotnya", "porsimu
+  //       potong separuh", "alihkan dananya". Verba yang sama tanpa objek milik
+  //       ("kurangi ambangnya", "tambah satu blok untuk TELE") tidak kena.
+  pasangan(VERBA_NETRAL, OBJEK_MILIK),
+  // (P2c) Verba netral bentuk me- + objek efek TERDEKAT. Yang membedakan
+  //       "sebaiknya kamu tidak menambah SRIL lagi" (anjuran posisi) dari
+  //       "kalau kamu menambah blok suspensi, TELE tertangkap lebih awal"
+  //       (usulan aturan) adalah kata tepat sesudah verbanya, bukan seluruh
+  //       isi klausa — jadi istilah alarm di posisi itu menggugurkan pola.
+  new RegExp(
+    `\\b(?:${VERBA_NETRAL_ME})\\s+(?!(?:blok|ambang|aturan|alarm|threshold|kombinasi|uji|pemantauan|syarat|catatan|data)\\b)` +
+      `(?:\\w+\\s+){0,2}?(?:${OBJEK_EFEK})(?:nya|mu|ku)?\\b`,
+    "i",
+  ),
+  // (P7) Istilah transaksi yang tidak punya makna lain di luar pasar.
+  /\b(cut\s*loss|stop\s*loss|take[\s-]?profit|average\s*(down|up)|averaging|switching)\b/i,
   /\bmenunggu\s+di\s+luar\b/i,
-  /\b(average|averaging)[\s-]*(down|up)\b/i,
-  /\bswitch(ing)?\s+ke\b/i,
-  // Harga, target, dan hasil transaksi.
-  /\b(harga|target)\s+(beli|jual|masuk|keluar|wajar|atas|bawah)\b/i,
-  /\b(cut\s*loss|stop\s*loss|take[\s-]?profit)\b/i,
+  // (P8) Harga/target dan waktu bertransaksi sebagai ajakan.
+  // Akhiran -nya wajib ikut: "harga wajarnya 120" adalah bentuk yang paling
+  // sering ditulis model, dan `\bwajar\b` tidak cocok dengan "wajarnya".
+  /\b(harga|target)\s+(beli|jual|masuk|keluar|wajar|atas|bawah)(nya|mu)?\b/i,
+  /\b(selagi|mumpung)\s+(murah|mahal|bisa|sempat|masih|belum)\b/i,
   /\b(cuan|untung|rugi)(nya|mu)?\s+(bisa|akan|lebih|makin)\b/i,
-  // Penilaian layak/tidak layak sebagai investasi.
-  /\b(layak|cocok|aman|bagus)\s+(dibeli|dikoleksi|dipegang|disimpan|untuk\s+investasi|buat\s+investasi)\b/i,
+  // (P9) Penilaian layak/tidak layak dibeli atau dipegang.
+  /\b(layak|cocok|aman|bagus|pantas)\s+(dibeli|dikoleksi|dipegang|disimpan|dipertahankan|ditahan|dilirik|masuk|untuk\s+investasi|buat\s+investasi)\b/i,
+  /\b(tidak|belum|kurang|nggak|gak)\s+(layak|cocok|pantas)\b/i,
+  // "berisiko" sengaja TIDAK di sini: "emiten ini berisiko delisting" adalah
+  // pesan inti alat ini, bukan penilaian layak-tidaknya sebagai investasi.
   /\b(saham|emiten)\s+ini\s+(bagus|jelek|buruk|aman|berbahaya|menguntungkan)\b/i,
-  // "Kalau saya jadi kamu …" selalu tentang keputusan posisi orang lain.
-  /\bkalau\s+(saya|aku)\s+jadi\s+(kamu|anda|kalian)\b/i,
+  // (P10) Uang pengguna diarahkan ke tempat lain.
+  /\b(dana|modal|uang|duit)(nya|mu|ku)?\s+[^.!?;\n]{0,25}(lebih\s+(aman|baik|berguna)|(di|ke)\s+tempat\s+lain)\b/i,
+  /\balokasi\s+(dana|modal|aset|portofolio)\b/i,
+  // (P11) Porsi/portofolio pengguna dinilai atau diperintahkan.
+  /\b(posisi|porsi|bobot|eksposur|portofolio|kepemilikan)(nya|mu|ku)?\s+[^.!?;\n]{0,25}\b(terlalu|kebesaran|kegedean|sebaiknya|seharusnya|jangan|wajib|harus|mesti)\b/i,
+] as const;
+
+/**
+ * PELAKU DATA: pihak ketiga yang melakukan transaksi di dalam kalimat BERITA
+ * ("orang dalam melepas sahamnya", "asing menjual bersih", "broker ritel
+ * membeli"). Klausa seperti ini fakta dari data, bukan anjuran, dan wajib
+ * selamat walau memuat kata jual/beli.
+ *
+ * Pengecualiannya batal begitu klausa itu juga berbicara KEPADA pengguna
+ * (POLA_ORANG_KEDUA) atau berbentuk perintah telanjang — di situ faktanya cuma
+ * pengantar anjuran ("orang dalam sudah keluar, kamu lepas juga").
+ */
+export const POLA_PELAKU_DATA: readonly RegExp[] = [
+  // Pelaku transaksi di data filing.
+  /\b(orang dalam|insider|direksi|komisaris|pengendali|manajemen|pemegang saham)\b/i,
+  /\b(institusi|institusional|asing|broker|ritel|bandar|publik|reksa\s?dana)\b/i,
+  /\bfiling\b/i,
+  // Pelaku tindakan bursa ("perdagangannya ditahan bursa sampai pengumuman").
+  /\b(bursa|otoritas|regulator|ojk|idx|bei)\b/i,
+] as const;
+
+/**
+ * Penanda klausa yang berbicara KEPADA pengguna atau tentang milik pengguna.
+ * Dipakai hanya untuk membatalkan pengecualian POLA_PELAKU_DATA — bukan untuk
+ * membuang kalimat, karena "alarmmu" dan "aturanmu" justru subjek yang sah.
+ */
+export const POLA_ORANG_KEDUA: readonly RegExp[] = [
+  /\b(kamu|kau|anda|kalian)\b/i,
+  /\b(posisi|porsi|bobot|eksposur|portofolio|kepemilikan|saham|dana|modal|uang|cuan)(mu|ku)\b/i,
 ] as const;
 
 /**

@@ -17,7 +17,11 @@ export interface Penjelasan {
   teks: string;
   /** true bila teks hasil rapian model (bukan template). */
   olehAi: boolean;
-  /** true bila ada kata terlarang yang disensor dari keluaran model. */
+  /**
+   * true bila keluaran model perlu dilihat manusia: ada kata terlarang atau
+   * klausa beranjuran yang dibuang (teks kembali ke template), ATAU ada klausa
+   * "ragu" yang dipertahankan tetapi ditandai penyensor.
+   */
   perluTinjau: boolean;
 }
 
@@ -116,7 +120,14 @@ export async function penjelasanSaham(h: HasilSaham, opsi: OpsiPenjelasan): Prom
       console.warn(`[jaga] penjelasan AI ${h.symbol} memuat ${sebab}; memakai template.`);
       return { symbol: h.symbol, teks: template, olehAi: false, perluTinjau: true };
     }
-    return { symbol: h.symbol, teks: pastikanDisclaimer(sensor.teks), olehAi: true, perluTinjau: false };
+    // Klausa "ragu" (beranjuran ke pengguna, subjeknya tidak jelas pasar) tidak
+    // membatalkan rapian model — tetapi ditandai supaya bisa ditinjau manusia.
+    return {
+      symbol: h.symbol,
+      teks: pastikanDisclaimer(sensor.teks),
+      olehAi: true,
+      perluTinjau: sensor.kalimatRagu > 0,
+    };
   } catch (err) {
     if (!(err instanceof AiKeyMissingError)) {
       console.warn(`[jaga] penjelasan AI gagal untuk ${h.symbol}: ${err instanceof Error ? err.message : String(err)}`);

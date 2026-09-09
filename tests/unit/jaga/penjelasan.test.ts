@@ -96,7 +96,10 @@ describe("templatePenjelasan", () => {
   it("tidak memuat kata rekomendasi (beli/jual/rekomendasi) — frasa faktual 'filing jual' dilindungi guard", () => {
     for (const h of [MERAH, HIJAU]) {
       const t = templatePenjelasan(h, "2026-09-07");
-      expect(sensorTeks(t).kata).toEqual([]);
+      // Template deterministik ini juga jadi bahan rapian model: kalau penyaring
+      // subjek-pasar sampai memakan satu klausanya, keluaran AI yang setia pada
+      // template akan selalu ditolak. Jadi bukan cuma `kata` yang harus kosong.
+      expect(sensorTeks(t)).toEqual({ teks: t, kata: [], kalimatDibuang: 0, kalimatRagu: 0 });
       expect(t).not.toMatch(/rekomendasi/i);
       // Selain frasa faktual dari mesin ("filing jual"), tidak ada kata jual/beli lepas.
       expect(t.replace(/filing jual/g, "")).not.toMatch(TERLARANG);
