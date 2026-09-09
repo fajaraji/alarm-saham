@@ -67,7 +67,7 @@ describe("/cara-kami-menghitung", () => {
     expect(screen.getByTestId("kredit-total")).toHaveTextContent(`${KREDIT_TOTAL_LEDGER} dari ${KREDIT_ANGGARAN}`);
     // Disclaimer datang dari footer layout akar (tiket 13), bukan dari halaman ini.
     expect(screen.queryByTestId("disclaimer")).not.toBeInTheDocument();
-    render(<FooterDisclaimer />);
+    render(<FooterDisclaimer sumberNyata />);
     expect(screen.getByTestId("disclaimer")).toHaveTextContent("bukan saran investasi");
     expect(document.body.textContent).not.toMatch(/berbahaya|gorengan|akan pailit/i);
   });

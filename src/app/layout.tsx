@@ -6,6 +6,7 @@ import { FooterDisclaimer } from "@/components/panduan/FooterDisclaimer";
 import { HeaderNav } from "@/components/panduan/HeaderNav";
 import { OverlayPanduan } from "@/components/panduan/OverlayPanduan";
 import { PanduanProvider } from "@/components/panduan/PanduanContext";
+import { sumberSitus } from "@/lib/sumber-situs";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -32,15 +33,21 @@ export const metadata: Metadata = {
 
 // Header (langkah 1–2–3, Kamus, tombol Panduan), overlay panduan kunjungan
 // pertama, dan footer disclaimer dipasang SEKALI di sini untuk semua halaman.
-export default function RootLayout({ children }: LayoutProps<"/">) {
+//
+// Sumber data dibaca di sini dan diturunkan ke keduanya: kalimat "fakta resmi
+// dari feed Sectors" hanya boleh muncul kalau servernya memang berjalan di atas
+// database Sectors. `sumberSitus()` memakai `connection()` sehingga penilaian
+// terjadi saat permintaan, bukan saat build (build tidak punya DATABASE_URL).
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { nyata } = await sumberSitus();
   return (
     <html lang="id" className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <PanduanProvider>
           <HeaderNav />
-          <OverlayPanduan />
+          <OverlayPanduan sumberNyata={nyata} />
           {children}
-          <FooterDisclaimer />
+          <FooterDisclaimer sumberNyata={nyata} />
         </PanduanProvider>
       </body>
     </html>

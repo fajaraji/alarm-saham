@@ -22,14 +22,17 @@ import { BLOCK_KINDS } from "../../src/lib/engine/rules";
 import { BLOK_B_KINDS } from "../../src/lib/jaga/blok-b";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/rakit" }));
+// Halaman server membaca sumber data lewat `connection()` (hanya ada saat ada
+// permintaan Next). Di jsdom nilainya disuntik: jalur data nyata.
+vi.mock("../../src/lib/sumber-situs", () => ({ sumberSitus: async () => ({ nyata: true, jenis: "pglite" }) }));
 
 function Aplikasi({ children }: { children?: React.ReactNode }) {
   return (
     <PanduanProvider>
       <HeaderNav />
-      <OverlayPanduan />
+      <OverlayPanduan sumberNyata />
       {children}
-      <FooterDisclaimer />
+      <FooterDisclaimer sumberNyata />
     </PanduanProvider>
   );
 }
@@ -194,9 +197,12 @@ describe("Kamus: cakupan istilah", () => {
     }
   });
 
-  it("layar Rakit, Pasang, dan Cara kami menghitung memuat istilah bertooltip yang semuanya ada di kamus", () => {
+  it("layar Rakit, Pasang, dan Cara kami menghitung memuat istilah bertooltip yang semuanya ada di kamus", async () => {
     for (const Halaman of [HalamanRakit, HalamanPasang, HalamanCaraKamiMenghitung]) {
-      const { container, unmount } = render(<Halaman />);
+      // /pasang kini server component async (membaca sumber data untuk lede-nya);
+      // `await` pada komponen sinkron mengembalikan JSX-nya apa adanya.
+      const jsx = await (Halaman as () => Promise<React.ReactElement> | React.ReactElement)();
+      const { container, unmount } = render(jsx);
       const tombol = container.querySelectorAll<HTMLElement>("button[data-istilah]");
       expect(tombol.length, Halaman.name).toBeGreaterThanOrEqual(3);
       for (const b of tombol) {
@@ -227,10 +233,62 @@ describe("Header, petunjuk, dan footer", () => {
   });
 
   it("footer disclaimer memuat kalimat PLAN §2 dan tautan kamus/metodologi", () => {
-    render(<FooterDisclaimer />);
+    render(<FooterDisclaimer sumberNyata />);
     const footer = screen.getByTestId("disclaimer");
     expect(footer).toHaveTextContent(DISCLAIMER);
     expect(footer).toHaveTextContent("bukan saran investasi");
     expect(within(footer).getByRole("link", { name: "Kamus istilah" })).toHaveAttribute("href", "/kamus");
+  });
+
+  // ---------------------------------------------------------------------
+  // Keberatan 3 & 6: klaim sumber harus mengikuti sumber data yang nyata.
+  // Footer ini dipasang di layout akar (SEMUA halaman) dan dulu selalu
+  // berbunyi "fakta resmi dari feed Sectors" — di jalur data contoh ia
+  // membantah label "data contoh" pada layar yang sama.
+  // ---------------------------------------------------------------------
+  it("footer pada jalur data contoh TIDAK mengklaim fakta resmi Sectors", () => {
+    render(<FooterDisclaimer sumberNyata={false} />);
+    const footer = screen.getByTestId("disclaimer");
+    expect(footer).toHaveAttribute("data-sumber", "fixture");
+    expect(footer).toHaveTextContent("data contoh");
+    expect(footer).toHaveTextContent("bukan data Sectors nyata");
+    expect(footer).toHaveTextContent("ilustratif");
+    expect(footer.textContent).not.toMatch(/fakta resmi dari feed Sectors/);
+    // Disclaimer wajib PLAN §2 tetap ada di kedua jalur.
+    expect(footer).toHaveTextContent("bukan saran investasi");
+  });
+
+  it("footer pada jalur data nyata memang mengklaim fakta resmi Sectors", () => {
+    render(<FooterDisclaimer sumberNyata />);
+    const footer = screen.getByTestId("disclaimer");
+    expect(footer).toHaveAttribute("data-sumber", "db");
+    expect(footer).toHaveTextContent("fakta resmi dari feed Sectors");
+  });
+
+  it("dialog panduan pada jalur data contoh menyebut data contoh, bukan 'fakta dari data resmi'", () => {
+    render(
+      <PanduanProvider>
+        <OverlayPanduan sumberNyata={false} />
+      </PanduanProvider>,
+    );
+    const dialog = screen.getByTestId("overlay-panduan");
+    expect(dialog).toHaveAttribute("data-sumber", "fixture");
+    expect(dialog).toHaveTextContent("data contoh");
+    expect(dialog.textContent).not.toMatch(/fakta dari data resmi/);
+    // Janji "107 saham" juga tidak boleh muncul saat universenya data contoh.
+    expect(dialog.textContent).not.toMatch(/107 saham/);
+    expect(dialog).toHaveTextContent("bukan saran investasi");
+  });
+
+  it("dialog panduan pada jalur data nyata tetap menyebut fakta dari data resmi & 107 saham", () => {
+    render(
+      <PanduanProvider>
+        <OverlayPanduan sumberNyata />
+      </PanduanProvider>,
+    );
+    const dialog = screen.getByTestId("overlay-panduan");
+    expect(dialog).toHaveAttribute("data-sumber", "db");
+    expect(dialog).toHaveTextContent("fakta dari data resmi");
+    expect(dialog).toHaveTextContent("107 saham");
   });
 });

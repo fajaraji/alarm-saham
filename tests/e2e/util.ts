@@ -30,6 +30,44 @@ export async function harapkanLabelSumber(label: Locator): Promise<void> {
   if (!ADA_PGLITE) await expect(label).toContainText("bukan data Sectors nyata");
 }
 
+/**
+ * Kalimat yang MENGKLAIM isi layar adalah data resmi Sectors. Tidak satu pun
+ * boleh muncul saat server berjalan pada jalur data contoh.
+ *
+ * Ditulis sebagai beberapa varian urutan kata dengan sengaja: gerbang lama
+ * hanya mencocokkan satu kalimat persis ("fakta dari data resmi") di dalam
+ * <main>, sehingga footer yang berbunyi "fakta resmi dari feed Sectors" lolos
+ * dua kali — beda urutan kata DAN di luar <main>.
+ */
+export const KLAIM_SUMBER_RESMI: RegExp[] = [
+  /fakta\s+(dari\s+)?(data\s+)?resmi/i,
+  /data\s+resmi/i,
+  /Sectors\s+Financial\s+API/i,
+  /Alasan\s+resmi\s+BEI/i,
+  /emiten\s+nyata/i,
+  /107\s+saham/i,
+];
+
+/** Klaim yang WAJIB ada di jalur data nyata (footer memikul kalimat sumbernya). */
+export const KLAIM_WAJIB_JALUR_DB = /fakta resmi dari feed Sectors/i;
+
+/**
+ * Periksa SELURUH halaman (bukan hanya <main>): footer disclaimer dan overlay
+ * panduan dipasang di layout akar, jadi keduanya di luar <main>.
+ */
+export async function harapkanKlaimSumberJujur(page: Page, jalur: string): Promise<void> {
+  const teks = await page.locator("body").innerText();
+  await expect(page.getByTestId("disclaimer"), jalur).toHaveAttribute("data-sumber", ADA_PGLITE ? "db" : "fixture");
+  if (ADA_PGLITE) {
+    expect(teks, `${jalur}: footer jalur DB harus menyebut sumbernya`).toMatch(KLAIM_WAJIB_JALUR_DB);
+    return;
+  }
+  for (const pola of KLAIM_SUMBER_RESMI) {
+    expect(teks, `${jalur}: klaim sumber resmi "${pola}" muncul padahal servernya jalur data contoh`).not.toMatch(pola);
+  }
+  expect(teks, `${jalur}: jalur data contoh harus mengakui data contoh`).toMatch(/data contoh/i);
+}
+
 /** Pesan console.error yang memang diharapkan pada alur tanpa kunci AI / tanpa DB. */
 const DIHARAPKAN: RegExp[] = [
   // Panel AI tanpa kunci → server menjawab 503 dan browser mencatat gagalnya fetch.

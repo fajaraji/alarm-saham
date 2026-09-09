@@ -4,7 +4,7 @@
 // fixture (E2E_TANPA_PGLITE=1 atau clone bersih) — bukan gagal.
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanLabelSumber, PESAN_SKIP_PGLITE } from "./util";
+import { ADA_PGLITE, harapkanKlaimSumberJujur, harapkanLabelSumber, PESAN_SKIP_PGLITE } from "./util";
 
 test.describe("/putar-ulang", () => {
   test("cari SRIL → garis waktu dari DB dengan ≥ 3 kejadian, sumber & tautan BEI, lampu", async ({ page }) => {
@@ -42,8 +42,12 @@ test.describe("/putar-ulang", () => {
     await page.goto("/putar-ulang?kode=SRIL");
     await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "SRIL");
     await harapkanLabelSumber(page.getByTestId("label-sumber"));
-    // Klaim "fakta dari data resmi" tidak boleh muncul saat datanya contoh.
-    await expect(page.locator("main")).not.toContainText("fakta dari data resmi");
+    // Klaim sumber resmi tidak boleh muncul di MANA PUN pada halaman ini —
+    // termasuk footer disclaimer & dialog panduan yang dipasang layout akar,
+    // dan dalam urutan kata apa pun ("fakta dari data resmi" maupun "fakta
+    // resmi dari feed Sectors"). Gerbang lama hanya memindai <main> dan satu
+    // urutan kata, jadi footer lolos dua kali.
+    await harapkanKlaimSumberJujur(page, "/putar-ulang?kode=SRIL (fixture)");
     await expect(page.getByTestId("catatan")).toContainText("data CONTOH");
     for (const teks of await page.getByTestId("kejadian").allTextContents()) {
       expect(teks).toMatch(/Sumber: data contoh — fixture/);

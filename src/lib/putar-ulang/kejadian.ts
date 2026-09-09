@@ -136,7 +136,14 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
       jenis: "suspensi",
       tingkat: "crit",
       judul: "Perdagangan saham dihentikan sementara (suspensi)",
-      rincian: x.reason ? `Alasan resmi BEI: "${x.reason}".` : "Alasan tidak tercantum di feed.",
+      // Atribusi alasan ikut sumber: pada jalur fixture teks alasannya meniru
+      // bentuk pengumuman BEI, tetapi menyebutnya "resmi" akan membantah label
+      // "data contoh" pada kartu yang sama.
+      rincian: x.reason
+        ? m.contoh
+          ? `Alasan yang tercantum di data contoh: "${x.reason}".`
+          : `Alasan resmi BEI: "${x.reason}".`
+        : "Alasan tidak tercantum di feed.",
       sumber: sumber("/v2/suspensions/ (feed pengumuman BEI)", pdf[x.date] ?? null),
     });
   });

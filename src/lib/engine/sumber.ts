@@ -11,7 +11,7 @@ import path from "node:path";
 
 import { bukaDb, bukaPglite, DIR_PGLITE_DEFAULT, type DbTerbuka } from "../db/buka";
 import type { Db } from "../db/client";
-import { hasDb } from "../db/client";
+import { hasDb, isNeonUrl } from "../db/client";
 import { fromDb, fromFixture, universeFromDb, type EventSource, type UniverseEntry } from "./events";
 import universeKecil from "./fixtures/universe-kecil.json";
 
@@ -110,4 +110,24 @@ export async function getEventSource(opsi: OpsiSumber = {}): Promise<SumberKejad
   const dir = folderPglite(opsi);
   if (dir) return dariDb(await bukaPgliteSekali(dir));
   return dariFixture("DATABASE_URL kosong dan ./.pglite tidak ada");
+}
+
+/**
+ * Jenis sumber yang AKAN dipilih `getEventSource()`, TANPA membuka koneksi.
+ *
+ * Dipakai lapisan tampilan (footer disclaimer, overlay panduan, beranda) yang
+ * hanya perlu tahu "data nyata atau data contoh" dan tidak boleh membayar biaya
+ * membuka PGlite di setiap halaman. Keputusannya harus persis sama dengan
+ * getEventSource(); tests/unit/engine/sumber-ringkas.test.ts membandingkan
+ * keduanya untuk setiap kombinasi env supaya tidak diam-diam menyimpang.
+ */
+export function jenisSumberTerpilih(opsi: OpsiSumber = {}): JenisSumber {
+  if (opsi.fixture) return "fixture";
+  if (hasDb()) return isNeonUrl(process.env.DATABASE_URL!.trim()) ? "neon" : "postgres";
+  return folderPglite(opsi) ? "pglite" : "fixture";
+}
+
+/** true bila sumbernya database berisi data Sectors nyata (bukan fixture contoh). */
+export function sumberNyata(opsi: OpsiSumber = {}): boolean {
+  return jenisSumberTerpilih(opsi) !== "fixture";
 }

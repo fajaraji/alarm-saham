@@ -25,22 +25,41 @@ function tandaiSelesai() {
   }
 }
 
-export const LANGKAH_PANDUAN = [
-  {
-    judul: "Putar ulang.",
-    teks: "Ketik kode saham, lalu geser slider waktu ke kiri. Lihat tanda resmi apa yang sudah kelihatan sebelum sahamnya dibekukan atau dihapus dari bursa.",
-  },
-  {
-    judul: "Rakit alarm.",
-    teks: "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke 107 saham: 18 yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat.",
-  },
-  {
-    judul: "Pasang.",
-    teks: "Tambahkan saham yang kamu pegang. Alarm mengecek data resmi dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
-  },
-] as const;
+/**
+ * Isi tiga langkah panduan MENGIKUTI sumber data server: pada jalur data contoh
+ * dialog ini dulu tetap menjanjikan "data resmi" dan "107 saham", padahal
+ * universenya 8 emiten contoh.
+ */
+export function langkahPanduan(sumberNyata: boolean) {
+  return [
+    {
+      judul: "Putar ulang.",
+      teks: "Ketik kode saham, lalu geser slider waktu ke kiri. Lihat tanda resmi apa yang sudah kelihatan sebelum sahamnya dibekukan atau dihapus dari bursa.",
+    },
+    {
+      judul: "Rakit alarm.",
+      teks: sumberNyata
+        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke 107 saham: 18 yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat."
+        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke 107 emiten universe uji.",
+    },
+    {
+      judul: "Pasang.",
+      teks: sumberNyata
+        ? "Tambahkan saham yang kamu pegang. Alarm mengecek data resmi dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya."
+        : "Tambahkan saham yang kamu pegang. Alarm mengecek data contoh di server ini dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
+    },
+  ] as const;
+}
 
-export function OverlayPanduan() {
+/** Daftar langkah untuk jalur data nyata (dipakai tes & dokumentasi). */
+export const LANGKAH_PANDUAN = langkahPanduan(true);
+
+export interface PropsOverlayPanduan {
+  /** true = database berisi data Sectors nyata; false = fixture data contoh. */
+  sumberNyata: boolean;
+}
+
+export function OverlayPanduan({ sumberNyata }: PropsOverlayPanduan) {
   const { terbuka, buka, tutup } = usePanduan();
   const kartu = useRef<HTMLDivElement>(null);
   const pemicu = useRef<Element | null>(null);
@@ -97,6 +116,7 @@ export function OverlayPanduan() {
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-[rgba(15,20,32,.55)] p-5"
       data-testid="overlay-panduan"
+      data-sumber={sumberNyata ? "db" : "fixture"}
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) selesai();
       }}
@@ -113,11 +133,18 @@ export function OverlayPanduan() {
           Alarm Saham — cara pakainya dalam 3 langkah
         </h2>
         <p className="m-0 mb-3.5 text-ink-2">
-          Semua yang tampil adalah fakta dari data resmi (feed BEI lewat Sectors). Alarm Saham adalah alat informasi, bukan
-          saran investasi.
+          {sumberNyata ? (
+            <>Semua yang tampil adalah fakta dari data resmi (feed BEI lewat Sectors).</>
+          ) : (
+            <>
+              Server ini belum terhubung ke database Sectors, jadi yang tampil adalah <b>data contoh</b> (bukan data
+              Sectors nyata) — bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif.
+            </>
+          )}{" "}
+          Alarm Saham adalah alat informasi, bukan saran investasi.
         </p>
         <ol className="m-0 mb-4 flex list-none flex-col gap-2.5 p-0">
-          {LANGKAH_PANDUAN.map((l, i) => (
+          {langkahPanduan(sumberNyata).map((l, i) => (
             <li key={l.judul} className="flex items-start gap-3">
               <b
                 aria-hidden="true"

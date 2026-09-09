@@ -172,9 +172,11 @@ export default function HalamanCaraKamiMenghitung() {
       </h1>
       <p className="m-0 max-w-[70ch] text-ink-2">
         Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
-        ke masa lalu dan apa saja yang belum bisa kami buktikan. Semua angka di sini berasal dari data resmi Sectors yang
-        tersimpan di database kami — tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di
-        halaman ini sama dengan keluaran mesin uji.
+        ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>snapshot yang di-commit</b>{" "}
+        (<code className="font-mono">docs/skor-nyata.json</code> dan <code className="font-mono">docs/kredit-ledger.json</code>),
+        hasil menjalankan mesin uji di atas database berisi data Sectors — bukan hasil hitung ulang dari sumber data yang
+        sedang dipakai server ini. Tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di halaman
+        ini sama dengan keluaran mesin uji.
       </p>
 
       {/* ------------------------------------------------------------ */}
