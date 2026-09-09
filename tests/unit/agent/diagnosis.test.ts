@@ -142,7 +142,9 @@ describe("diagnosis (model tiruan)", () => {
     // Kalimat "Sebaiknya [dihapus] saham ini" masih terbaca sebagai saran walau
     // katanya sudah diganti, jadi kalimatnya dibuang seluruhnya.
     expect(hasil.ringkasan).toBe("Alarm bolong. [kalimat saran dihapus].");
-    expect(hasil.emitenDibahas[0].sebab).toBe("[dihapus] the dip");
+    // "buy the dip" adalah ajakan bertransaksi: klausanya dibuang seluruhnya,
+    // bukan sekadar katanya ("[dihapus] the dip" masih terbaca sebagai ajakan).
+    expect(hasil.emitenDibahas[0].sebab).toBe("[kalimat saran dihapus]");
     expect(hasil.usulanBlok[0]).toEqual({ kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual (filing jual)" });
     expect(hasil.runId).toBeUndefined();
     expect(hasil.trace).toHaveLength(2);

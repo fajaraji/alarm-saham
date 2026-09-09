@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sensorObjek, sensorTeks } from "../../../src/lib/agent/guard";
+import { PENGGANTI_KALIMAT, sensorObjek, sensorTeks } from "../../../src/lib/agent/guard";
 import {
   DISCLAIMER,
   INSTRUKSI_DASAR,
@@ -36,7 +36,10 @@ describe("sensorTeks", () => {
     for (const frasa of ["cut loss", "take profit", "saatnya masuk", "layak dikoleksi"]) {
       const r = sensorTeks(`Menurut data, ${frasa} untuk SRIL.`);
       expect(r.kata.length, frasa).toBeGreaterThan(0);
-      expect(r.teks, frasa).toContain("[dihapus]");
+      // Klausanya dibuang seluruhnya: "Menurut data, [dihapus] untuk SRIL."
+      // masih terbaca sebagai ajakan bertransaksi.
+      expect(r.teks, frasa).toContain(PENGGANTI_KALIMAT);
+      expect(r.teks, frasa).not.toContain(frasa);
     }
   });
 
@@ -133,6 +136,96 @@ describe("sensorTeks", () => {
     const teks = "Emiten harus menyampaikan laporan kuartal 120 hari setelah periode berakhir.";
     expect(sensorTeks(teks)).toEqual({ teks, kata: [], kalimatDibuang: 0 });
   });
+
+  // =====================================================================
+  // Tiket 15 putaran 3 — penyensor membedakan SUBJEK anjuran.
+  //
+  // Tabel A: anjuran yang subjeknya EFEK/POSISI/UANG. Semuanya WAJIB hilang,
+  // termasuk pola "sangkal dulu lalu beri anjuran" (yang pada HEAD sebelum
+  // perbaikan lolos UTUH: kata=[], kalimatDibuang=0) dan anjuran yang tidak
+  // memakai satu pun kata beli/jual.
+  //
+  // Tabel B: usulan penyetelan alarm & langkah pemeriksaan — keluaran INTI
+  // agent diagnosis (INSTRUKSI_DIAGNOSIS menyuruh "usulkan perbaikan" dan
+  // mengisi usulanBlok[].alasan). Semuanya WAJIB selamat utuh; pada HEAD
+  // sebelum perbaikan semuanya menjadi "[kalimat saran dihapus].".
+  // =====================================================================
+  const ANJURAN_PASAR_HARUS_DIBUANG = [
+    // Sangkal dulu lalu beri anjuran — pengingkar tidak boleh menyelamatkan sisanya.
+    "Bukan rekomendasi ya, tapi sebaiknya jual TELE hari ini.",
+    "Ini bukan saran investasi, tapi beli SRIL sekarang selagi murah.",
+    "Kami tidak memberi rekomendasi beli SRIL, hanya fakta.",
+    "Bukan anjuran, tapi posisi kamu sebaiknya dikurangi separuh.",
+    "Ini bukan nasihat investasi, tetapi lebih baik keluar dari saham ini sekarang.",
+    // Anjuran pasar tanpa kata beli/jual sama sekali.
+    "Alokasi dana sebaiknya dipindahkan ke emiten lain.",
+    "Saran kami: tahan dulu sampai laporan kuartal berikutnya keluar.",
+    "Sebaiknya average down di harga sekarang.",
+    "Kamu harus keluar dari saham ini sebelum akhir bulan.",
+    "Menurut kami target harga wajarnya 120 rupiah.",
+    // Campur konfigurasi alarm + posisi → dibuang (pilihan aman).
+    "Ambang ekuitas negatif sebaiknya dilonggarkan dan kamu lepas TELE sekarang.",
+  ];
+
+  it.each(ANJURAN_PASAR_HARUS_DIBUANG)("membuang anjuran bersubjek posisi/uang: %s", (kalimat) => {
+    const r = sensorTeks(`Ekuitas negatif sejak 2023-09-30. ${kalimat} Suspensi masih aktif.`);
+    expect(r.kalimatDibuang, kalimat).toBe(1);
+    expect(r.teks, kalimat).toBe(
+      `Ekuitas negatif sejak 2023-09-30. ${PENGGANTI_KALIMAT}. Suspensi masih aktif.`,
+    );
+  });
+
+  const USULAN_ALARM_HARUS_SELAMAT = [
+    "Ambang ekuitas negatif seharusnya dilonggarkan agar TELE tertangkap",
+    "Blok laporan_hilang disarankan memakai ambang 120 hari, bukan 180 hari",
+    "Saran perbaikan: tambahkan blok suspensi ke aturan ini",
+    "Alarm ini melewatkan SRIL karena rekomendasi ambangnya terlalu ketat",
+    "Sebaiknya periksa TELE dengan blok laporan hilang ambang ketat",
+    "Jalankan uji ke masa lalu lagi setelah menambahkan blok aksi dilutif",
+    "Kami sarankan membaca pengumuman resmi bursa untuk tanggal suspensinya",
+    "Laporan keuangan kuartal 2 seharusnya terbit 31 Juli 2024, tetapi sampai 10 September belum ada",
+    "Emiten seharusnya menyampaikan laporan keuangan paling lambat 3 bulan setelah tutup buku",
+    "Suspensi dicabut setelah emiten memenuhi rekomendasi otoritas bursa",
+  ];
+
+  it.each(USULAN_ALARM_HARUS_SELAMAT)("mempertahankan usulan aturan/pemeriksaan: %s", (kalimat) => {
+    const teks = `Ekuitas negatif sejak 2023-09-30. ${kalimat}. Suspensi masih aktif.`;
+    const r = sensorTeks(teks);
+    expect(r.kalimatDibuang, kalimat).toBe(0);
+    expect(r.kata, kalimat).toEqual([]);
+    expect(r.teks, kalimat).toBe(teks);
+  });
+
+  it("pengingkar hanya melindungi dirinya sendiri, bukan sisa klausanya", () => {
+    // Frasa pelindung dulu berakhir `[^.!?;\n]*` sehingga seluruh sisa klausa
+    // ikut kebal. Disclaimer wajib tetap harus selamat.
+    const r = sensorTeks("Bukan saran investasi, tapi sebaiknya lepas SRIL sekarang.");
+    expect(r.teks).toBe(`${PENGGANTI_KALIMAT}.`);
+    expect(r.kalimatDibuang).toBe(1);
+    expect(sensorTeks("Alarm Saham adalah alat informasi, bukan saran investasi.").kalimatDibuang).toBe(0);
+  });
+
+  it("penolakan sopan yang MENOLAK meramal selamat; 'sangkal lalu ramal' tetap dibuang", () => {
+    // Bunyi penolakan /rakit saat pengguna minta prediksi harga. Ia memuat
+    // "akan naik" sebagai objek penolakan, bukan sebagai ramalan.
+    const tolak =
+      "Alarm Saham hanya membuat peringatan berbasis data, bukan saran investasi, jadi saya tidak bisa menebak saham yang akan naik.";
+    expect(sensorTeks(tolak)).toEqual({ teks: tolak, kata: [], kalimatDibuang: 0 });
+    // Begitu ada kata sambung pertentangan, pengecualiannya batal.
+    const curang = sensorTeks("Saya tidak bisa meramal, tapi SRIL akan naik bulan depan.");
+    expect(curang.teks).toBe(`${PENGGANTI_KALIMAT}.`);
+    expect(curang.kalimatDibuang).toBe(1);
+  });
+
+  it("kalimat campur dibuang tanpa menyeret tetangganya", () => {
+    const r = sensorTeks(
+      "Blok suspensi berbunyi 2021-05-18. Sebaiknya kamu kurangi porsinya. Tambahkan blok laporan_hilang ambang ketat.",
+    );
+    expect(r.teks).toBe(
+      `Blok suspensi berbunyi 2021-05-18. ${PENGGANTI_KALIMAT}. Tambahkan blok laporan_hilang ambang ketat.`,
+    );
+    expect(r.kalimatDibuang).toBe(1);
+  });
 });
 
 describe("sensorObjek", () => {
@@ -163,6 +256,28 @@ describe("sensorObjek", () => {
       kataDisensor: [],
       kalimatDibuang: 0,
     });
+  });
+
+  it("usulan blok & alasannya selamat utuh — keluaran inti agent diagnosis", () => {
+    // Ini bentuk keluaran yang diminta INSTRUKSI_DIAGNOSIS. Sebelum perbaikan
+    // putaran 3, "seharusnya"/"disarankan" telanjang membuang kalimatnya
+    // sehingga panel diagnosis menampilkan "[kalimat saran dihapus]." sebagai
+    // alasan usulan blok.
+    const masukan = {
+      ringkasan:
+        "Alarm bolong di TELE karena ambang ekuitas terlalu ketat. Saran perbaikan: tambahkan blok laporan_hilang ambang longgar.",
+      emitenDibahas: [
+        { symbol: "TELE", sebab: "Laporan kuartal 2 seharusnya terbit 31 Juli 2024, tetapi tidak pernah muncul", buktiTanggal: ["2024-07-31"] },
+      ],
+      usulanBlok: [
+        { kind: "laporan_hilang", threshold: "longgar", alasan: "Ambang 180 hari disarankan diturunkan ke 120 hari agar TELE tertangkap lebih awal" },
+      ],
+    };
+    const r = sensorObjek(masukan, ["kind", "threshold", "symbol", "buktiTanggal"]);
+    expect(r.perluTinjau).toBe(false);
+    expect(r.kalimatDibuang).toBe(0);
+    expect(r.kataDisensor).toEqual([]);
+    expect(r.hasil).toEqual(masukan);
   });
 
   it("anjuran tanpa kata terlarang tetap menandai perluTinjau (keberatan 5)", () => {

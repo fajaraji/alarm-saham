@@ -115,7 +115,9 @@ describe("rakitAturan: pengaman", () => {
     });
     expect(hasil.ditolak).toBe(false);
     if (hasil.ditolak) return;
-    expect(hasil.rule.name).toBe("Sinyal [dihapus] murah");
+    // Nama aturan pun dibuang seluruhnya: "Sinyal [dihapus] murah" masih
+    // terbaca sebagai ajakan bertransaksi.
+    expect(hasil.rule.name).toBe("[kalimat saran dihapus]");
     // Kalimat beranjuran ("sebaiknya … jual") dibuang seluruhnya, bukan hanya katanya:
     // mengganti kata saja menyisakan bingkai saran yang utuh.
     expect(hasil.alasan).toBe("[kalimat saran dihapus].");
