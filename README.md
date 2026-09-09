@@ -136,7 +136,18 @@ Tiga tingkat, tergantung apa yang Anda punya:
    Setelah itu `/putar-ulang`, tombol **Uji ke masa lalu** di `/rakit`, `/pasang`, dan `npm run backtest` sama-sama memakai 107 emiten nyata dari `./.pglite` lewat satu pintu `getEventSource()` (Neon → PGlite → data contoh), dan labelnya berubah menjadi `data Sectors nyata`.
 3. **Dengan `DATABASE_URL` (Neon)** — `npm run db:migrate` lalu `npm run db:sync -- --from=pglite --to=neon`; semua halaman dan API memakai Neon. Tambahkan `DEEPSEEK_API_KEY` (atau `ANTHROPIC_API_KEY`) untuk mengaktifkan perakit blok dan agent diagnosis. Urutan lengkap untuk produksi ada di [Deploy ke Vercel](#deploy-ke-vercel).
 
-Uji end-to-end (Playwright; membangun build production lalu menjalankannya): `npm run test:e2e`. Suite ini punya dua varian dan keduanya harus hijau — `npm run test:e2e` memakai `./.pglite` bila ada (port 3100), `E2E_TANPA_PGLITE=1 npm run test:e2e` memaksa jalur data contoh seperti CI/clone bersih (port 3101) dan men-*skip* dengan pesan spec yang memang butuh data nyata.
+Uji end-to-end (Playwright; membangun build production lalu menjalankannya): `npm run test:e2e`. Suite ini punya **dua varian dan CI menjalankan keduanya** — jalur database (bentuk yang dideploy) dan jalur data contoh (kondisi deploy sebelum `DATABASE_URL` diisi):
+
+```bash
+# jalur database — persis yang dijalankan job CI `e2e-db`
+npm run e2e:seed -- --dir=.pglite-e2e     # bangun DB dari benih yang di-commit, nol panggilan API
+E2E_PGLITE_DIR=.pglite-e2e npm run test:e2e
+
+npm run test:e2e                           # jalur database memakai ./.pglite Anda sendiri (port 3100)
+E2E_TANPA_PGLITE=1 npm run test:e2e        # jalur data contoh (port 3101); spec data nyata di-skip berpesan
+```
+
+Benihnya `tests/e2e/seed/universe-uji.json` (< 1 MB, di-commit): baris **nyata** kelas A hasil penarikan Sectors tiket 07 — 107 emiten, suspensi, tanggal laporan, aksi korporasi, keuangan, filing; tanpa buku kredit, cache, atau data pengguna. `npm run e2e:seed` menolak menimpa folder yang sudah ada (tanpa `--paksa`), jadi `./.pglite` hasil penarikan 395 kredit Anda aman. Isi seed dijaga `tests/db/benih-e2e.integration.test.ts`; keberadaan kedua job CI dijaga `tests/unit/ci/gerbang-e2e.test.ts`.
 
 ## Cara mereproduksi skor
 
@@ -246,7 +257,9 @@ Yang **belum** ada dan tidak kami klaim: deploy hidup; uji AI dengan model sungg
 | `npm run dev` | server pengembangan |
 | `npm run lint` · `npm run typecheck` | ESLint · TypeScript |
 | `npm test` | Vitest (unit + integrasi PGlite in-memory) |
-| `npm run test:e2e` · `E2E_TANPA_PGLITE=1 npm run test:e2e` | Playwright di build production lokal: varian data nyata (port 3100) dan varian data contoh seperti CI (port 3101) |
+| `npm run test:e2e` · `E2E_TANPA_PGLITE=1 npm run test:e2e` | Playwright di build production lokal: varian jalur database (port 3100) dan varian data contoh (port 3101). CI menjalankan **keduanya** (job `e2e-db` dan `e2e`) |
+| `npm run e2e:seed -- --dir=.pglite-e2e` | bangun database e2e dari benih yang di-commit (nol panggilan API); menolak menimpa folder yang sudah ada |
+| `npm run e2e:export-seed -- --pglite` | ekspor ulang benih itu dari `./.pglite` ke `tests/e2e/seed/universe-uji.json` |
 | `npm run scan:history` | pindai pola kunci/kredensial di seluruh riwayat git (nol dependensi, dipakai CI) |
 | `npm run build` | build produksi |
 | `npm run backtest -- <aturan.json> [--fixture] [--pglite[=dir]] [--json] [--today=YYYY-MM-DD]` | uji ke masa lalu dari DB/PGlite/fixture, nol API |

@@ -52,3 +52,39 @@ describe("jenisSumberTerpilih()", () => {
     await s.tutup();
   }, 60_000);
 });
+
+/**
+ * Gerbang e2e jalur DB (tiket 15, keberatan 1) menjalankan servernya di atas
+ * database benih di folder tersendiri, bukan ./.pglite. Kalau ALARM_PGLITE_DIR
+ * tidak benar-benar dihormati, job `e2e-db` di CI akan diam-diam berjalan pada
+ * fixture (atau pada ./.pglite pengembang) dan namanya jadi bohong.
+ */
+describe("ALARM_PGLITE_DIR menggeser folder PGlite", () => {
+  it("folder yang ditunjuk env dipakai, bukan ./.pglite", () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("TANPA_PGLITE", "");
+    // Folder yang PASTI ada tetapi bukan ./.pglite: keputusannya hanya existsSync,
+    // jadi tidak ada koneksi yang dibuka.
+    vi.stubEnv("ALARM_PGLITE_DIR", "drizzle");
+    expect(jenisSumberTerpilih()).toBe("pglite");
+    expect(sumberNyata()).toBe(true);
+  });
+
+  it("folder yang ditunjuk env tidak ada → fixture, walau ./.pglite ada", () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("TANPA_PGLITE", "");
+    vi.stubEnv("ALARM_PGLITE_DIR", ".pglite-tidak-ada-abcdef");
+    expect(jenisSumberTerpilih()).toBe("fixture");
+    expect(sumberNyata()).toBe(false);
+  });
+
+  it("kosong = perilaku lama (./.pglite), dan TANPA_PGLITE tetap menang", () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("ALARM_PGLITE_DIR", "");
+    vi.stubEnv("TANPA_PGLITE", "");
+    expect(jenisSumberTerpilih()).toBe(ADA_PGLITE ? "pglite" : "fixture");
+    vi.stubEnv("ALARM_PGLITE_DIR", "drizzle");
+    vi.stubEnv("TANPA_PGLITE", "1");
+    expect(jenisSumberTerpilih()).toBe("fixture");
+  });
+});

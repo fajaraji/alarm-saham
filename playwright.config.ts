@@ -6,10 +6,16 @@
 // Env:
 //   E2E_PORT=3101        port lain (menimpa pilihan otomatis di bawah).
 //   E2E_SKIP_BUILD=1     pakai .next yang sudah ada.
-//   E2E_TANPA_PGLITE=1   paksa jalur fixture walau ./.pglite ada (meniru CI / clone
+//   E2E_TANPA_PGLITE=1   paksa jalur fixture walau ./.pglite ada (meniru clone
 //                        bersih): server dijalankan dengan TANPA_PGLITE=1 dan spec
 //                        yang butuh data nyata di-skip dengan pesan
 //                        (tests/e2e/util.ts → ADA_PGLITE, PESAN_SKIP_PGLITE).
+//   E2E_PGLITE_DIR=.pglite-e2e
+//                        folder PGlite lain untuk server e2e (diteruskan sebagai
+//                        ALARM_PGLITE_DIR). Dipakai gerbang jalur DB di CI:
+//                        `npm run e2e:seed -- --dir=.pglite-e2e` membangun database
+//                        dari benih yang di-commit, dan ./.pglite pengembang
+//                        (hasil penarikan 395 kredit Sectors) tidak tersentuh.
 //
 // Dua varian memakai PORT BERBEDA secara otomatis karena `reuseExistingServer`
 // akan memakai ulang server yang masih hidup di port yang sama — dan server
@@ -22,6 +28,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const TANPA_PGLITE = Boolean(process.env.E2E_TANPA_PGLITE);
 const PORT = Number(process.env.E2E_PORT ?? (TANPA_PGLITE ? 3101 : 3100));
+const DIR_PGLITE = process.env.E2E_PGLITE_DIR?.trim() ?? "";
 
 /**
  * Tanggal "hari ini" dipakukan di server e2e (src/lib/engine/dates.ts membaca
@@ -74,6 +81,7 @@ export default defineConfig({
       ALARM_HARI_INI: HARI_INI,
       ALARM_IZINKAN_BEKU_WAKTU: "1",
       TANPA_PGLITE: TANPA_PGLITE ? "1" : "",
+      ALARM_PGLITE_DIR: DIR_PGLITE,
     },
   },
 });

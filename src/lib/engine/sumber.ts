@@ -4,6 +4,10 @@
 // foldernya ada (hasil `npm run pull-universe -- --pglite`, tiket 07) → fixture
 // universe-kecil.json. Nol panggilan API Sectors di jalur mana pun.
 //
+// `ALARM_PGLITE_DIR` (env operator, bukan nilai klien) menggeser folder PGlite
+// itu; berpengaruh hanya saat DATABASE_URL kosong. Dipakai gerbang e2e jalur DB
+// agar servernya berjalan di atas database benih, bukan ./.pglite pengembang.
+//
 // PGlite berkas hanya boleh dibuka SATU kali per proses (kunci direktori), maka
 // instansnya di-cache di globalThis agar hot-reload Next tidak membuka ulang.
 import { existsSync } from "node:fs";
@@ -89,17 +93,32 @@ function dariDb(t: DbTerbuka): SumberKejadian {
   };
 }
 
+/**
+ * Folder PGlite bawaan untuk proses ini.
+ *
+ * `ALARM_PGLITE_DIR` menggesernya ke folder lain. Ini variabel operator (server),
+ * bukan nilai dari klien, dan hanya berpengaruh saat DATABASE_URL kosong —
+ * artinya nol pengaruh di produksi yang memang punya database. Gunanya: gerbang
+ * e2e jalur DB menjalankan servernya di atas database benih
+ * (`npm run e2e:seed -- --dir=.pglite-e2e`) tanpa perlu menimpa ./.pglite milik
+ * pengembang, yang berisi hasil penarikan 395 kredit Sectors.
+ */
+function dirPgliteBawaan(): string {
+  return process.env.ALARM_PGLITE_DIR?.trim() || DIR_PGLITE_DEFAULT;
+}
+
 /** Folder PGlite yang akan dipakai bila DATABASE_URL kosong; null bila tidak ada.
  *  `TANPA_PGLITE=1` (dipakai e2e/CI untuk meniru clone bersih, dan oleh
  *  `npm test` untuk membuktikan jalur skip) mengabaikan ./.pglite walau
  *  foldernya ada — kecuali pemanggil menyebut folder eksplisit. */
 function folderPglite(opsi: OpsiSumber = {}): string | null {
   if (opsi.pglite === undefined && process.env.TANPA_PGLITE === "1") return null;
-  // Folder ditentukan saat runtime (opsi CLI) — jangan ditelusuri Turbopack sebagai aset.
-  const absolut =
-    typeof opsi.pglite === "string"
-      ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), opsi.pglite)
-      : path.join(/*turbopackIgnore: true*/ process.cwd(), DIR_PGLITE_DEFAULT);
+  // Folder ditentukan saat runtime (opsi CLI / env operator) — jangan ditelusuri
+  // Turbopack sebagai aset.
+  const absolut = path.resolve(
+    /*turbopackIgnore: true*/ process.cwd(),
+    typeof opsi.pglite === "string" ? opsi.pglite : dirPgliteBawaan(),
+  );
   if (opsi.pglite === true || typeof opsi.pglite === "string") return absolut;
   return existsSync(absolut) ? absolut : null;
 }

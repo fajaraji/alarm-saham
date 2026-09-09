@@ -22,7 +22,9 @@
     "cache:migrate-to-db": "node --env-file-if-exists=.env.local --import tsx scripts/cache-migrate-to-db.ts",
     "db:sync": "node --env-file-if-exists=.env.local --import tsx scripts/db-sync.ts",
     "telegram:set-webhook": "node --env-file-if-exists=.env.local --import tsx scripts/telegram-set-webhook.ts",
-    "kredit:snapshot": "node --env-file-if-exists=.env.local --import tsx scripts/kredit-snapshot.ts"
+    "kredit:snapshot": "node --env-file-if-exists=.env.local --import tsx scripts/kredit-snapshot.ts",
+    "e2e:export-seed": "node --env-file-if-exists=.env.local --import tsx scripts/export-seed-e2e.ts",
+    "e2e:seed": "node --import tsx scripts/seed-e2e-db.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.49",

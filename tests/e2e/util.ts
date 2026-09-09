@@ -5,13 +5,26 @@ import path from "node:path";
 import { expect, type Locator, type Page } from "@playwright/test";
 
 /**
- * Server e2e berjalan tanpa DATABASE_URL: sumber = PGlite ./.pglite bila foldernya
- * ada dan `E2E_TANPA_PGLITE` tidak diset (playwright.config meneruskannya sebagai
- * TANPA_PGLITE=1 ke server); selain itu fixture universe-kecil.json (8 emiten).
+ * Folder PGlite yang dipakai server e2e. Sama persis dengan yang diteruskan
+ * playwright.config.ts sebagai ALARM_PGLITE_DIR — kalau keduanya berbeda, spec
+ * akan menuntut data nyata dari server yang berjalan di fixture (atau sebaliknya).
  */
-export const ADA_PGLITE = !process.env.E2E_TANPA_PGLITE && existsSync(path.resolve(process.cwd(), ".pglite"));
+export const DIR_PGLITE_E2E = process.env.E2E_PGLITE_DIR?.trim() || ".pglite";
 
-export const PESAN_SKIP_PGLITE = "butuh data nyata ./.pglite (server berjalan pada jalur fixture)";
+/**
+ * Server e2e berjalan tanpa DATABASE_URL: sumber = PGlite (DIR_PGLITE_E2E) bila
+ * foldernya ada dan `E2E_TANPA_PGLITE` tidak diset (playwright.config meneruskannya
+ * sebagai TANPA_PGLITE=1 ke server); selain itu fixture universe-kecil.json (8 emiten).
+ *
+ * Di CI kedua varian sama-sama dijalankan: job `e2e` (jalur data contoh) dan job
+ * `e2e-db` yang lebih dulu membangun database dari benih yang di-commit
+ * (`npm run e2e:seed -- --dir=.pglite-e2e`). Jangan mengubah ini menjadi selalu
+ * false "supaya hijau": jalur DB adalah bentuk yang dideploy.
+ */
+export const ADA_PGLITE =
+  !process.env.E2E_TANPA_PGLITE && existsSync(path.resolve(process.cwd(), DIR_PGLITE_E2E));
+
+export const PESAN_SKIP_PGLITE = `butuh data nyata ${DIR_PGLITE_E2E} (server berjalan pada jalur fixture)`;
 
 /** Tanggal "hari ini" yang dipakukan untuk server e2e (playwright.config.ts). */
 export const HARI_INI_E2E = "2026-09-07";
