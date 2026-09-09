@@ -6,7 +6,7 @@
 // `kreditTerpakai` dihitung dari ledger sebelum/sesudah (bukti, bukan taksiran).
 import { z } from "zod";
 
-import { jawabanTerlaluSering, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
+import { jawabanTerlaluSering, kunciPemanggil, kunciPemanggilServer, pagarLaju } from "@/lib/api/pagar";
 import { alarmDariDb } from "@/lib/jaga/alarm-db";
 import { ALARM_BAWAAN, alarmDariKlien, AlarmKlienSchema, BlokBSchema, type AlarmJaga } from "@/lib/jaga/bawaan";
 import { cekPortofolio } from "@/lib/jaga/evaluasi";
@@ -52,6 +52,13 @@ function galat(status: number, kode: string, pesan: string, rincian?: unknown) {
 const MAKS_SAHAM_KELAS_B = 10;
 const PAGAR_KELAS_A = { maks: 60, jendelaMs: 60_000 };
 const PAGAR_KELAS_B = { maks: 6, jendelaMs: 10 * 60_000 };
+/**
+ * Ember kedua untuk kelas B: batas mutlak seluruh instance, tanpa peduli siapa
+ * pemanggilnya. Pagar per-IP saja masih bisa disebar lewat banyak alamat;
+ * kredit Sectors tim tidak ikut bertambah kalau alamatnya banyak.
+ */
+const PAGAR_KELAS_B_GLOBAL = { maks: 30, jendelaMs: 10 * 60_000 };
+const KUNCI_KELAS_B_GLOBAL = "kelasB:global";
 
 export async function POST(req: Request): Promise<Response> {
   let body: unknown;
@@ -97,8 +104,19 @@ export async function POST(req: Request): Promise<Response> {
       );
     }
   }
-  const pagar = pagarLaju(kunciPemanggil(req, token), kelasB ? PAGAR_KELAS_B : PAGAR_KELAS_A);
+  // Kunci ember TIDAK boleh berasal dari nilai pilihan klien: `x-owner-token`
+  // dibuat sendiri oleh peramban (UUID di localStorage, tanpa pendaftaran),
+  // jadi token yang diganti tiap permintaan dulu selalu mendapat kuota kosong.
+  // Kelas B memakai identitas server murni (IP menurut proksi) + ember global.
+  const pagar = pagarLaju(
+    kelasB ? kunciPemanggilServer(req) : kunciPemanggil(req, token),
+    kelasB ? PAGAR_KELAS_B : PAGAR_KELAS_A,
+  );
   if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
+  if (kelasB) {
+    const global = pagarLaju(KUNCI_KELAS_B_GLOBAL, PAGAR_KELAS_B_GLOBAL);
+    if (!global.lolos) return jawabanTerlaluSering(global.tungguDetik);
+  }
 
   // `today` dari klien hanya untuk tes deterministik. Di produksi ia diabaikan
   // supaya tidak bisa dipakai menggeser jendela tanggal sehari demi sehari untuk

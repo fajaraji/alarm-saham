@@ -6,6 +6,11 @@
 // BUKAN kuota global — ia hanya meredam pengulangan cepat dari satu penyerang
 // pada satu instance. Pagar sebenarnya untuk kredit Sectors adalah
 // `providerKelasB` (butuh database buku kredit) dan `SECTORS_CREDIT_RESERVE`.
+//
+// Aturan yang tidak boleh dilanggar: kunci ember HARUS ditentukan server.
+// Nilai yang dipilih klien (header token, cookie, body) tidak boleh menjadi
+// kunci, karena penyerang tinggal menggantinya tiap permintaan untuk selalu
+// mendapat ember kosong.
 
 export interface OpsiPagar {
   /** Maksimum permintaan per jendela. */
@@ -48,15 +53,50 @@ export function pagarLaju(kunci: string, opsi: OpsiPagar): HasilPagar {
 }
 
 /**
- * Kunci pembatas: token pemilik bila ada (lebih spesifik daripada IP di belakang
- * NAT), selain itu alamat IP dari header proksi. Tanpa keduanya (mis. localhost)
- * seluruh permintaan berbagi satu ember.
+ * Alamat pemanggil menurut proksi, BUKAN menurut klien.
+ *
+ * Urutan sengaja begini:
+ *   1. `x-vercel-forwarded-for` — diisi edge Vercel, tidak bisa ditimpa klien;
+ *   2. `x-real-ip` — juga diisi proksi (Vercel, nginx);
+ *   3. entri TERAKHIR `x-forwarded-for` — hop terdekat, yaitu nilai yang
+ *      ditambahkan proksi kita. Entri pertama justru yang paling mudah
+ *      dipalsukan: klien tinggal mengirim headernya sendiri dan proksi
+ *      menambahkan IP aslinya di belakang.
+ * Tanpa satu pun (mis. localhost) seluruh permintaan berbagi satu ember.
+ */
+export function ipPemanggil(req: Request): string | null {
+  const vercel = req.headers.get("x-vercel-forwarded-for")?.split(",").pop()?.trim();
+  if (vercel) return vercel;
+  const real = req.headers.get("x-real-ip")?.trim();
+  if (real) return real;
+  const maju = req.headers.get("x-forwarded-for")?.split(",").pop()?.trim();
+  return maju || null;
+}
+
+/**
+ * Kunci pembatas yang SELURUHNYA ditentukan server. Dipakai route yang
+ * membelanjakan kredit/uang: nilai yang dipilih klien tidak boleh menentukan
+ * embernya sendiri.
+ */
+export function kunciPemanggilServer(req: Request): string {
+  const ip = ipPemanggil(req);
+  return ip ? `ip:${ip}` : "lokal";
+}
+
+/**
+ * Kunci pembatas umum: alamat IP dari proksi lebih dulu, token pemilik hanya
+ * sebagai cadangan saat tidak ada IP sama sekali (pengembangan lokal).
+ *
+ * Dulu urutannya terbalik ("token dulu, karena lebih spesifik di belakang
+ * NAT"), dan itu lubang: `x-owner-token` dibuat sendiri oleh peramban (UUID di
+ * localStorage, tanpa pendaftaran), jadi penyerang cukup mengirim UUID baru
+ * tiap permintaan untuk selalu mendapat ember kuota kosong. Identitas pembatas
+ * harus datang dari server.
  */
 export function kunciPemanggil(req: Request, token: string | null = null): string {
-  if (token) return `token:${token}`;
-  const maju = req.headers.get("x-forwarded-for");
-  const ip = maju?.split(",")[0]?.trim() || req.headers.get("x-real-ip")?.trim();
-  return ip ? `ip:${ip}` : "lokal";
+  const ip = ipPemanggil(req);
+  if (ip) return `ip:${ip}`;
+  return token ? `token:${token}` : "lokal";
 }
 
 /** Jawaban 429 berbahasa awam. */

@@ -2,7 +2,14 @@
 // tes deterministik — tidak ada tidur dan tidak bergantung waktu nyata.
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { jawabanTerlaluSering, kunciPemanggil, pagarLaju, resetPagar } from "../../../src/lib/api/pagar";
+import {
+  ipPemanggil,
+  jawabanTerlaluSering,
+  kunciPemanggil,
+  kunciPemanggilServer,
+  pagarLaju,
+  resetPagar,
+} from "../../../src/lib/api/pagar";
 
 describe("pagarLaju", () => {
   beforeEach(() => resetPagar());
@@ -26,12 +33,34 @@ describe("pagarLaju", () => {
     expect(pagarLaju("ip:b", opsi).lolos).toBe(true);
   });
 
-  it("kunci memakai token bila ada, selain itu IP proksi, selain itu 'lokal'", () => {
+  // Identitas pembatas HARUS datang dari server. `x-owner-token` dibuat sendiri
+  // oleh peramban (UUID di localStorage, tanpa pendaftaran), jadi kalau ia
+  // menentukan ember, penyerang cukup mengganti token tiap permintaan.
+  it("kunci memakai IP dari proksi lebih dulu; token hanya cadangan tanpa IP", () => {
     const req = (h: Record<string, string> = {}) => new Request("http://x/api", { headers: h });
+    expect(kunciPemanggil(req({ "x-real-ip": "8.8.8.8" }), "abc")).toBe("ip:8.8.8.8");
     expect(kunciPemanggil(req(), "abc")).toBe("token:abc");
-    expect(kunciPemanggil(req({ "x-forwarded-for": "9.9.9.9, 10.0.0.1" }))).toBe("ip:9.9.9.9");
-    expect(kunciPemanggil(req({ "x-real-ip": "8.8.8.8" }))).toBe("ip:8.8.8.8");
     expect(kunciPemanggil(req())).toBe("lokal");
+  });
+
+  it("x-forwarded-for dibaca dari hop TERAKHIR (entri pertama bisa dipalsukan klien)", () => {
+    const req = (h: Record<string, string> = {}) => new Request("http://x/api", { headers: h });
+    // Klien mengirim "9.9.9.9" sendiri, proksi menambahkan IP asli di belakang.
+    expect(kunciPemanggil(req({ "x-forwarded-for": "9.9.9.9, 10.0.0.1" }))).toBe("ip:10.0.0.1");
+    // Header yang diisi proksi menang atas x-forwarded-for.
+    expect(kunciPemanggil(req({ "x-forwarded-for": "9.9.9.9", "x-real-ip": "10.0.0.1" }))).toBe("ip:10.0.0.1");
+    expect(
+      kunciPemanggil(req({ "x-real-ip": "10.0.0.1", "x-vercel-forwarded-for": "10.0.0.2" })),
+    ).toBe("ip:10.0.0.2");
+  });
+
+  it("kunciPemanggilServer mengabaikan token sepenuhnya", () => {
+    const req = (h: Record<string, string>) => new Request("http://x/api", { headers: h });
+    const a = kunciPemanggilServer(req({ "x-real-ip": "8.8.8.8", "x-owner-token": "a".repeat(36) }));
+    const b = kunciPemanggilServer(req({ "x-real-ip": "8.8.8.8", "x-owner-token": "b".repeat(36) }));
+    expect(a).toBe("ip:8.8.8.8");
+    expect(b).toBe(a);
+    expect(ipPemanggil(req({}))).toBeNull();
   });
 
   it("jawaban 429 memakai bahasa awam dan header Retry-After", async () => {
