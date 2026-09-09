@@ -86,17 +86,58 @@ export function labelKuartal(akhirPeriode: string): { fiscalYear: number; quarte
   return { fiscalYear: y, quarter: `q${Math.ceil(m / 3)}` };
 }
 
+/** Kunci kedua yang WAJIB menyertai ALARM_HARI_INI bila waktu dibekukan di produksi. */
+export const ENV_IZIN_BEKU = "ALARM_IZINKAN_BEKU_WAKTU";
+
+/** Peringatan pembeku waktu hanya dicetak sekali per keadaan (hariIni() dipanggil per baris). */
+const sudahDiperingatkan = new Set<string>();
+
+/** Hanya untuk tes: lupakan peringatan yang sudah dicetak. */
+export function resetPeringatanTanggal(): void {
+  sudahDiperingatkan.clear();
+}
+
+function peringatkanSekali(kunci: string, pesan: string): void {
+  if (sudahDiperingatkan.has(kunci)) return;
+  sudahDiperingatkan.add(kunci);
+  console.warn(pesan);
+}
+
 /**
  * Tanggal hari ini (UTC) sebagai YYYY-MM-DD.
  *
- * `ALARM_HARI_INI=YYYY-MM-DD` memakukan nilainya. Dipakai HANYA untuk tes/e2e
- * (playwright.config.ts) supaya hasil layar tidak berubah seiring hari berjalan
- * — mis. blok `laporan_hilang` yang mulai berbunyi 120 hari setelah akhir
- * kuartal. Jangan diset di produksi.
+ * `ALARM_HARI_INI=YYYY-MM-DD` memakukan nilainya supaya hasil layar tidak
+ * berubah seiring hari berjalan — mis. blok `laporan_hilang` yang mulai
+ * berbunyi 120 hari setelah akhir kuartal. Dipakai e2e (playwright.config.ts)
+ * dan demo lokal.
+ *
+ * PAGAR PRODUKSI: pembeku waktu ini menyentuh SELURUH mesin (evaluasi
+ * portofolio, cron harian, layar putar ulang). Kalau nilainya tanpa sengaja
+ * ikut tersalin ke dasbor produksi, aplikasi akan membeku di satu tanggal tanpa
+ * satu pun pesan galat — alarm berhenti mencerminkan kenyataan. Karena itu di
+ * `NODE_ENV=production` nilainya DIABAIKAN (dengan peringatan), kecuali
+ * operator juga menyalakan kunci kedua `ALARM_IZINKAN_BEKU_WAKTU=1` — yang
+ * tetap mencetak peringatan mencolok di log. Pola yang sama dipakai
+ * `SECTORS_BASE_URL` (src/lib/data/sectors-provider.ts) dan `today` di
+ * /api/portofolio/cek.
  */
 export function hariIni(): string {
-  const paksa = typeof process !== "undefined" ? process.env?.ALARM_HARI_INI?.trim() : undefined;
-  if (paksa && POLA_TANGGAL.test(paksa)) return paksa;
+  const env = typeof process !== "undefined" ? process.env : undefined;
+  const paksa = env?.ALARM_HARI_INI?.trim();
+  if (paksa && POLA_TANGGAL.test(paksa)) {
+    if (env?.NODE_ENV !== "production") return paksa;
+    if (env?.[ENV_IZIN_BEKU] === "1") {
+      peringatkanSekali(
+        `beku:${paksa}`,
+        `[tanggal] PERINGATAN: waktu aplikasi DIBEKUKAN di ${paksa} pada NODE_ENV=production (ALARM_HARI_INI + ${ENV_IZIN_BEKU}=1). Alarm TIDAK mencerminkan hari sebenarnya. Hapus kedua variabel itu untuk kembali normal.`,
+      );
+      return paksa;
+    }
+    peringatkanSekali(
+      `abai:${paksa}`,
+      `[tanggal] ALARM_HARI_INI=${paksa} diabaikan di NODE_ENV=production (pembeku waktu hanya untuk pengembangan/tes). Hapus variabel itu dari dasbor deploy; kalau memang disengaja, tambahkan ${ENV_IZIN_BEKU}=1.`,
+    );
+  }
   return new Date().toISOString().slice(0, 10);
 }
 

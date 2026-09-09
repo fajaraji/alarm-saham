@@ -29,6 +29,12 @@ const PORT = Number(process.env.E2E_PORT ?? (TANPA_PGLITE ? 3101 : 3100));
  * setelah kuartal terakhir di fixture, sehingga emiten kontrol (BBCA/TLKM/ASII/
  * UNVR) berubah hijau → kuning dengan sendirinya pada 2027-01-28 dan spec
  * membusuk tanpa ada yang menyentuh kode. Nilainya = docs/skor-nyata.json.today.
+ *
+ * `next start` berjalan dengan NODE_ENV=production, dan di produksi ALARM_HARI_INI
+ * SENGAJA diabaikan (pagar tiket 15: nilai yang tanpa sengaja tersalin ke dasbor
+ * deploy akan membekukan seluruh aplikasi diam-diam). Karena itu server e2e juga
+ * menyalakan kunci kedua ALARM_IZINKAN_BEKU_WAKTU=1 — satu-satunya cara membekukan
+ * waktu di build produksi, dan pilihan yang harus dilakukan sadar.
  */
 const HARI_INI = "2026-09-07";
 
@@ -66,6 +72,7 @@ export default defineConfig({
       DEEPSEEK_API_KEY: "",
       DATABASE_URL: "",
       ALARM_HARI_INI: HARI_INI,
+      ALARM_IZINKAN_BEKU_WAKTU: "1",
       TANPA_PGLITE: TANPA_PGLITE ? "1" : "",
     },
   },
