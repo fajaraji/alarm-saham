@@ -5,7 +5,7 @@ import { NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 
 import { AiKeyMissingError, diagnosis, hasAiKey, pilihSumber } from "@/lib/agent";
-import { jawabanTerlaluSering, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
+import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { GROUPS, RuleError, RuleSchema, runBacktest, type BacktestResult } from "@/lib/engine";
 
 export const maxDuration = 120;
@@ -70,7 +70,9 @@ export async function POST(req: Request): Promise<Response> {
   if (!hasAiKey()) {
     return galat(503, "AI_TIDAK_TERSEDIA", new AiKeyMissingError().message);
   }
-  const pagar = pagarLaju(kunciPemanggil(req), PAGAR);
+  // Ember sendiri: jatah route ini tidak boleh dihabiskan route lain, dan
+  // sebaliknya (lihat kunciEmber di src/lib/api/pagar.ts).
+  const pagar = pagarLaju(kunciEmber("agent-diagnosis", kunciPemanggil(req)), PAGAR);
   if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
 
   try {

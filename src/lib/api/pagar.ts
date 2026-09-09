@@ -7,10 +7,13 @@
 // pada satu instance. Pagar sebenarnya untuk kredit Sectors adalah
 // `providerKelasB` (butuh database buku kredit) dan `SECTORS_CREDIT_RESERVE`.
 //
-// Aturan yang tidak boleh dilanggar: kunci ember HARUS ditentukan server.
-// Nilai yang dipilih klien (header token, cookie, body) tidak boleh menjadi
-// kunci, karena penyerang tinggal menggantinya tiap permintaan untuk selalu
-// mendapat ember kosong.
+// Dua aturan yang tidak boleh dilanggar:
+//   1. kunci ember HARUS ditentukan server. Nilai yang dipilih klien (header
+//      token, cookie, body) tidak boleh menjadi kunci, karena penyerang tinggal
+//      menggantinya tiap permintaan untuk selalu mendapat ember kosong;
+//   2. setiap JENIS operasi punya embernya sendiri (`kunciEmber`). Satu ember
+//      bersama membuat permintaan nol kredit menghabiskan jatah permintaan
+//      berbayar — batas paling ketat berlaku untuk semuanya.
 
 export interface OpsiPagar {
   /** Maksimum permintaan per jendela. */
@@ -97,6 +100,33 @@ export function kunciPemanggil(req: Request, token: string | null = null): strin
   const ip = ipPemanggil(req);
   if (ip) return `ip:${ip}`;
   return token ? `token:${token}` : "lokal";
+}
+
+/**
+ * Nama ember: setiap JENIS operasi punya jatahnya sendiri.
+ *
+ * Tanpa ini seluruh route berbagi satu ember `ip:<IP>`, sehingga permintaan
+ * kelas A yang NOL KREDIT menghabiskan jatah kelas B yang berbayar: enam klik
+ * "Cek sekarang" (batas 60/menit) dalam 10 menit membuat permintaan "Sertakan
+ * data terkini" (batas 6 per 10 menit) yang PERTAMA langsung ditolak 429 dengan
+ * waktu tunggu 600 detik — fitur berbayar unggulan mati justru pada alur demo
+ * yang paling wajar. Gagal-aman untuk kredit, tetapi salah untuk produk.
+ *
+ * Daftarnya SENGAJA berupa union tertutup: nama ember selalu konstanta di kode
+ * server. Nilai pilihan klien (body, query, header) tidak boleh menentukan ember
+ * karena penyerang tinggal menggantinya tiap permintaan untuk selalu mendapat
+ * ember kosong — cacat yang sama yang dulu dibuat `token:<T>`.
+ */
+export type Ember =
+  | "cek-kelas-a"
+  | "cek-kelas-b"
+  | "agent-rakit"
+  | "agent-diagnosis"
+  | "minta-tarik";
+
+/** Gabungkan nama ember dengan identitas pemanggil menjadi kunci pagar laju. */
+export function kunciEmber(ember: Ember, identitas: string): string {
+  return `${ember}|${identitas}`;
 }
 
 /** Jawaban 429 berbahasa awam. */

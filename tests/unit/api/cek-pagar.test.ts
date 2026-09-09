@@ -83,4 +83,42 @@ describe("/api/portofolio/cek — pagar kelas B tidak bisa dilewati klien", () =
     for (let i = 0; i < 8; i++) status.push((await POST(req({ token: tokenBaru(), ip, kelasB: false }))).status);
     expect(status.includes(429)).toBe(false);
   });
+
+  // -------------------------------------------------------------------
+  // Ember per JENIS operasi. Saat kelas A dan kelas B berbagi satu kunci
+  // `ip:<IP>`, permintaan nol kredit menghabiskan jatah permintaan berbayar:
+  // enam klik "Cek sekarang" dalam 10 menit membuat permintaan "Sertakan data
+  // terkini" yang PERTAMA langsung ditolak 429 (tunggu 600 detik). Semua tes
+  // lama memanggil resetPagar() lebih dulu sehingga interaksi antar-kelas ini
+  // tidak pernah teruji — termasuk tes bernama "kelas A tetap longgar".
+  // -------------------------------------------------------------------
+  it("kelas A yang nol kredit TIDAK menghabiskan jatah kelas B", async () => {
+    const ip = "203.0.113.11";
+    // Sepuluh permintaan kelas A dari IP yang sama (masih di bawah 60/menit).
+    for (let i = 0; i < 10; i++) {
+      const r = await POST(req({ token: tokenBaru(), ip, kelasB: false }));
+      expect(r.status, `kelas A #${i + 1}`).not.toBe(429);
+    }
+    // Kelas B berikutnya harus tetap punya jatah penuh 6 per 10 menit.
+    const kelasB: number[] = [];
+    for (let i = 0; i < 6; i++) kelasB.push((await POST(req({ token: tokenBaru(), ip }))).status);
+    expect(kelasB.some((s) => s === 429), `status kelas B: ${kelasB.join(",")}`).toBe(false);
+  });
+
+  it("kelas B tetap dibatasi 6 per 10 menit walau kelas A sudah dipakai", async () => {
+    const ip = "203.0.113.12";
+    for (let i = 0; i < 10; i++) await POST(req({ token: tokenBaru(), ip, kelasB: false }));
+    for (let i = 0; i < 6; i++) await POST(req({ token: tokenBaru(), ip }));
+    const lebih = await POST(req({ token: tokenBaru(), ip }));
+    expect(lebih.status).toBe(429);
+  });
+
+  it("kelas B yang sudah habis TIDAK mematikan kelas A yang nol kredit", async () => {
+    const ip = "203.0.113.13";
+    for (let i = 0; i < 7; i++) await POST(req({ token: tokenBaru(), ip }));
+    const habis = await POST(req({ token: tokenBaru(), ip }));
+    expect(habis.status, "kelas B seharusnya sudah habis").toBe(429);
+    const kelasA = await POST(req({ token: tokenBaru(), ip, kelasB: false }));
+    expect(kelasA.status).not.toBe(429);
+  });
 });

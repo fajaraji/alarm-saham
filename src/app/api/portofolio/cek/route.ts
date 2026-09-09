@@ -6,7 +6,7 @@
 // `kreditTerpakai` dihitung dari ledger sebelum/sesudah (bukti, bukan taksiran).
 import { z } from "zod";
 
-import { jawabanTerlaluSering, kunciPemanggil, kunciPemanggilServer, pagarLaju } from "@/lib/api/pagar";
+import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, kunciPemanggilServer, pagarLaju } from "@/lib/api/pagar";
 import { alarmDariDb } from "@/lib/jaga/alarm-db";
 import { ALARM_BAWAAN, alarmDariKlien, AlarmKlienSchema, BlokBSchema, type AlarmJaga } from "@/lib/jaga/bawaan";
 import { cekPortofolio } from "@/lib/jaga/evaluasi";
@@ -58,7 +58,7 @@ const PAGAR_KELAS_B = { maks: 6, jendelaMs: 10 * 60_000 };
  * kredit Sectors tim tidak ikut bertambah kalau alamatnya banyak.
  */
 const PAGAR_KELAS_B_GLOBAL = { maks: 30, jendelaMs: 10 * 60_000 };
-const KUNCI_KELAS_B_GLOBAL = "kelasB:global";
+const KUNCI_KELAS_B_GLOBAL = kunciEmber("cek-kelas-b", "global");
 
 export async function POST(req: Request): Promise<Response> {
   let body: unknown;
@@ -108,8 +108,15 @@ export async function POST(req: Request): Promise<Response> {
   // dibuat sendiri oleh peramban (UUID di localStorage, tanpa pendaftaran),
   // jadi token yang diganti tiap permintaan dulu selalu mendapat kuota kosong.
   // Kelas B memakai identitas server murni (IP menurut proksi) + ember global.
+  //
+  // Ember kelas A dan kelas B TERPISAH (`kunciEmber`). Saat keduanya berbagi
+  // satu kunci `ip:<IP>`, enam klik "Cek sekarang" yang nol kredit menghabiskan
+  // jatah 6-per-10-menit kelas B, sehingga permintaan "Sertakan data terkini"
+  // yang pertama langsung ditolak 429.
   const pagar = pagarLaju(
-    kelasB ? kunciPemanggilServer(req) : kunciPemanggil(req, token),
+    kelasB
+      ? kunciEmber("cek-kelas-b", kunciPemanggilServer(req))
+      : kunciEmber("cek-kelas-a", kunciPemanggil(req, token)),
     kelasB ? PAGAR_KELAS_B : PAGAR_KELAS_A,
   );
   if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);

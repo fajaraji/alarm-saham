@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   ipPemanggil,
   jawabanTerlaluSering,
+  kunciEmber,
   kunciPemanggil,
   kunciPemanggilServer,
   pagarLaju,
@@ -61,6 +62,22 @@ describe("pagarLaju", () => {
     expect(a).toBe("ip:8.8.8.8");
     expect(b).toBe(a);
     expect(ipPemanggil(req({}))).toBeNull();
+  });
+
+  // Satu ember bersama membuat batas paling ketat berlaku untuk semua route:
+  // permintaan nol kredit menghabiskan jatah permintaan berbayar.
+  it("kunciEmber memisahkan jatah per jenis operasi pada identitas yang sama", () => {
+    const identitas = "ip:203.0.113.7";
+    const opsi = { maks: 1, jendelaMs: 60_000, sekarang: () => 9_000 };
+    expect(pagarLaju(kunciEmber("cek-kelas-a", identitas), opsi).lolos).toBe(true);
+    expect(pagarLaju(kunciEmber("cek-kelas-a", identitas), opsi).lolos).toBe(false);
+    // Ember lain dengan identitas yang sama masih penuh…
+    for (const ember of ["cek-kelas-b", "agent-rakit", "agent-diagnosis", "minta-tarik"] as const) {
+      expect(pagarLaju(kunciEmber(ember, identitas), opsi).lolos, ember).toBe(true);
+      // …tetapi tetap dibatasi sendiri.
+      expect(pagarLaju(kunciEmber(ember, identitas), opsi).lolos, ember).toBe(false);
+    }
+    expect(kunciEmber("cek-kelas-b", identitas)).not.toBe(kunciEmber("cek-kelas-a", identitas));
   });
 
   it("jawaban 429 memakai bahasa awam dan header Retry-After", async () => {

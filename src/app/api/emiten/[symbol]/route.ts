@@ -1,6 +1,6 @@
 // GET  /api/emiten/[symbol]  → data putar ulang satu emiten dari DB/PGlite/fixture (nol panggilan API Sectors).
 // POST /api/emiten/[symbol]  → "minta ditarik": hanya mencatat permintaan (JSONL lokal / log).
-import { jawabanTerlaluSering, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
+import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { getEventSource } from "@/lib/engine/sumber";
 import { catatPermintaanTarik } from "@/lib/putar-ulang/minta-tarik";
 import { muatEmitenDariSumber, normalKode } from "@/lib/putar-ulang/muat";
@@ -42,7 +42,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/emiten/[symbol]
   const { symbol } = await ctx.params;
   const kode = normalKode(symbol);
   if (!kode) return galat(400, "KODE_TIDAK_SAH", "Kode saham harus 2–5 huruf, mis. SRIL.");
-  const pagar = pagarLaju(kunciPemanggil(req), PAGAR_MINTA_TARIK);
+  // Ember sendiri: jatah route ini tidak boleh dihabiskan route lain, dan
+  // sebaliknya (lihat kunciEmber di src/lib/api/pagar.ts).
+  const pagar = pagarLaju(kunciEmber("minta-tarik", kunciPemanggil(req)), PAGAR_MINTA_TARIK);
   if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
   const hasil = await catatPermintaanTarik(kode);
   // Jujur soal ke mana permintaan pergi: di serverless sistem berkasnya
