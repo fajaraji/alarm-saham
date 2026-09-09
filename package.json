@@ -21,7 +21,8 @@
     "pull-universe": "node --env-file-if-exists=.env.local --import tsx scripts/pull-universe.ts",
     "cache:migrate-to-db": "node --env-file-if-exists=.env.local --import tsx scripts/cache-migrate-to-db.ts",
     "db:sync": "node --env-file-if-exists=.env.local --import tsx scripts/db-sync.ts",
-    "telegram:set-webhook": "node --env-file-if-exists=.env.local --import tsx scripts/telegram-set-webhook.ts"
+    "telegram:set-webhook": "node --env-file-if-exists=.env.local --import tsx scripts/telegram-set-webhook.ts",
+    "kredit:snapshot": "node --env-file-if-exists=.env.local --import tsx scripts/kredit-snapshot.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.49",

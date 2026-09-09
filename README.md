@@ -232,7 +232,7 @@ Yang **belum** ada dan tidak kami klaim: deploy hidup; uji AI dengan model sungg
 
 ## Kepatuhan aturan lomba
 
-- Data Sectors adalah inti: tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang. Setiap panggilan tercatat di buku kredit; **467** dari 1.000 kredit terpakai (395 penarikan universe + 68 pembuktian data + 4 uji kelas B nyata), 250 cadangan tidak disentuh kode. Bila sumber data bukan Sectors (jalur data contoh), setiap layar mengatakannya dengan label dan tidak ada kejadian yang diberi atribusi "Sumber: Sectors …".
+- Data Sectors adalah inti: tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang. Setiap panggilan tercatat di buku kredit; **467** dari 1.000 kredit terpakai (395 penarikan universe + 68 pembuktian data + 4 uji kelas B nyata), sisa **533** kredit, 250 cadangan tidak disentuh kode. Angka itu bukan ketikan tangan: `npm run kredit:snapshot -- --pglite` membacanya dari tabel `api_ledger` ke `docs/kredit-ledger.json`, dan halaman `/cara-kami-menghitung`, README ini, serta tes `tests/unit/docs/kredit-ledger.test.ts` sama-sama turun dari berkas itu. Bila sumber data bukan Sectors (jalur data contoh), setiap layar mengatakannya dengan label dan tidak ada kejadian yang diberi atribusi "Sumber: Sectors …".
 - Logika agent buatan sendiri (loop tool-use + structured output di atas mesin uji), bukan sekadar prompt.
 - **Tidak ada eksekusi order beli/jual**; tidak ada blok aksi "beli/jual"; agent menolak kata rekomendasi.
 - **Bukan saran investasi**: disclaimer di footer setiap layar dan di system prompt agent; emiten nyata hanya disebut dengan fakta resmi + tautan sumber.

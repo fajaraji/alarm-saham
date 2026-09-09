@@ -16,9 +16,11 @@ import {
 import type { Group } from "@/lib/engine/events";
 import { BLOCK_KINDS, LABEL_BLOK, type BlockKind } from "@/lib/engine/rules";
 import { LEAD_CUTOFF_DEFAULT, LOOKBACK_YEARS_DEFAULT, SCAN_START_DEFAULT, type PerSymbolResult } from "@/lib/engine/score";
+import { KREDIT_LEDGER } from "@/lib/metodologi/kredit";
 import {
   KREDIT_ANGGARAN,
   KREDIT_CADANGAN_JURI,
+  KREDIT_KELAS_B,
   KREDIT_PEMBUKTIAN,
   KREDIT_TANGGAL_LEDGER,
   KREDIT_TOTAL_LEDGER,
@@ -160,6 +162,7 @@ export default function HalamanCaraKamiMenghitung() {
   const s = ringkasSkor(SKOR_NYATA);
   const kreditPembuktian = totalKredit(KREDIT_PEMBUKTIAN);
   const kreditUniverse = totalKredit(KREDIT_UNIVERSE);
+  const kreditKelasB = totalKredit(KREDIT_KELAS_B);
 
   return (
     <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="metodologi">
@@ -444,10 +447,25 @@ export default function HalamanCaraKamiMenghitung() {
                   <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
                 </tr>
               ))}
+              <tr className="border-t border-line bg-surface-2">
+                <td className="px-3 py-1.5 font-semibold" colSpan={3}>
+                  Uji kelas B nyata (tiket 11) — {kreditKelasB} kredit
+                </td>
+              </tr>
+              {KREDIT_KELAS_B.map((b) => (
+                <tr key={b.langkah} className="border-t border-line align-top">
+                  <td className="px-3 py-2">{b.langkah}</td>
+                  <td className="px-3 py-2 text-right font-mono">{b.kredit}</td>
+                  <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
+                </tr>
+              ))}
               <tr className="border-t border-line-strong font-semibold">
                 <td className="px-3 py-2">Total ledger</td>
-                <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse}</td>
-                <td className="px-3 py-2 text-ink-2">= {KREDIT_TOTAL_LEDGER} menurut api_ledger; run ulang penarikan = 0 kredit (idempoten)</td>
+                <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse + kreditKelasB}</td>
+                <td className="px-3 py-2 text-ink-2">
+                  = {KREDIT_TOTAL_LEDGER} menurut api_ledger ({KREDIT_LEDGER.baris} baris, snapshot{" "}
+                  <code className="font-mono">docs/kredit-ledger.json</code>); run ulang penarikan = 0 kredit (idempoten)
+                </td>
               </tr>
             </tbody>
           </table>
