@@ -7,6 +7,7 @@
   "sebelum": {
     "commit": "72a33ca",
     "keterangan": "Penyensor kalimat berbasis daftar kata + klasifikasi subjek klausa (empat putaran tambalan). TIDAK bisa dihitung ulang oleh tes karena kodenya sudah diganti; angka ini direkam saat pengukuran pada commit tersebut, korpus yang sama.",
+    "caraReproduksi": "git checkout 72a33ca -- src/lib/agent/guard.ts src/lib/agent/instructions.ts ; node --import tsx scripts/ukur-penjaga.ts ; git checkout HEAD -- src/lib/agent/guard.ts src/lib/agent/instructions.ts",
     "harusUtuhTotal": 106,
     "harusUtuhBerubah": 40,
     "presisiPersen": 62.3,

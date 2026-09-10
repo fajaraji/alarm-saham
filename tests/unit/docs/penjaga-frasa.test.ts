@@ -39,8 +39,11 @@ describe("docs/penjaga-frasa.json", () => {
     expect(PENJAGA_FRASA.sebelum.commit).toMatch(/^[0-9a-f]{7,40}$/);
     expect(PENJAGA_FRASA.sebelum.harusUtuhBerubah).toBeGreaterThan(0);
     expect(PENJAGA_FRASA.sebelum.presisiPersen).toBeLessThan(100);
-    // Jujur bahwa angka lama tidak bisa dihitung ulang dari kode sekarang.
+    // Jujur bahwa angka lama tidak bisa dihitung ulang dari kode sekarang —
+    // tetapi resep untuk mengulanginya sendiri tetap dicantumkan.
     expect(PENJAGA_FRASA.sebelum.keterangan).toMatch(/tidak bisa dihitung ulang/i);
+    expect(PENJAGA_FRASA.sebelum.caraReproduksi).toContain(PENJAGA_FRASA.sebelum.commit);
+    expect(PENJAGA_FRASA.sebelum.caraReproduksi).toContain("scripts/ukur-penjaga.ts");
   });
 
   it("menyebut tanggal, korpus, cara mengukur, dan batas yang diakui", () => {

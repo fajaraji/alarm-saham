@@ -48,7 +48,7 @@ export interface PenjagaFrasa {
   tanggal: string;
   caraMengukur: string;
   /** Pengukuran pada penjaga LAMA; tidak bisa dihitung ulang dari kode sekarang. */
-  sebelum: AngkaPenjaga & { commit: string; keterangan: string };
+  sebelum: AngkaPenjaga & { commit: string; keterangan: string; caraReproduksi: string };
   sesudah: AngkaPenjaga;
   /** Frasa yang sengaja TIDAK didaftar, beserta kalimat sah yang bentrok. */
   batasYangDiakui: string[];
