@@ -42,6 +42,13 @@ export interface MasukanKejadian {
   pdfUrl?: Record<string, string | null>;
   /** Batas "hari ini" untuk menurunkan laporan hilang (YYYY-MM-DD). */
   today: string;
+  /**
+   * true bila `events` berasal dari fixture contoh, bukan database Sectors.
+   * Wajib diteruskan pada jalur fixture: angka keuangan, rasio rights issue, dan
+   * filing di universe-kecil.json bersifat ILUSTRATIF, sehingga TIDAK boleh
+   * diatribusikan ke endpoint Sectors nyata untuk emiten nyata.
+   */
+  contoh?: boolean;
 }
 
 const LABEL_Q: Record<string, string> = { q1: "kuartal 1", q2: "kuartal 2", q3: "kuartal 3", q4: "kuartal 4" };
@@ -60,6 +67,11 @@ export function fmtRupiah(x: number): string {
 
 export function sumberSectors(endpoint: string, url: string | null = null): SumberKejadian {
   return { nama: `Sectors ${endpoint}`, url };
+}
+
+/** Sumber untuk data fixture: tidak pernah mengaku berasal dari feed Sectors. */
+export function sumberContoh(endpoint: string): SumberKejadian {
+  return { nama: `data contoh — fixture universe-kecil.json (bentuknya meniru ${endpoint})`, url: null };
 }
 
 export interface LaporanHilang {
@@ -111,6 +123,11 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
   const pdf = m.pdfUrl ?? {};
   const s = e.symbol;
   const hasil: Kejadian[] = [];
+  // Satu pintu atribusi sumber: pada jalur fixture tidak ada satu pun kejadian
+  // yang boleh berlabel "Sectors <endpoint>".
+  const sumber: (endpoint: string, url?: string | null) => SumberKejadian = m.contoh
+    ? (endpoint) => sumberContoh(endpoint)
+    : (endpoint, url) => sumberSectors(endpoint, url ?? null);
 
   e.suspensions.forEach((x, i) => {
     hasil.push({
@@ -119,8 +136,15 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
       jenis: "suspensi",
       tingkat: "crit",
       judul: "Perdagangan saham dihentikan sementara (suspensi)",
-      rincian: x.reason ? `Alasan resmi BEI: "${x.reason}".` : "Alasan tidak tercantum di feed.",
-      sumber: sumberSectors("/v2/suspensions/ (feed pengumuman BEI)", pdf[x.date] ?? null),
+      // Atribusi alasan ikut sumber: pada jalur fixture teks alasannya meniru
+      // bentuk pengumuman BEI, tetapi menyebutnya "resmi" akan membantah label
+      // "data contoh" pada kartu yang sama.
+      rincian: x.reason
+        ? m.contoh
+          ? `Alasan yang tercantum di data contoh: "${x.reason}".`
+          : `Alasan resmi BEI: "${x.reason}".`
+        : "Alasan tidak tercantum di feed.",
+      sumber: sumber("/v2/suspensions/ (feed pengumuman BEI)", pdf[x.date] ?? null),
     });
   });
 
@@ -132,7 +156,7 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
       tingkat: "info",
       judul: `Laporan keuangan ${labelPeriode(q.fiscalYear, q.quarter)} tersedia`,
       rincian: `Akhir periode ${q.periodEnd}. Endpoint hanya memuat kuartal yang laporannya ada, bukan tanggal penyampaian.`,
-      sumber: sumberSectors(`/v2/company/get_quarterly_financial_dates/${s}/`),
+      sumber: sumber(`/v2/company/get_quarterly_financial_dates/${s}/`),
     });
   });
 
@@ -149,7 +173,7 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
       tingkat: "warn",
       judul: `Laporan keuangan ${labelPeriode(h.fiscalYear, h.quarter)} belum tersedia`,
       rincian: `${N} hari setelah akhir periode ${h.periodEnd}, kuartal ini belum ada di daftar laporan tersedia.${lanjutan}`,
-      sumber: sumberSectors(`/v2/company/get_quarterly_financial_dates/${s}/ (turunan aturan laporan hilang)`),
+      sumber: sumber(`/v2/company/get_quarterly_financial_dates/${s}/ (turunan aturan laporan hilang)`),
     });
   }
 
@@ -165,7 +189,7 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
       tingkat: "warn",
       judul: "Penerbitan saham baru (rights issue)",
       rincian: `Ex-date ${r.exDate}.${rasio}`,
-      sumber: sumberSectors(`/v2/company/corporate-actions/${s}/`),
+      sumber: sumber(`/v2/company/corporate-actions/${s}/`),
     });
   });
 
@@ -179,7 +203,7 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
         tingkat: "warn",
         judul: "Ekuitas negatif (utang melebihi harta)",
         rincian: `Total ekuitas ${fmtRupiah(f.totalEquity as number)} pada laporan kuartal berakhir ${f.date}.`,
-        sumber: sumberSectors(`/v2/financials/quarterly/${s}/`),
+        sumber: sumber(`/v2/financials/quarterly/${s}/`),
       });
     });
 
@@ -202,7 +226,7 @@ export function turunkanKejadian(m: MasukanKejadian): Kejadian[] {
         tingkat: "warn",
         judul: `Laporan penjualan saham oleh ${f.holderType === "insider" ? "orang dalam" : "institusi"}`,
         rincian: `Filing transaksi jual tanggal ${f.date} (nama pemegang tidak ditampilkan).${pct}`,
-        sumber: sumberSectors(`/v2/filings/?symbol=${s}`),
+        sumber: sumber(`/v2/filings/?symbol=${s}`),
       });
     });
 

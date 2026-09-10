@@ -17,11 +17,15 @@ import { getEventSource, type SumberKejadian } from "../../../src/lib/engine/sum
 import { ringkasSkor, SKOR_NYATA } from "../../../src/lib/metodologi/skor";
 
 const DIR_PGLITE = path.resolve(process.cwd(), ".pglite");
-const adaPglite = existsSync(DIR_PGLITE);
+// `TANPA_PGLITE=1` memaksa jalur "seolah folder tidak ada" — cara aman menguji
+// perilaku clone bersih tanpa menghapus data lokal (lihat src/lib/engine/sumber.ts).
+const dipaksaTanpa = process.env.TANPA_PGLITE === "1";
+const adaPglite = !dipaksaTanpa && existsSync(DIR_PGLITE);
 if (!adaPglite) {
   console.warn(
-    `[skor-nyata] Hitung ulang DI-SKIP: folder PGlite ${DIR_PGLITE} tidak ada. ` +
-      "Jalankan `npm run pull-universe -- --pglite` (butuh SECTORS_API_KEY & kredit) untuk membangunnya.",
+    `[skor-nyata] Hitung ulang DI-SKIP: ${
+      dipaksaTanpa ? "TANPA_PGLITE=1 diset" : `folder PGlite ${DIR_PGLITE} tidak ada`
+    }. Jalankan \`npm run pull-universe -- --pglite\` (butuh SECTORS_API_KEY & kredit) untuk membangunnya.`,
   );
 }
 

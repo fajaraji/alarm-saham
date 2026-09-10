@@ -4,8 +4,11 @@
 //   npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07 --json
 // di atas PGlite lokal hasil tiket 07 (nol panggilan API). Tes
 // tests/unit/docs/skor-nyata.test.ts menghitung ulang dan memastikan angkanya sama.
-// Angka kredit: docs/universe-pull.md (tabel api_ledger) dan docs/data-proof.md.
+// Angka kredit: docs/kredit-ledger.json (snapshot langsung dari tabel api_ledger,
+// lihat src/lib/metodologi/kredit.ts); rincian langkahnya docs/universe-pull.md
+// dan docs/data-proof.md.
 import skorMentah from "../../../docs/skor-nyata.json";
+import { KREDIT_LEDGER } from "./kredit";
 import { BLOCK_KINDS, type BlockKind } from "../engine/rules";
 import type { BacktestResult, PerSymbolResult } from "../engine/score";
 import type { Group } from "../engine/events";
@@ -109,10 +112,25 @@ export const KREDIT_UNIVERSE: BarisKredit[] = [
   { langkah: "Laporan keuangan kuartalan 14 emiten delisting", kredit: 91, catatan: "1 kredit per kuartal; n_quarters dipilih dari dates agar tidak membayar kuartal kosong" },
 ];
 
-export const KREDIT_TOTAL_LEDGER = 463;
+/** Tiket 11: satu uji kelas B nyata di layar Pasang (angka nyata dari api_ledger). */
+export const KREDIT_KELAS_B: BarisKredit[] = [
+  {
+    langkah: "Uji kelas B nyata di layar Pasang (BBCA, ASII) — tiket 11",
+    kredit: 4,
+    catatan: "broker-summary + daily untuk 2 emiten; ledger 463 → 467",
+  },
+];
+
+/**
+ * Total kredit TIDAK diketik ulang di sini: ia dibaca dari docs/kredit-ledger.json
+ * yang dihasilkan `npm run kredit:snapshot -- --pglite` langsung dari tabel
+ * api_ledger. Halaman metodologi dan README sama-sama turun dari angka ini, dan
+ * tests/unit/docs/kredit-ledger.test.ts menolak kalau salah satunya menyimpang.
+ */
+export const KREDIT_TOTAL_LEDGER = KREDIT_LEDGER.total;
 export const KREDIT_ANGGARAN = 1000;
 export const KREDIT_CADANGAN_JURI = 250;
-export const KREDIT_TANGGAL_LEDGER = "2026-09-07";
+export const KREDIT_TANGGAL_LEDGER = KREDIT_LEDGER.tanggal;
 
 export function totalKredit(baris: BarisKredit[]): number {
   return baris.reduce((a, b) => a + b.kredit, 0);

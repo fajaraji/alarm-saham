@@ -300,7 +300,13 @@ export function PanelPasang() {
         {hasil ? (
           <p className="mt-2.5 text-xs text-ink-3" data-testid="ringkasan-cek">
             Dicek {hasil.today} dengan{" "}
-            <span data-testid="label-sumber" className={`rounded-full px-2 py-0.5 font-semibold ${/fixture/i.test(hasil.sumber) ? "bg-warn-soft text-warn" : "bg-ok-soft text-ok"}`}>
+            {/* `data-sumber` = penanda mesin untuk tes: teks label fixture memuat
+                substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks. */}
+            <span
+              data-testid="label-sumber"
+              data-sumber={/fixture/i.test(hasil.sumber) ? "fixture" : "db"}
+              className={`rounded-full px-2 py-0.5 font-semibold ${/fixture/i.test(hasil.sumber) ? "bg-warn-soft text-warn" : "bg-ok-soft text-ok"}`}
+            >
               {sumberLabel}
             </span>
             {" · "}

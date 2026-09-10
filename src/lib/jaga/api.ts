@@ -73,10 +73,6 @@ export function simpanPortofolioServer(token: string, body: { symbols: string[];
   return minta<{ portofolio: PortofolioTersimpan }>("/api/portofolio", { method: "POST", token, body: JSON.stringify(body) });
 }
 
-export function hapusPortofolioServer(token: string) {
-  return minta<{ dihapus: number }>("/api/portofolio", { method: "DELETE", token });
-}
-
 export function daftarAlarmServer(token: string) {
   return minta<{ alarms: AlarmServer[] }>("/api/alarms", { method: "GET", token });
 }

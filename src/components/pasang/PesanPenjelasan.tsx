@@ -31,7 +31,7 @@ export function PesanPenjelasan({ saham, penjelasan, today }: Props) {
               <span>
                 {today ? `Dicek ${today}` : ""}
                 {p?.olehAi ? " · dirapikan AI" : " · teks otomatis"}
-                {p?.perluTinjau ? " · ada kata yang disensor" : ""}
+                {p?.perluTinjau ? " · rapian AI ditolak penjaga, dipakai teks otomatis" : ""}
               </span>
             </div>
             <p className="m-0 text-[13.5px] leading-relaxed">

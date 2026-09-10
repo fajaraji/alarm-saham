@@ -12,9 +12,9 @@ import { z } from "zod";
 import { getDb, hasDb, schema, type Db } from "../db";
 import { fires, type FireResult } from "../engine/evaluate";
 import type { EmitenEvents, EventSource } from "../engine/events";
-import { BLOCK_KINDS, LABEL_BLOK, ringkasAturan, THRESHOLDS, type Rule } from "../engine/rules";
+import { BLOCK_KINDS, LABEL_BLOK, ringkasAturan, THRESHOLDS, type BlockKind, type Rule, type Threshold } from "../engine/rules";
 import type { BacktestResult, PerSymbolResult } from "../engine/score";
-import { sensorObjek } from "./guard";
+import { periksaFrasa, sensorObjek } from "./guard";
 import { INSTRUKSI_DIAGNOSIS } from "./instructions";
 import { instruksiSistem, opsiProvider, pilihModel, providerDari } from "./model";
 import { ringkasUsage, type UsageRingkas } from "./usage";
@@ -23,12 +23,30 @@ import { ringkasUsage, type UsageRingkas } from "./usage";
 // Skema keluaran model (tanpa trace — trace dibangun dari langkah SDK)
 // ---------------------------------------------------------------------------
 
+/**
+ * Skema keluaran = KONTROL STRUKTURAL aturan lomba (b), lapis kedua sesudah
+ * instruksi sistem (lihat instructions.ts). `kind` dan `threshold` enum,
+ * `buktiTanggal` tanggal, dan setiap medan prosa bebas dipersempit lewat
+ * `describe()` — deskripsi ini ikut dikirim ke provider, jadi ia bagian dari
+ * kontrolnya, bukan komentar. Batas panjangnya sengaja TIDAK ditegakkan
+ * `z.string().max()`: kegagalan validasi memunculkan NoObjectGeneratedError dan
+ * menghapus seluruh diagnosis, harga yang terlalu mahal untuk prosa yang
+ * kepanjangan.
+ */
 export const DiagnosisOutputSchema = z.object({
-  ringkasan: z.string().describe("2–4 kalimat awam: kenapa alarm bolong dan apa usulannya"),
+  ringkasan: z
+    .string()
+    .describe(
+      "2–4 kalimat awam (±600 karakter): kenapa alarm bolong dan apa usulannya. Subjek setiap kalimat WAJIB data atau aturan alarm — jangan menyinggung posisi, porsi, lot, dana, atau waktu transaksi pengguna.",
+    ),
   emitenDibahas: z.array(
     z.object({
       symbol: z.string(),
-      sebab: z.string().describe("Sebab alarm tidak berbunyi, berbasis data tool"),
+      sebab: z
+        .string()
+        .describe(
+          "1–2 kalimat sebab alarm tidak berbunyi, berbasis data tool dan menyebut tanggalnya. Bukan penilaian tentang emitennya.",
+        ),
       buktiTanggal: z.array(z.string()).describe("Tanggal YYYY-MM-DD dari data yang jadi bukti"),
     }),
   ),
@@ -37,7 +55,11 @@ export const DiagnosisOutputSchema = z.object({
       z.object({
         kind: z.enum(BLOCK_KINDS),
         threshold: z.enum(THRESHOLDS),
-        alasan: z.string(),
+        alasan: z
+          .string()
+          .describe(
+            "Satu kalimat (±300 karakter) kenapa blok ini menolong menurut data — mis. tanggal bukti atau perubahan jumlah temuan. Tentang blok dan datanya, bukan tentang apa yang sebaiknya pengguna lakukan atas sahamnya.",
+          ),
       }),
     )
     .describe("Maksimal 2 usulan blok tambahan/pengetatan"),
@@ -52,7 +74,26 @@ export interface TraceStep {
   ringkasanHasil: string;
 }
 
-export interface DiagnosisResult extends DiagnosisOutput {
+/**
+ * Usulan blok setelah pemeriksaan backstop. `alasan` TIDAK pernah digunting:
+ * usulan blok tanpa alasan menghapus justru nilai jual produk (penyerang
+ * putaran 4 membuktikan kedua alasan bisa hilang sekaligus). Bila penjaga frasa
+ * menyala di sana, teksnya dibiarkan apa adanya dan `perluTinjau` dinyalakan
+ * supaya UI memasang tanda peringatan pada usulan itu.
+ */
+export interface UsulanBlokDiperiksa {
+  kind: BlockKind;
+  threshold: Threshold;
+  alasan: string;
+  /** true bila `alasan` memuat frasa backstop; teksnya tetap utuh. */
+  perluTinjau: boolean;
+}
+
+export interface DiagnosisKeluaran extends Omit<DiagnosisOutput, "usulanBlok"> {
+  usulanBlok: UsulanBlokDiperiksa[];
+}
+
+export interface DiagnosisResult extends DiagnosisKeluaran {
   trace: TraceStep[];
   langkah: number;
   perluTinjau: boolean;
@@ -306,7 +347,7 @@ function susunPrompt(input: DiagnosisInput): string {
 export interface RekamanRun {
   rule: Rule;
   backtest: BacktestResult;
-  keluaran: DiagnosisOutput;
+  keluaran: DiagnosisKeluaran;
   trace: TraceStep[];
   usage: UsageRingkas;
   alarmId?: string;
@@ -380,21 +421,31 @@ export async function diagnosis(input: DiagnosisInput): Promise<DiagnosisResult>
     ...hasil.output,
     usulanBlok: hasil.output.usulanBlok.slice(0, MAKS_USULAN),
   };
-  // Sensor hanya teks karangan model; `kind`/`threshold`/`symbol`/tanggal berasal dari data.
-  const sensor = sensorObjek(mentah, ["kind", "threshold", "symbol", "buktiTanggal"]);
+  // Backstop frasa. `kind`/`threshold`/`symbol`/tanggal dilewati karena berasal
+  // dari data (enum & tanggal), bukan karangan model — itu kontrol strukturalnya.
+  // `alasan` hanya DITANDAI: menggunting alasan usulan blok menghapus keluaran
+  // inti fitur, jadi teksnya dibiarkan utuh dan usulan itu diberi bendera.
+  const sensor = sensorObjek(mentah, {
+    lewati: ["kind", "threshold", "symbol", "buktiTanggal"],
+    tandaiSaja: ["alasan"],
+  });
+  const keluaran: DiagnosisKeluaran = {
+    ...sensor.hasil,
+    usulanBlok: sensor.hasil.usulanBlok.map((u) => ({ ...u, perluTinjau: periksaFrasa(u.alasan).length > 0 })),
+  };
 
   const simpan = input.simpan ?? ((rek: RekamanRun) => simpanRunKeDb(rek));
   const runId = await simpan({
     rule: input.rule,
     backtest: input.backtest,
-    keluaran: sensor.hasil,
+    keluaran,
     trace,
     usage,
     alarmId: input.alarmId,
   });
 
   return {
-    ...sensor.hasil,
+    ...keluaran,
     trace,
     langkah: hasil.steps.length,
     perluTinjau: sensor.perluTinjau,

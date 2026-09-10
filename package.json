@@ -10,9 +10,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "e2e": "playwright test",
+    "scan:history": "node scripts/scan-history.mjs",
     "prepare": "husky",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs migrate",
     "sectors": "node --env-file-if-exists=.env.local --import tsx scripts/sectors.ts",
     "data-proof": "node --env-file-if-exists=.env.local --import tsx scripts/data-proof.ts",
@@ -21,7 +21,10 @@
     "pull-universe": "node --env-file-if-exists=.env.local --import tsx scripts/pull-universe.ts",
     "cache:migrate-to-db": "node --env-file-if-exists=.env.local --import tsx scripts/cache-migrate-to-db.ts",
     "db:sync": "node --env-file-if-exists=.env.local --import tsx scripts/db-sync.ts",
-    "telegram:set-webhook": "node --env-file-if-exists=.env.local --import tsx scripts/telegram-set-webhook.ts"
+    "telegram:set-webhook": "node --env-file-if-exists=.env.local --import tsx scripts/telegram-set-webhook.ts",
+    "kredit:snapshot": "node --env-file-if-exists=.env.local --import tsx scripts/kredit-snapshot.ts",
+    "e2e:export-seed": "node --env-file-if-exists=.env.local --import tsx scripts/export-seed-e2e.ts",
+    "e2e:seed": "node --import tsx scripts/seed-e2e-db.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.49",
@@ -40,6 +43,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@electric-sql/pglite": "^0.5.8",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",

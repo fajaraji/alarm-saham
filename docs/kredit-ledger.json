@@ -1,0 +1,65 @@
+{
+  "sumber": "tabel api_ledger (pglite)",
+  "tanggal": "2026-09-07",
+  "baris": 923,
+  "total": 467,
+  "panggilanSungguhan": 398,
+  "cacheHit": 525,
+  "perEndpoint": [
+    {
+      "endpoint": "/v2/company/get_quarterly_financial_dates/{symbol}/",
+      "baris": 273,
+      "kredit": 107
+    },
+    {
+      "endpoint": "/v2/company/corporate-actions/{symbol}/",
+      "baris": 229,
+      "kredit": 99
+    },
+    {
+      "endpoint": "/v2/filings/",
+      "baris": 224,
+      "kredit": 98
+    },
+    {
+      "endpoint": "/v2/financials/quarterly/{symbol}/",
+      "baris": 40,
+      "kredit": 97
+    },
+    {
+      "endpoint": "/v2/suspensions/",
+      "baris": 96,
+      "kredit": 29
+    },
+    {
+      "endpoint": "/v2/listing-performance/{symbol}/",
+      "baris": 24,
+      "kredit": 16
+    },
+    {
+      "endpoint": "/v2/free-float/",
+      "baris": 8,
+      "kredit": 10
+    },
+    {
+      "endpoint": "/v2/broker-summary/{symbol}/",
+      "baris": 15,
+      "kredit": 6
+    },
+    {
+      "endpoint": "/v2/daily/{symbol}/",
+      "baris": 8,
+      "kredit": 3
+    },
+    {
+      "endpoint": "/v2/brokers/",
+      "baris": 2,
+      "kredit": 1
+    },
+    {
+      "endpoint": "/v2/companies/",
+      "baris": 4,
+      "kredit": 1
+    }
+  ]
+}

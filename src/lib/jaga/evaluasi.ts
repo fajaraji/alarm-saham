@@ -8,6 +8,7 @@
 //
 // Status: hijau = tidak ada blok terpenuhi; kuning = 1 blok; merah = >= 2 blok
 // atau suspensi aktif.
+import { catatanTidakAdaData } from "../cakupan";
 import { CreditReserveError, NotFoundError, SectorsApiError, type DataProvider } from "../data/provider";
 import type { Broker, FreeFloatEntry } from "../data/types";
 import type { PenyimpanLedger } from "../data/ledger";
@@ -39,6 +40,17 @@ export const SUMBER_BLOK_A: Record<BlockKind, string> = {
   ekuitas_negatif: "Sectors /v2/financials/quarterly/ (di DB kami)",
   insider_jual: "Sectors /v2/filings/ (di DB kami)",
 };
+
+/**
+ * Label sumber satu blok kelas A. Pada jalur fixture (server tanpa DATABASE_URL
+ * dan tanpa ./.pglite) angkanya ILUSTRATIF, jadi ia TIDAK boleh diatribusikan ke
+ * endpoint Sectors — pesan penjelasan ikut dikirim ke kotak masuk & Telegram.
+ */
+export function sumberBlokA(kind: BlockKind, contoh = false): string {
+  return contoh
+    ? `data contoh — fixture universe-kecil.json (bentuknya meniru ${SUMBER_BLOK_A[kind].replace(/^Sectors /, "").replace(/ \(.*\)$/, "")})`
+    : SUMBER_BLOK_A[kind];
+}
 
 export interface AlasanJaga {
   kind: BlockKind | BlokBKind;
@@ -97,6 +109,8 @@ export interface OpsiCek {
   provider?: PenyediaKelasB | null;
   /** Keterangan sumber kelas A untuk laporan. */
   keteranganSumber?: string;
+  /** true bila sumber kelas A adalah fixture contoh (bukan data Sectors). */
+  sumberContoh?: boolean;
 }
 
 export interface InputCek {
@@ -145,7 +159,11 @@ function pesanGalat(err: unknown): string {
   if (err instanceof CreditReserveError) return "dilewati: cadangan kredit";
   if (err instanceof NotFoundError) return "tidak ada data di Sectors (404)";
   if (err instanceof SectorsApiError) return `gagal: Sectors HTTP ${err.status}`;
-  return `gagal: ${err instanceof Error ? err.message : String(err)}`;
+  // Pesan mentah TIDAK diteruskan ke klien: galat sistem berkas di serverless
+  // memuat jalur absolut server (mis. "EROFS ... '/var/task/.cache/sectors'")
+  // dan detail itu dirender apa adanya di UI.
+  console.error("[jaga] blok kelas B gagal:", err);
+  return "gagal: kesalahan tak terduga di server";
 }
 
 async function jalankanKelasB(
@@ -193,6 +211,7 @@ async function jalankanKelasB(
 
 export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promise<HasilPortofolio> {
   const today = opts.today ?? hariIni();
+  const contoh = opts.sumberContoh === true;
   const daftar = [...new Set(symbols.map((s) => s.trim().toUpperCase()))];
   const alarmA = alarms.filter((a) => a.kelas === "A" && a.rule);
   const alarmB = alarms.filter((a) => a.kelas === "B" && a.blokB?.length);
@@ -229,7 +248,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
           threshold: alasan.threshold,
           detail: alasan.detail,
           tanggal: alasan.detail.match(POLA_TANGGAL)?.[0] ?? null,
-          sumber: SUMBER_BLOK_A[alasan.kind],
+          sumber: sumberBlokA(alasan.kind, contoh),
           alarm: r.fired ? [{ id: a.id, name: a.name }] : [],
         });
       }
@@ -241,7 +260,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
         label: LABEL_BLOK.suspensi,
         detail: `suspensi ${suspensi} masih aktif menurut data kami (feed tidak memuat tanggal pencabutan)`,
         tanggal: suspensi,
-        sumber: SUMBER_BLOK_A.suspensi,
+        sumber: sumberBlokA("suspensi", contoh),
         alarm: [],
       });
     }
@@ -252,7 +271,11 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     } else if (blokBAktif.length === 0) {
       kelasB = { status: "nonaktif", keterangan: "tidak ada alarm kelas B yang aktif", blok: [] };
     } else if (!opts.provider) {
-      kelasB = { status: "dilewati", keterangan: "dilewati: kunci Sectors tidak tersedia di server", blok: [] };
+      kelasB = {
+        status: "dilewati",
+        keterangan: "dilewati: server ini tidak menyediakan data terkini (butuh kunci Sectors dan database buku kredit)",
+        blok: [],
+      };
     } else if (suspensi) {
       kelasB = {
         status: "dilewati",
@@ -287,7 +310,10 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     }
 
     if (!adaData(events)) {
-      catatan.push(`${symbol} tidak ada di data kami (107 emiten universe uji + feed suspensi BEI); blok kelas A tidak bisa dinilai.`);
+      // Cakupan mengikuti sumber yang benar-benar dipakai. Kalimat ini muncul di
+      // panel pesan /pasang; sebelumnya ia menjanjikan universe nyata walau
+      // server sedang berjalan di jalur data contoh.
+      catatan.push(catatanTidakAdaData(symbol, { jumlah: universe.size, contoh }));
     }
     const alasan = [...perKind.values()];
     saham.push({

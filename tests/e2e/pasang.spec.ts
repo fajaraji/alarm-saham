@@ -1,8 +1,10 @@
-// E2E layar "Pasang" di atas data nyata (PGlite ./.pglite, DATABASE_URL kosong):
-// tambah BBCA & SRIL → cek sekarang (kelas A saja) → SRIL merah dengan alasan
-// suspensi, BBCA hijau → muat ulang → portofolio tetap ada. Toggle "data
+// E2E layar "Pasang" (PGlite ./.pglite bila ada, selain itu fixture; DATABASE_URL
+// kosong): tambah BBCA & SRIL → cek sekarang (kelas A saja) → SRIL merah dengan
+// alasan suspensi, BBCA hijau → muat ulang → portofolio tetap ada. Toggle "data
 // terkini" (kelas B) sengaja TIDAK dijalankan agar tidak memakai kredit Sectors.
 import { expect, test } from "@playwright/test";
+
+import { ADA_PGLITE, harapkanLabelSumber } from "./util";
 
 test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ulang tetap ada", async ({ page }) => {
   await page.goto("/pasang");
@@ -33,15 +35,20 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   await expect(page.getByTestId("tile-SRIL")).toHaveAttribute("data-status", "merah");
   await expect(page.getByTestId("tile-BBCA")).toHaveAttribute("data-status", "hijau");
   await expect(page.getByTestId("alasan-SRIL")).toContainText(/suspensi/i);
-  await expect(page.getByTestId("label-sumber")).toContainText("data Sectors nyata");
+  await harapkanLabelSumber(page.getByTestId("label-sumber"));
   await expect(page.getByTestId("kredit-terpakai")).toContainText("kredit Sectors terpakai: 0");
 
   // Pesan penjelasan: syarat + tanggal + sumber + disclaimer, tanpa kata rekomendasi
   const pesan = page.getByTestId("pesan-SRIL");
   await expect(pesan).toContainText("alarm berbunyi");
-  await expect(pesan).toContainText("2021-05-18");
+  // Tanggal suspensi yang dilaporkan berbeda per sumber: DB memuat seluruh feed
+  // BEI (suspensi pertama 2021-05-18), fixture hanya dua baris (terakhir 2024-11-01).
+  await expect(pesan).toContainText(ADA_PGLITE ? "2021-05-18" : "2024-11-01");
   await expect(pesan).toContainText("bukan saran investasi");
   await expect(pesan).toContainText("Saham mau pailit");
+  // Atribusi sumber di pesan penjelasan harus ikut jujur pada jalur fixture.
+  await expect(pesan).toContainText(ADA_PGLITE ? "Sectors /v2/suspensions/" : "data contoh — fixture");
+  if (!ADA_PGLITE) await expect(pesan).not.toContainText("Sectors /v2/");
   const teks = (await pesan.textContent()) ?? "";
   expect(teks.replace(/filing jual/g, "")).not.toMatch(/\b(beli|jual|rekomendasi)\b/i);
   await expect(page.getByTestId("pesan-BBCA")).toContainText("aman menurut alarmmu");

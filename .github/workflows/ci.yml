@@ -1,4 +1,24 @@
-# CI Alarm Saham: lint, typecheck, test, build pada setiap push & pull request.
+# CI Alarm Saham — gerbang otomatis pada setiap push & pull request.
+#
+#   verify    lint, typecheck, tes unit/integrasi (Vitest), build produksi
+#   e2e       Playwright pada jalur DATA CONTOH (fixture 8 emiten)
+#   e2e-db    Playwright pada jalur DATABASE — bentuk yang dideploy
+#   rahasia   pemindai pola kunci/kredensial pada SELURUH riwayat git
+#
+# Kenapa DUA job e2e: produksi punya DATABASE_URL, jadi bentuk yang dideploy
+# adalah jalur database. Sampai tiket 15, CI hanya menjalankan varian
+# E2E_TANPA_PGLITE=1 — sehingga tiga spec yang menjaga klaim data nyata (nama
+# perusahaan & tautan PDF BEI di /putar-ulang, COWL, portofolio tersimpan di
+# server) tidak pernah dieksekusi mesin dan hanya hijau kalau seorang manusia
+# menjalankannya di laptopnya. Job `e2e-db` menutup itu: ia membangun database
+# PGlite dari benih yang di-commit (tests/e2e/seed/universe-uji.json, < 1 MB,
+# baris NYATA hasil penarikan Sectors tiket 07) lalu menjalankan suite yang sama.
+#
+# TIDAK ADA job yang butuh kunci API, DATABASE_URL, Docker, atau salinan ./.pglite
+# 57 MB: runner membangun databasenya sendiri dari benih, dan tes unit memakai
+# PGlite in-memory — nol panggilan Sectors/LLM. Kalau salah satu job di sini butuh
+# rahasia, gerbangnya jadi tidak bisa dipakai kontributor lain — dan aturan lomba
+# (c) melarang rahasia masuk repo.
 name: CI
 
 on:
@@ -16,12 +36,17 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      # Tes integrasi skema memakai PGlite in-memory. Tanpa baris ini ia memilih
+      # jalur Docker (daemon memang tersedia di runner) dan menarik image
+      # postgres:16 dari Docker Hub setiap run — ketergantungan jaringan luar dan
+      # rate limit IP bersama, di gerbang yang seharusnya deterministik.
+      ALARM_TEST_DB: pglite
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -40,3 +65,116 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: Jalur data contoh (Playwright)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Meniru deploy TANPA DATABASE_URL — kondisi nyata sebelum database diisi.
+      # Server berjalan pada fixture 8 emiten; spec yang menuntut data nyata
+      # di-skip dengan pesan (tests/e2e/util.ts), dan sebagai gantinya spec
+      # "jalur fixture jujur" + klaim-sumber.spec.ts memastikan tidak ada satu pun
+      # layar yang mengaku memakai data resmi Sectors. Jalur databasenya diuji
+      # job `e2e-db` di bawah.
+      E2E_TANPA_PGLITE: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci
+
+      # Hanya chromium: satu peramban cukup untuk smoke + axe, dan unduhannya
+      # jauh lebih ringan daripada tiga mesin peramban.
+      - name: Pasang peramban Playwright
+        run: npx playwright install --with-deps chromium
+
+      # webServer di playwright.config.ts menjalankan `npm run build && npm run start`.
+      - name: E2E (fixture)
+        run: npm run test:e2e
+
+      - name: Simpan laporan Playwright bila gagal
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-fixture
+          path: playwright-report/
+          retention-days: 7
+
+  e2e-db:
+    name: Jalur database (Playwright)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Bentuk yang dideploy. Database dibangun di runner dari benih yang
+      # di-commit, ke folder tersendiri — BUKAN ./.pglite — supaya perintah yang
+      # sama bisa dijalankan pengembang tanpa menimpa hasil penarikan universe
+      # (395 kredit Sectors) di laptopnya. `ADA_PGLITE` di tests/e2e/util.ts ikut
+      # membaca E2E_PGLITE_DIR, jadi spec jalur DB BENAR-BENAR dieksekusi di sini,
+      # bukan di-skip.
+      E2E_PGLITE_DIR: .pglite-e2e
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependensi
+        run: npm ci
+
+      - name: Pasang peramban Playwright
+        run: npx playwright install --with-deps chromium
+
+      # Nol panggilan API Sectors: benih hanya dibaca dari repo, migrasi ./drizzle
+      # yang sama dengan produksi yang membentuk skemanya.
+      - name: Bangun database dari benih
+        run: npm run e2e:seed -- --dir=.pglite-e2e
+
+      - name: E2E (database)
+        run: npm run test:e2e
+
+      - name: Simpan laporan Playwright bila gagal
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-db
+          path: playwright-report/
+          retention-days: 7
+
+  rahasia:
+    name: Pemindai rahasia (seluruh riwayat)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout (riwayat penuh)
+        uses: actions/checkout@v5
+        with:
+          # Pemindai membaca SEMUA commit, bukan hanya HEAD: kunci yang sempat
+          # ter-commit lalu dihapus tetap terbaca dari riwayat repo publik.
+          fetch-depth: 0
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      # Tanpa `npm ci`: scripts/scan-history.mjs sengaja nol dependensi, hanya
+      # Node + git, supaya gerbang rahasia tidak ikut jatuh bila registry npm
+      # sedang bermasalah.
+      - name: Pindai rahasia di seluruh riwayat
+        run: npm run scan:history

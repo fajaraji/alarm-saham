@@ -4,7 +4,10 @@ import type { StatusSaham } from "@/lib/jaga/evaluasi";
 export const TEKS = {
   eyebrow: "Langkah 3 dari 3",
   judul: "Pasang alarmmu. Sekarang dia yang berjaga.",
-  lede: "Tambahkan saham yang kamu pegang, pilih alarm yang aktif, lalu klik Cek sekarang. Alarm mengecek data resmi di server kami tanpa memakai kredit; data terkini (broker, free float, harga) hanya ditarik kalau kamu minta.",
+  // Lede halaman TIDAK ada di sini: kalimatnya bercabang menurut sumber data
+  // server (data Sectors nyata vs data contoh), jadi ia dirakit di
+  // src/app/pasang/page.tsx. Salinan tetap di berkas ini dulu mengklaim "data
+  // resmi" tanpa syarat dan sudah tidak dipakai siapa pun.
   portofolioJudul: "Saham yang dijaga",
   portofolioSub: "Kode 4 huruf, mis. BBCA. Setiap saham cukup sekali.",
   placeholderKode: "kode",
@@ -31,8 +34,11 @@ export const TEKS = {
   disimpanLokal: "tersimpan di browser ini (server tanpa database)",
 } as const;
 
+// "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya
+// melaporkan apakah alarm yang KAMU rakit berbunyi. Sama dengan kalimat di
+// src/lib/jaga/penjelasan.ts.
 export const LABEL_STATUS: Record<StatusSaham, string> = {
-  hijau: "Aman",
+  hijau: "Aman menurut alarmmu",
   kuning: "1 tanda",
   merah: "Alarm berbunyi",
 };

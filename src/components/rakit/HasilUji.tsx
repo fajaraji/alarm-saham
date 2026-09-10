@@ -39,9 +39,12 @@ function tooltipEmiten(r: PerSymbolResult): string {
   return `${r.symbol} · tertangkap: berbunyi ${r.firstFireDate}${lead} (${alasan})`;
 }
 
+// Warna sel: teks memakai token --ok-ink/--crit-ink (bukan `text-white`) karena
+// --ok/--crit berbalik menjadi pastel terang di mode gelap; putih di atasnya
+// hanya 1,85:1. Sel "tidak berbunyi" memakai ink-2 agar lolos 4.5:1 di kedua tema.
 function warnaSel(r: PerSymbolResult): string {
-  if (r.group === "control") return r.fired ? "bg-crit text-white" : "bg-ok-soft text-ink-2";
-  return r.fired ? "bg-ok text-white" : "bg-line text-ink-3";
+  if (r.group === "control") return r.fired ? "bg-crit text-crit-ink" : "bg-ok-soft text-ink-2";
+  return r.fired ? "bg-ok text-ok-ink" : "bg-line text-ink-2";
 }
 
 function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }) {
@@ -59,7 +62,7 @@ function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }
       </div>
       <ul
         className="grid list-none gap-[3px] p-0"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(38px, 1fr))" }}
+        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(44px, 1fr))" }}
         aria-label={`Emiten ${KELOMPOK[group].judul}`}
       >
         {g.perSymbol.map((r) => (
@@ -69,7 +72,7 @@ function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }
             aria-label={tooltipEmiten(r)}
             data-testid={`sel-${r.symbol}`}
             data-fired={r.fired}
-            className={`grid h-[18px] place-items-center rounded-[3px] font-mono text-[8.5px] outline-2 -outline-offset-2 ${warnaSel(r)} ${r.targetEventDate ? "outline outline-ink" : ""}`}
+            className={`grid h-[20px] place-items-center rounded-[3px] font-mono text-[10px] outline-2 -outline-offset-2 ${warnaSel(r)} ${r.targetEventDate ? "outline outline-ink" : ""}`}
           >
             {r.symbol}
           </li>
@@ -90,8 +93,12 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
       {h && sumber ? (
         <p className="mb-2.5 text-xs text-ink-3">
           Diuji ke {h.perSymbol.length} saham dengan{" "}
+          {/* `data-sumber` = penanda mesin untuk tes: teks "data contoh (bukan data
+              Sectors nyata)" memuat substring "data Sectors nyata", jadi assertion
+              teks saja tidak bisa membedakan kedua jalur. */}
           <span
             data-testid="label-sumber"
+            data-sumber={hasil?.sumber === "db" ? "db" : "fixture"}
             className={`rounded-full px-2 py-0.5 font-semibold ${hasil?.sumber === "db" ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`}
           >
             {sumber}

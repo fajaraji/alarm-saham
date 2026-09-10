@@ -462,8 +462,11 @@ export function sectorsProviderDariEnv(
   const cadangan = Number(env.SECTORS_CREDIT_RESERVE);
   const anggaran = Number(env.SECTORS_CREDIT_BUDGET);
   let penyimpanDb: Pick<OpsiSectorsProvider, "ledger" | "cache"> = {};
-  if (env.DATABASE_URL?.trim() && !tambahan.ledger && !tambahan.cache) {
-    const db = getDb();
+  const urlDb = env.DATABASE_URL?.trim();
+  if (urlDb && !tambahan.ledger && !tambahan.cache) {
+    // URL diteruskan eksplisit: `env` bisa berupa objek suntikan (tes), sedangkan
+    // getDb() tanpa argumen hanya membaca process.env.
+    const db = getDb(urlDb);
     const now = tambahan.now ?? (() => new Date());
     penyimpanDb = { ledger: new LedgerDb(db), cache: new CacheDb(db, now) };
   }
@@ -474,8 +477,28 @@ export function sectorsProviderDariEnv(
     anggaran: Number.isFinite(anggaran) && env.SECTORS_CREDIT_BUDGET ? anggaran : undefined,
     izinkanCadangan: env.ALLOW_RESERVE === "1" || env.ALLOW_RESERVE === "true",
     cacheDir: env.SECTORS_CACHE_DIR || undefined,
-    // Hanya untuk tes/demo lokal (server tiruan); jangan set di produksi.
-    baseUrl: env.SECTORS_BASE_URL || undefined,
+    baseUrl: baseUrlAman(env),
     ...tambahan,
   });
+}
+
+/**
+ * SECTORS_BASE_URL mengalihkan SELURUH panggilan Sectors — termasuk header
+ * Authorization berisi SECTORS_API_KEY — ke host lain. Itu hanya boleh untuk
+ * server tiruan lokal saat tes/demo, jadi di produksi nilai non-lokal diabaikan
+ * (dengan peringatan) alih-alih diam-diam mengirim kunci ke host asing.
+ */
+function baseUrlAman(env: EnvSumber): string | undefined {
+  const nilai = env.SECTORS_BASE_URL?.trim();
+  if (!nilai) return undefined;
+  if (env.NODE_ENV !== "production" && process.env.NODE_ENV !== "production") return nilai;
+  let host = "";
+  try {
+    host = new URL(nilai).hostname;
+  } catch {
+    host = "";
+  }
+  if (host === "localhost" || host === "127.0.0.1" || host === "::1") return nilai;
+  console.warn("[sectors] SECTORS_BASE_URL non-lokal diabaikan di produksi; memakai host resmi Sectors.");
+  return undefined;
 }

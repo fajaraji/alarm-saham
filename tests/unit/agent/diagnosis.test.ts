@@ -75,7 +75,12 @@ describe("diagnosis (model tiruan)", () => {
     expect(hasil.ringkasan).toBe(JAWABAN.ringkasan);
     expect(hasil.emitenDibahas).toEqual(JAWABAN.emitenDibahas);
     expect(hasil.usulanBlok).toHaveLength(MAKS_USULAN);
-    expect(hasil.usulanBlok[0]).toEqual({ kind: "suspensi", threshold: "longgar", alasan: expect.any(String) });
+    expect(hasil.usulanBlok[0]).toEqual({
+      kind: "suspensi",
+      threshold: "longgar",
+      alasan: expect.any(String),
+      perluTinjau: false,
+    });
     expect(hasil.perluTinjau).toBe(false);
     expect(hasil.langkah).toBe(3);
     expect(hasil.runId).toBe("run-uji-1");
@@ -127,23 +132,60 @@ describe("diagnosis (model tiruan)", () => {
     expect(JSON.stringify(pesanTool)).toContain("2024-12-27");
   });
 
-  it("guard menyensor kata rekomendasi pada teks model, bukan pada kind/symbol", async () => {
+  it("backstop meredaksi FRASA di ringkasan/sebab, dan hanya MENANDAI alasan usulan blok", async () => {
+    // Rancang-ulang putaran 5: `alasan` tidak boleh digunting, karena penyerang
+    // membuktikan kedua alasan bisa hilang sekaligus sehingga panel memasang
+    // usulan blok tanpa alasan — justru nilai jual produk.
     const model = modelTiruan([
       langkahTool([{ toolName: "listMissed", input: {} }, { toolName: "getFinancials", input: { symbol: "TELE" } }]),
       langkahTeks({
-        ringkasan: "Alarm bolong. Sebaiknya jual saham ini.",
-        emitenDibahas: [{ symbol: "TELE", sebab: "buy the dip", buktiTanggal: ["2025-03-31"] }],
-        usulanBlok: [{ kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual (filing jual)" }],
+        ringkasan: "Alarm bolong sejak 2021-05-18. Sebaiknya jual saham ini.",
+        emitenDibahas: [{ symbol: "TELE", sebab: "ekuitas negatif; cut loss saja", buktiTanggal: ["2025-03-31"] }],
+        usulanBlok: [
+          { kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual (filing jual)" },
+          { kind: "laporan_hilang", threshold: "ketat", alasan: "Ekuitas minus Rp1,1 triliun; kurangi porsimu di TELE." },
+        ],
       }),
     ]);
     const hasil = await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
     expect(hasil.perluTinjau).toBe(true);
-    expect(hasil.kataDisensor.sort()).toEqual(["buy", "jual"]);
-    expect(hasil.ringkasan).toBe("Alarm bolong. Sebaiknya [dihapus] saham ini.");
-    expect(hasil.emitenDibahas[0].sebab).toBe("[dihapus] the dip");
-    expect(hasil.usulanBlok[0]).toEqual({ kind: "insider_jual", threshold: "longgar", alasan: "orang dalam menjual (filing jual)" });
+    expect(hasil.kataDisensor.sort()).toEqual(["cut loss", "jual saham ini", "kurangi porsi", "porsimu"]);
+    // Fakta di kalimat/klausa yang sama TIDAK ikut hilang — hanya frasanya.
+    expect(hasil.ringkasan).toBe("Alarm bolong sejak 2021-05-18. Sebaiknya [dihapus].");
+    expect(hasil.emitenDibahas[0].sebab).toBe("ekuitas negatif; [dihapus] saja");
+    // Alasan bersih → tanpa tanda; alasan bermasalah → teks UTUH + ditandai.
+    expect(hasil.usulanBlok[0]).toEqual({
+      kind: "insider_jual",
+      threshold: "longgar",
+      alasan: "orang dalam menjual (filing jual)",
+      perluTinjau: false,
+    });
+    expect(hasil.usulanBlok[1]).toEqual({
+      kind: "laporan_hilang",
+      threshold: "ketat",
+      alasan: "Ekuitas minus Rp1,1 triliun; kurangi porsimu di TELE.",
+      perluTinjau: true,
+    });
     expect(hasil.runId).toBeUndefined();
     expect(hasil.trace).toHaveLength(2);
+  });
+
+  it("batas yang diakui: kata Inggris telanjang 'buy' TIDAK ditangkap backstop", async () => {
+    // Sengaja tidak didaftar: `transactionType` di data filing bernilai
+    // "buy"/"sell", sehingga menyaringnya akan memakan kalimat fakta. Yang
+    // menahan bentuk ini adalah instruksi sistem (lapis 1), dan README serta
+    // /cara-kami-menghitung menyatakannya terang-terangan.
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahTeks({
+        ringkasan: "Alarm bolong. Buy the dip.",
+        emitenDibahas: [],
+        usulanBlok: [],
+      }),
+    ]);
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
+    expect(hasil.perluTinjau).toBe(false);
+    expect(hasil.ringkasan).toBe("Alarm bolong. Buy the dip.");
   });
 
   it("tool getFilings/getCorporateActions/getFinancials meringkas hasil; galat input tool tercatat di trace", async () => {

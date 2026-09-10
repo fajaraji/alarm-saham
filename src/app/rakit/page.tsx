@@ -4,6 +4,7 @@ import { Istilah } from "@/components/panduan/Istilah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { PapanRakit } from "@/components/rakit/PapanRakit";
 import { TEKS } from "@/components/rakit/teks";
+import { labelAmbang } from "@/lib/rakit/blok";
 
 export const metadata: Metadata = {
   title: "Rakit alarm · Alarm Saham",
@@ -26,7 +27,7 @@ export default function HalamanRakit() {
           </>,
           <>
             Klik tombol <strong>ATAU/DAN</strong> di antara blok untuk mengubah cara menggabung. Klik ambang (mis. “
-            <Istilah id="laporan_hilang">hilang</Istilah> &gt; 120 hari”) untuk memperketat.
+            <Istilah id="laporan_hilang">hilang</Istilah> · {labelAmbang("laporan_hilang", "ketat")}”) untuk memperketat.
           </>,
           <>
             Klik <strong>Uji ke masa lalu</strong>: berapa yang tertangkap, berapa bulan{" "}

@@ -5,9 +5,15 @@ import { NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 
 import { AiKeyMissingError, diagnosis, hasAiKey, pilihSumber } from "@/lib/agent";
+import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { GROUPS, RuleError, RuleSchema, runBacktest, type BacktestResult } from "@/lib/engine";
 
 export const maxDuration = 120;
+
+// Diagnosis adalah panggilan LLM termahal di produk ini (loop tool-use sampai 8
+// langkah). Publik, tetapi dibatasi lajunya agar URL deploy tidak bisa dipakai
+// menguras saldo model pemilik.
+const PAGAR = { maks: 10, jendelaMs: 60_000 };
 
 const PerSymbolSchema = z.looseObject({
   symbol: z.string(),
@@ -64,6 +70,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!hasAiKey()) {
     return galat(503, "AI_TIDAK_TERSEDIA", new AiKeyMissingError().message);
   }
+  // Ember sendiri: jatah route ini tidak boleh dihabiskan route lain, dan
+  // sebaliknya (lihat kunciEmber di src/lib/api/pagar.ts).
+  const pagar = pagarLaju(kunciEmber("agent-diagnosis", kunciPemanggil(req)), PAGAR);
+  if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
 
   try {
     const { rule, targetSymbol, alarmId, pakaiFixture } = parsed.data;

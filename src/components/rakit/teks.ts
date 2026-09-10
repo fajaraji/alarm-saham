@@ -28,8 +28,13 @@ export const TEKS = {
   sumberFixture: "data contoh (bukan data Sectors nyata)",
 } as const;
 
+// Catatan legenda menyebut LABEL kotak (yang juga ada di title/aria-label tiap
+// sel), bukan nama warna — supaya berguna untuk pengguna buta warna dan pembaca layar.
 export const KELOMPOK = {
-  delisting: { judul: "dihapus dari bursa", catatan: "hijau = tertangkap sebelum kejadian" },
-  watchlist: { judul: "di pemantauan khusus (peringatan dini)", catatan: "hijau = tertangkap sebelum kejadian" },
-  control: { judul: "sehat", catatan: "merah = salah bunyi" },
+  delisting: { judul: "dihapus dari bursa", catatan: "kotak bertanda “tertangkap” = alarm berbunyi sebelum kejadian" },
+  watchlist: {
+    judul: "di pemantauan khusus (peringatan dini)",
+    catatan: "kotak bertanda “tertangkap” = alarm berbunyi sebelum kejadian",
+  },
+  control: { judul: "sehat", catatan: "kotak bertanda “alarm palsu” = berbunyi padahal saham sehat" },
 } as const;

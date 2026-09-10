@@ -48,7 +48,16 @@ export function Grafik({
 
   return (
     <div className="pu-chart" data-testid="grafik">
-      <svg viewBox={`0 0 ${LEBAR} ${tinggi}`} role="img" aria-label="Pita waktu kejadian per jenis">
+      {/* role="img" memangkas seluruh isi SVG dari pohon aksesibilitas, jadi
+          <title> tiap titik tidak pernah terdengar. aria-label karena itu memuat
+          angkanya, dan padanan tekstual lengkapnya ada di daftar "Tanda yang
+          sudah kelihatan" (data-testid="garis-waktu") yang ditunjuk aria-describedby. */}
+      <svg
+        viewBox={`0 0 ${LEBAR} ${tinggi}`}
+        role="img"
+        aria-label={`Pita waktu ${kejadian.length} kejadian dalam ${lajur.length} jenis, ${rentang.awal} sampai ${rentang.akhir}; garis penunjuk pada ${t}.`}
+        aria-describedby="garis-waktu-teks"
+      >
         {tahun.map((y) => (
           <g key={y}>
             <line className="lane" x1={x(`${y}-01-01`)} x2={x(`${y}-01-01`)} y1={ATAS} y2={tinggi - BAWAH} />

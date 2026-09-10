@@ -16,9 +16,18 @@ import {
 import type { Group } from "@/lib/engine/events";
 import { BLOCK_KINDS, LABEL_BLOK, type BlockKind } from "@/lib/engine/rules";
 import { LEAD_CUTOFF_DEFAULT, LOOKBACK_YEARS_DEFAULT, SCAN_START_DEFAULT, type PerSymbolResult } from "@/lib/engine/score";
+import { KREDIT_LEDGER } from "@/lib/metodologi/kredit";
+import {
+  CONTOH_LABEL_BACKSTOP,
+  JUMLAH_FRASA_BACKSTOP,
+  KORPUS_PENJAGA,
+  PENJAGA_FRASA,
+  PERINTAH_UKUR_PENJAGA,
+} from "@/lib/metodologi/penjaga";
 import {
   KREDIT_ANGGARAN,
   KREDIT_CADANGAN_JURI,
+  KREDIT_KELAS_B,
   KREDIT_PEMBUKTIAN,
   KREDIT_TANGGAL_LEDGER,
   KREDIT_TOTAL_LEDGER,
@@ -160,6 +169,7 @@ export default function HalamanCaraKamiMenghitung() {
   const s = ringkasSkor(SKOR_NYATA);
   const kreditPembuktian = totalKredit(KREDIT_PEMBUKTIAN);
   const kreditUniverse = totalKredit(KREDIT_UNIVERSE);
+  const kreditKelasB = totalKredit(KREDIT_KELAS_B);
 
   return (
     <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="metodologi">
@@ -169,9 +179,12 @@ export default function HalamanCaraKamiMenghitung() {
       </h1>
       <p className="m-0 max-w-[70ch] text-ink-2">
         Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
-        ke masa lalu dan apa saja yang belum bisa kami buktikan. Semua angka di sini berasal dari data resmi Sectors yang
-        tersimpan di database kami — tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di
-        halaman ini sama dengan keluaran mesin uji.
+        ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>snapshot yang di-commit</b>{" "}
+        (<code className="font-mono">docs/skor-nyata.json</code>, <code className="font-mono">docs/kredit-ledger.json</code>, dan{" "}
+        <code className="font-mono">docs/penjaga-frasa.json</code>),
+        hasil menjalankan mesin uji di atas database berisi data Sectors — bukan hasil hitung ulang dari sumber data yang
+        sedang dipakai server ini. Tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di halaman
+        ini sama dengan keluaran mesin uji.
       </p>
 
       {/* ------------------------------------------------------------ */}
@@ -399,6 +412,104 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
+      <section className="mt-10" aria-labelledby="penjaga">
+        <h2 id="penjaga" className="font-display text-xl font-bold">
+          Bagaimana kami menjaga keluaran AI bukan saran investasi
+        </h2>
+        <p className="mt-1 max-w-[70ch] text-ink-2">
+          Alarm Saham adalah alat informasi dan analisis. Kami <strong>tidak</strong> mengklaim punya penyensor yang
+          memblokir semua kalimat beranjuran — klaim itu pernah ada di dokumen kami dan tidak benar. Dua pemeriksa
+          adversarial mengukurnya: dari 65 anjuran investasi yang mereka karang, 60 lolos utuh tanpa satu pun penanda,
+          sementara penyaring yang sama memakan 41 dari 83 kalimat sah, termasuk kedua alasan usulan blok pada satu
+          jawaban diagnosis. Pola kata tidak bisa memutuskan apakah subjek sebuah kalimat Bahasa Indonesia adalah
+          portofolio kamu atau setelan alarmmu. Jadi tugasnya dibagi tiga, dan urutannya penting.
+        </p>
+        <ol className="mt-3 grid gap-2 pl-5 text-sm text-ink-2" data-testid="lapis-penjaga">
+          <li>
+            <strong>Instruksi sistem — kontrol utama.</strong> Model dilarang menyinggung seluruh pokok bahasannya:
+            posisi, porsi, lot, dana, waktu bertransaksi, dan penilaian harga. Yang justru menjadi tugasnya disebut
+            terpisah (menjelaskan fakta data, mengusulkan blok/ambang, langkah pemeriksaan), ditambah empat contoh
+            negatif berpasangan.
+          </li>
+          <li>
+            <strong>Keluaran terstruktur — kontrol struktural.</strong> Usulan blok tiba sebagai data: jenis blok dan
+            ambang adalah pilihan tertutup, bukti berupa tanggal. Model tidak punya tempat menulis instruksi transaksi
+            tanpa terlihat.
+          </li>
+          <li>
+            <strong>Penjaga frasa — cadangan terakhir.</strong> {JUMLAH_FRASA_BACKSTOP} frasa yang tidak mungkin
+            bermakna lain, misalnya {CONTOH_LABEL_BACKSTOP.map((l) => `“${l}”`).join(", ")}. Frasa yang cocok
+            disamarkan; sisa kalimatnya — termasuk angka dan tanggalnya — dibiarkan utuh. Alasan usulan blok tidak
+            pernah digunting: kalau penjaga menyala di sana, teksnya tetap tampil dengan tanda peringatan, karena
+            usulan tanpa alasan justru menghapus inti fiturnya.
+          </li>
+        </ol>
+        <p className="mt-3 max-w-[70ch] text-ink-2">
+          Angkanya diukur, bukan diklaim. Tolok ukurnya <code className="font-mono">{KORPUS_PENJAGA}</code> —{" "}
+          {PENJAGA_FRASA.sesudah.harusUtuhTotal} kalimat sah yang wajib utuh dan {PENJAGA_FRASA.sesudah.harusDitandaiTotal}{" "}
+          anjuran, isinya kalimat verbatim dari kedua pemeriksa. Diukur {PENJAGA_FRASA.tanggal} dengan{" "}
+          <code className="font-mono">{PERINTAH_UKUR_PENJAGA}</code>, dan dicetak ulang setiap kali{" "}
+          <code className="font-mono">npm test</code> berjalan.
+        </p>
+        <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
+          <table className="w-full min-w-[560px] border-collapse text-[13px]" data-testid="tabel-penjaga">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
+                <th className="px-3 py-2">Ukuran</th>
+                <th className="px-3 py-2 text-right">Sebelum ({PENJAGA_FRASA.sebelum.commit})</th>
+                <th className="px-3 py-2 text-right">Sekarang</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-line">
+                <td className="px-3 py-2">Presisi — kalimat sah yang tidak berubah isinya</td>
+                <td className="px-3 py-2 text-right font-mono">
+                  {PENJAGA_FRASA.sebelum.harusUtuhTotal - PENJAGA_FRASA.sebelum.harusUtuhBerubah}/
+                  {PENJAGA_FRASA.sebelum.harusUtuhTotal} = {PENJAGA_FRASA.sebelum.presisiPersen}%
+                </td>
+                <td className="px-3 py-2 text-right font-mono font-semibold" data-testid="penjaga-presisi">
+                  {PENJAGA_FRASA.sesudah.harusUtuhTotal - PENJAGA_FRASA.sesudah.harusUtuhBerubah}/
+                  {PENJAGA_FRASA.sesudah.harusUtuhTotal} = {PENJAGA_FRASA.sesudah.presisiPersen}%
+                </td>
+              </tr>
+              <tr className="border-t border-line">
+                <td className="px-3 py-2">Recall — anjuran yang ditandai</td>
+                <td className="px-3 py-2 text-right font-mono">
+                  {PENJAGA_FRASA.sebelum.harusDitandaiKena}/{PENJAGA_FRASA.sebelum.harusDitandaiTotal} ={" "}
+                  {PENJAGA_FRASA.sebelum.recallPersen}%
+                </td>
+                <td className="px-3 py-2 text-right font-mono" data-testid="penjaga-recall">
+                  {PENJAGA_FRASA.sesudah.harusDitandaiKena}/{PENJAGA_FRASA.sesudah.harusDitandaiTotal} ={" "}
+                  {PENJAGA_FRASA.sesudah.recallPersen}%
+                </td>
+              </tr>
+              <tr className="border-t border-line">
+                <td className="px-3 py-2">Kalimat sah yang termakan penjaga</td>
+                <td className="px-3 py-2 text-right font-mono">{PENJAGA_FRASA.sebelum.harusUtuhBerubah}</td>
+                <td className="px-3 py-2 text-right font-mono font-semibold">{PENJAGA_FRASA.sesudah.harusUtuhBerubah}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 max-w-[70ch] text-ink-2">
+          Kami memilih <strong>presisi</strong>: gerbang uji merah bila satu kalimat sah berubah, tetapi tidak pernah
+          merah karena recall rendah. Artinya penjaga frasa <strong>tidak menjamin</strong> semua anjuran tertangkap —
+          recall terukurnya {PENJAGA_FRASA.sesudah.recallPersen}%, dan {PENJAGA_FRASA.sesudah.harusDitandaiTotal -
+            PENJAGA_FRASA.sesudah.harusDitandaiKena}{" "}
+          baris tolok ukur lewat tanpa penanda. Yang ditinggalkan bersama pilihan itu, terang-terangan:
+        </p>
+        <ul className="mt-2 grid gap-1.5 pl-5 text-sm text-ink-2" data-testid="batas-penjaga">
+          {PENJAGA_FRASA.batasYangDiakui.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+        <p className="mt-3 max-w-[70ch] text-ink-2">
+          Untuk pesan pagi mode jaga pilihannya berbeda dan lebih ketat: teks templat sudah memuat seluruh fakta, jadi
+          begitu penjaga menyala pada rapian model, rapian itu dibuang seluruhnya dan templatnya yang dikirim.
+        </p>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
       <section className="mt-10" aria-labelledby="kredit">
         <h2 id="kredit" className="font-display text-xl font-bold">
           Kredit Sectors yang terpakai
@@ -444,10 +555,25 @@ export default function HalamanCaraKamiMenghitung() {
                   <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
                 </tr>
               ))}
+              <tr className="border-t border-line bg-surface-2">
+                <td className="px-3 py-1.5 font-semibold" colSpan={3}>
+                  Uji kelas B nyata (tiket 11) — {kreditKelasB} kredit
+                </td>
+              </tr>
+              {KREDIT_KELAS_B.map((b) => (
+                <tr key={b.langkah} className="border-t border-line align-top">
+                  <td className="px-3 py-2">{b.langkah}</td>
+                  <td className="px-3 py-2 text-right font-mono">{b.kredit}</td>
+                  <td className="px-3 py-2 text-ink-2">{b.catatan}</td>
+                </tr>
+              ))}
               <tr className="border-t border-line-strong font-semibold">
                 <td className="px-3 py-2">Total ledger</td>
-                <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse}</td>
-                <td className="px-3 py-2 text-ink-2">= {KREDIT_TOTAL_LEDGER} menurut api_ledger; run ulang penarikan = 0 kredit (idempoten)</td>
+                <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse + kreditKelasB}</td>
+                <td className="px-3 py-2 text-ink-2">
+                  = {KREDIT_TOTAL_LEDGER} menurut api_ledger ({KREDIT_LEDGER.baris} baris, snapshot{" "}
+                  <code className="font-mono">docs/kredit-ledger.json</code>); run ulang penarikan = 0 kredit (idempoten)
+                </td>
               </tr>
             </tbody>
           </table>

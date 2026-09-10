@@ -266,7 +266,8 @@ Semua data tiket 07 saat ini hanya ada di PGlite lokal `./.pglite` (tidak di-tra
 npm run db:migrate                            # terapkan ./drizzle ke Neon (skema identik dengan PGlite)
 npm run db:sync -- --from=pglite --to=neon    # salin symbols, suspensions, report_dates, corporate_actions,
                                               # filings, financials_q, api_ledger, api_cache (upsert idempoten per batch 200)
-npm run pull-universe -- --dry                # verifikasi: harus 0 belum ter-cache, ledger Neon = 463 kredit
+npm run pull-universe -- --dry                # verifikasi: harus 0 belum ter-cache, ledger Neon = 467 kredit
+                                              # (463 saat laporan ini ditulis + 4 kredit uji kelas B nyata di tiket 11)
 ```
 
 Verifikasi hitung baris: `db:sync` mencetak tabel `Sumber | Tujuan | Status` per tabel dan exit 0 hanya bila semua **sama** (exit 2 bila beda, exit 1 bila DB gagal dibuka). Angka yang diharapkan sama dengan tabel "Baris per tabel (DB)" di atas: symbols 107, suspensions 583, report_dates 1901, corporate_actions 963, filings 248, financials_q 91; plus api_ledger dan api_cache. Menjalankan `db:sync` dua kali tidak menggandakan baris (dibuktikan tes PGlite → PGlite `tests/db/sinkron.test.ts`; Neon sendiri belum pernah diuji dari mesin ini).
