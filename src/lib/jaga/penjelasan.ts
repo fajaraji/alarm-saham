@@ -3,8 +3,10 @@
 //
 // Dua jalur: template deterministik (selalu ada) dan, bila kunci LLM tersedia,
 // model peran 'ringan' merapikan bahasanya TANPA menambah fakta. Keluaran model
-// disensor kata rekomendasi (guard.ts) dan dipastikan ditutup disclaimer; bila
-// model gagal/tidak ada kunci, template dipakai apa adanya.
+// diperiksa backstop frasa (guard.ts) dan dipastikan ditutup disclaimer; bila
+// model gagal, tidak ada kunci, atau backstop menyala, template dipakai apa
+// adanya — di jalur ini template sudah memuat seluruh fakta, jadi membuang
+// rapian model tidak menghilangkan informasi apa pun.
 import { generateText, type LanguageModel } from "ai";
 
 import { sensorTeks } from "../agent/guard";
@@ -18,9 +20,9 @@ export interface Penjelasan {
   /** true bila teks hasil rapian model (bukan template). */
   olehAi: boolean;
   /**
-   * true bila keluaran model perlu dilihat manusia: ada kata terlarang atau
-   * klausa beranjuran yang dibuang (teks kembali ke template), ATAU ada klausa
-   * "ragu" yang dipertahankan tetapi ditandai penyensor.
+   * true bila keluaran model perlu dilihat manusia: backstop frasa menemukan
+   * frasa anjuran, sehingga rapian model dibuang dan teks kembali ke template
+   * deterministik.
    */
   perluTinjau: boolean;
 }
@@ -109,25 +111,17 @@ export async function penjelasanSaham(h: HasilSaham, opsi: OpsiPenjelasan): Prom
     const teks = hasil.text.trim();
     if (!teks) return { symbol: h.symbol, teks: template, olehAi: false, perluTinjau: false };
     const sensor = sensorTeks(teks);
-    // Pesan ini dikirim ke kotak masuk & Telegram pengguna. Kalau model sampai
-    // memakai kata rekomendasi ATAU membingkai kalimatnya sebagai anjuran/
-    // penilaian (yang bisa terjadi tanpa satu pun kata terlarang), teks
-    // rapiannya TIDAK dipakai sama sekali — kembali ke template deterministik.
-    if (sensor.kata.length > 0 || sensor.kalimatDibuang > 0) {
-      const sebab = sensor.kata.length
-        ? `kata terlarang (${sensor.kata.join(", ")})`
-        : `${sensor.kalimatDibuang} kalimat beranjuran/penilaian`;
-      console.warn(`[jaga] penjelasan AI ${h.symbol} memuat ${sebab}; memakai template.`);
+    // Pesan ini dikirim ke kotak masuk & Telegram pengguna, jadi jalur ini punya
+    // pilihan aman yang tidak dimiliki panel diagnosis: template deterministik
+    // sudah memuat SEMUA faktanya. Begitu backstop menemukan satu frasa anjuran,
+    // rapian model tidak dipakai sama sekali — bukan diredaksi sebagian.
+    if (sensor.kata.length > 0) {
+      console.warn(
+        `[jaga] penjelasan AI ${h.symbol} memuat frasa anjuran (${sensor.kata.join(", ")}); memakai template.`,
+      );
       return { symbol: h.symbol, teks: template, olehAi: false, perluTinjau: true };
     }
-    // Klausa "ragu" (beranjuran ke pengguna, subjeknya tidak jelas pasar) tidak
-    // membatalkan rapian model — tetapi ditandai supaya bisa ditinjau manusia.
-    return {
-      symbol: h.symbol,
-      teks: pastikanDisclaimer(sensor.teks),
-      olehAi: true,
-      perluTinjau: sensor.kalimatRagu > 0,
-    };
+    return { symbol: h.symbol, teks: pastikanDisclaimer(sensor.teks), olehAi: true, perluTinjau: false };
   } catch (err) {
     if (!(err instanceof AiKeyMissingError)) {
       console.warn(`[jaga] penjelasan AI gagal untuk ${h.symbol}: ${err instanceof Error ? err.message : String(err)}`);

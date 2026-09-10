@@ -1,305 +1,200 @@
-// Filter keamanan keluaran model: membuang ANJURAN INVESTASI dari teks yang
-// ditulis model, tanpa ikut membuang usulan penyetelan alarm — yang justru
-// tugas agent diagnosis (INSTRUKSI_DIAGNOSIS: "usulkan perbaikan", usulanBlok[]).
+// BACKSTOP frasa untuk keluaran model — lapis KETIGA, bukan penjaga utama.
 //
-// Aturannya berdasarkan SUBJEK klausa saja — bingkai anjuran ("sebaiknya",
-// "saran saya", "kamu harus") BUKAN syarat wajib:
+// Apa yang berkas ini KERJAKAN
+//   Mencari frasa dari FRASA_BACKSTOP (src/lib/agent/instructions.ts) di teks
+//   yang ditulis model, meredaksi HANYA frasa yang cocok, dan melaporkan
+//   temuannya supaya pemanggil bisa menandai keluaran itu perlu ditinjau.
 //
-//   DIBUANG  — subjeknya efek/posisi/uang pengguna: membeli, menjual, menahan,
-//              menambah/mengurangi/melepas posisi, masuk/keluar, cut loss,
-//              average down, switching, alokasi atau pengalihan dana, bobot
-//              portofolio, target/harga wajar sebagai ajakan, penilaian layak
-//              atau tidak layak dibeli/dipegang, waktu bertransaksi. Berlaku
-//              untuk SEMUA bentuk kalimat: imperatif telanjang ("lepas saja
-//              selagi bisa"), deklaratif, pertanyaan retoris, satu butir daftar
-//              berpoin, dan sesudah pengingkar — pengingkar hanya melindungi
-//              dirinya sendiri, tidak pernah sisa klausanya.
-//   SELAMAT  — subjeknya konfigurasi alarm atau langkah pemeriksaan: menambah,
-//              menghapus, memperketat atau melonggarkan blok; mengubah ambang;
-//              menjalankan uji ulang; memeriksa emiten; membaca dokumen sumber;
-//              menyalakan pemantauan. Ini keluaran SAH agent diagnosis.
-//   SELAMAT  — kalimat FAKTA berpelaku pihak ketiga walau memuat kata
-//              jual/beli: "filing jual oleh orang dalam", "asing menjual
-//              bersih", "broker ritel membeli".
-//   CAMPUR   — klausa yang menyentuh pasar dan konfigurasi sekaligus dibuang
-//              (pilihan aman), tetapi hanya klausa itu; tetangganya tidak ikut.
-//   RAGU     — klausa beranjuran kepada pengguna yang subjeknya tidak jelas
-//              pasar ("sebaiknya kamu segera bertindak") DIPERTAHANKAN supaya
-//              fitur inti tidak rusak, tetapi dihitung di `kalimatRagu`
-//              sehingga pemanggil tetap menandainya perlu ditinjau.
+// Apa yang berkas ini TIDAK kerjakan — dan kenapa
+//   Ia tidak lagi mencoba MENGKLASIFIKASI kalimat. Empat putaran mencoba
+//   memutuskan "apakah subjek klausa ini posisi pengguna atau konfigurasi
+//   alarm?" dengan regex, dan dua penyerang independen membuktikan
+//   pendekatannya salah pada commit 72a33ca: 60 dari 65 anjuran investasi baru
+//   lolos utuh dengan perluTinjau=false (setiap imbuhan di-/-kan, salah ketik
+//   "jual2"/"cutlos", tanda hubung "cut-loss", dan slang bursa "lego"/"hajar
+//   kanan" melewati daftar kata tertutup) SEKALIGUS 41 dari 83 kalimat sah
+//   dimakan — termasuk KEDUA `usulanBlok[].alasan` pada satu objek diagnosis
+//   realistis, sehingga panel menampilkan usulan blok tanpa alasan. Yang
+//   dimakan justru keluaran inti produk: pembenaran berangka yang diminta
+//   INSTRUKSI_DIAGNOSIS ("jumlah temuan akan naik dari 26 menjadi 41"),
+//   kosakata diagnosis wajar ("blok insider_jual tidak cocok dipakai untuk
+//   kejadian sebelum 2024"), pesan blok free_float_kecil ("porsi saham yang
+//   dipegang masyarakat hanya 3,2%"), dan fakta aksi korporasi.
 //
-// Tiga putaran sebelumnya salah bergantian di kedua arah:
-//   * frasa pelindung pengingkar berakhir `[^.!?;\n]*` (rakus sampai akhir
-//     klausa), sehingga "Bukan rekomendasi ya, tapi sebaiknya jual TELE hari
-//     ini." lolos UTUH — seluruh sisa klausa tersembunyi di balik sentinel;
-//   * kata telanjang "seharusnya"/"disarankan"/"saran"/"rekomendasi" membuang
-//     kalimat tanpa melihat subjeknya, sehingga "Ambang ekuitas negatif
-//     seharusnya dilonggarkan agar TELE tertangkap." dan fakta "Laporan kuartal
-//     2 seharusnya terbit 31 Juli 2024" ikut hilang;
-//   * syarat `bingkai && pasar` (putaran 3) meloloskan setiap perintah
-//     telanjang — "kurangi bobotnya", "keluar dulu dari posisi ini", "alihkan
-//     dananya ke yang lain" — termasuk sesudah pengingkar.
-//
-// Pemenggalan memakai . ! ? ; dan baris baru, sehingga klausa fakta di sebelah
-// klausa anjuran ("ekuitas negatif; akumulasi disarankan") tetap selamat.
-import {
-  KATA_ANJURAN,
-  KATA_TERLARANG,
-  POLA_ANJURAN_BINGKAI,
-  POLA_ANJURAN_MANDIRI,
-  POLA_ORANG_KEDUA,
-  POLA_PELAKU_DATA,
-  POLA_PENGGANTI_ARAH,
-  POLA_PENILAIAN,
-  POLA_PERINTAH_PASAR,
-  POLA_SUBJEK_ALARM,
-  POLA_SUBJEK_PASAR,
-  POLA_TOLAK_RAMALAN,
-} from "./instructions";
+// Perilakunya sekarang
+//   * REDAKSI FRASA, bukan pemenggalan kalimat. Tidak ada lagi pengganti
+//     "[kalimat saran dihapus]" untuk seluruh kalimat: satu frasa yang cocok
+//     diganti "[dihapus]" dan sisa kalimatnya utuh. Konsekuensinya kalimat
+//     fakta di sekitarnya tidak pernah hilang lagi.
+//   * TANDAI, jangan gunting, pada medan yang tidak boleh bolong. `sensorObjek`
+//     menerima `tandaiSaja` untuk kunci seperti `usulanBlok[].alasan`: teks
+//     aslinya dibiarkan apa adanya, temuannya hanya dicatat, dan UI memasang
+//     tanda peringatan. Lebih baik pengguna melihat kalimat bermasalah yang
+//     ditandai daripada usulan blok tanpa alasan.
+//   * PRESISI di atas RECALL. Daftar frasanya sengaja pendek dan hanya memuat
+//     frasa yang tidak mungkin bermakna lain. Recall diukur dan dilaporkan apa
+//     adanya (tests/unit/agent/guard-korpus.test.ts mencetak angkanya); ia
+//     rendah dan TIDAK menjamin semua anjuran tertangkap. Yang menjaga aturan
+//     lomba (b) adalah instruksi sistem (INSTRUKSI_DASAR butir 1/1b/1c) +
+//     keluaran terstruktur + disclaimer; berkas ini hanya jaring terakhir.
+import { FRASA_BACKSTOP } from "./instructions";
+
+/** Pengganti satu frasa yang cocok. */
+export const PENGGANTI = "[dihapus]";
+
+/** Tanda pisah yang dinormalkan menjadi spasi agar "cut-loss" ikut tertangkap. */
+const TANDA_PISAH = new Set(["-", "‐", "‑", "‒", "–", "—", "−", " ", " ", " "]);
 
 /**
- * Frasa yang harus kebal penyaring.
- *
- * Dua jenis:
- *   1. frasa faktual yang memuat kata "jual"/"beli" tetapi bukan ajakan (nama
- *      blok `insider_jual`, "filing jual", "transaksi jual" dari mesin uji);
- *   2. pengingkar yang justru wajib ada ("bukan saran investasi") — tanpa ini
- *      disclaimer wajib PLAN §2 tersensor oleh polanya sendiri.
- *
- * Pola pengingkar BERHENTI tepat setelah kata yang diingkari. Versi sebelumnya
- * berakhir `[^.!?;\n]*` dan menelan sisa klausa, sehingga pola "sangkal dulu
- * lalu beri anjuran" — bentuk yang paling sering ditulis model — lolos utuh.
+ * Normalisasi yang MEMPERTAHANKAN PANJANG string: huruf kecil, tanda hubung /
+ * pisah / spasi tak-putus → spasi biasa. Indeks di hasil normalisasi karena itu
+ * masih menunjuk ke posisi yang sama di teks asli, sehingga redaksi bisa
+ * mengganti frasa aslinya (bukan versi normalnya). Karakter yang huruf kecilnya
+ * lebih dari satu satuan (mis. "İ") dibiarkan apa adanya supaya panjangnya
+ * tidak bergeser.
  */
-const FRASA_DILINDUNGI = [
-  /insider_jual/gi,
-  /\bfiling jual\b/gi,
-  /\btransaksi jual\b/gi,
-  /\btransaksi beli\b/gi,
-  /\btipe jual\b/gi,
-  /\btipe beli\b/gi,
-  /\borang dalam jual\b/gi,
-  /\bjual orang dalam\b/gi,
-  /\bbukan\s+(saran|rekomendasi|anjuran|nasihat)(\s+investasi)?\b/gi,
-  /\btidak\s+(memberi|memberikan|mengandung|ada)\s+(saran|rekomendasi|anjuran|nasihat)(\s+investasi)?\b/gi,
-  /\btanpa\s+(saran|rekomendasi|anjuran|nasihat)(\s+investasi)?\b/gi,
-];
-
-const PENGGANTI = "[dihapus]";
-export const PENGGANTI_KALIMAT = "[kalimat saran dihapus]";
-// Penanda sementara untuk frasa terlindung; karakter kontrol tidak pernah
-// muncul di teks model sehingga tidak bentrok dengan angka biasa.
-const SENTINEL = String.fromCharCode(1);
-const POLA_SENTINEL = new RegExp(SENTINEL + "([0-9]+)" + SENTINEL, "g");
-
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export function normalisasi(teks: string): string {
+  let keluar = "";
+  for (let i = 0; i < teks.length; i += 1) {
+    const c = teks[i];
+    if (TANDA_PISAH.has(c)) {
+      keluar += " ";
+      continue;
+    }
+    const kecil = c.toLowerCase();
+    keluar += kecil.length === 1 ? kecil : c;
+  }
+  return keluar;
 }
 
-function polaKata(kata: string): RegExp {
-  // Kata berimbuhan (menjual, dijual, pembelian) TIDAK ikut tersensor karena
-  // \b menuntut batas kata di kedua sisi. Frasa multi-kata: spasi fleksibel.
-  const inti = kata.trim().split(/\s+/).map(escapeRegex).join("\\s+");
-  return new RegExp(`\\b${inti}\\b`, "gi");
+/** Satu frasa yang ditemukan di teks. */
+export interface TemuanFrasa {
+  label: string;
+  /** Indeks awal & akhir pada teks ASLI. */
+  mulai: number;
+  selesai: number;
 }
 
-const POLA_TERLARANG = KATA_TERLARANG.map((k) => ({ kata: k, pola: polaKata(k) }));
-/** Semua kata pembingkai anjuran yang disebut instruksi sistem. */
-const POLA_ANJURAN = KATA_ANJURAN.map((k) => polaKata(k));
-/** Bingkai yang menandai klausa BERBENTUK anjuran (kata + pola berorang kedua). */
-const POLA_BINGKAI = [...POLA_ANJURAN_MANDIRI.map((k) => polaKata(k)), ...POLA_ANJURAN_BINGKAI];
-/** Pemenggal kalimat/klausa: titik, tanya, seru, titik koma, baris baru. */
-const PEMENGGAL = /([.!?;\n]+)/;
+/**
+ * Cari semua frasa backstop. Rentang yang bertumpang-tindih digabung supaya
+ * redaksinya tidak saling menimpa; setiap label tetap dilaporkan.
+ */
+export function cariFrasa(teks: string): TemuanFrasa[] {
+  const t = normalisasi(teks);
+  const mentah: TemuanFrasa[] = [];
+  for (const f of FRASA_BACKSTOP) {
+    const pola = new RegExp(f.pola, "g");
+    let m: RegExpExecArray | null;
+    while ((m = pola.exec(t)) !== null) {
+      if (m[0].length === 0) {
+        pola.lastIndex += 1;
+        continue;
+      }
+      mentah.push({ label: f.label, mulai: m.index, selesai: m.index + m[0].length });
+    }
+  }
+  return mentah.sort((a, b) => a.mulai - b.mulai || a.selesai - b.selesai);
+}
+
+/** Label unik dari sekumpulan temuan, urut sesuai kemunculan pertama. */
+function label(temuan: readonly TemuanFrasa[]): string[] {
+  const keluar: string[] = [];
+  for (const x of temuan) if (!keluar.includes(x.label)) keluar.push(x.label);
+  return keluar;
+}
+
+/**
+ * PERIKSA saja: laporkan frasa yang ditemukan tanpa mengubah satu karakter pun.
+ * Dipakai untuk medan yang tidak boleh bolong (`usulanBlok[].alasan`).
+ */
+export function periksaFrasa(teks: string): string[] {
+  return label(cariFrasa(teks));
+}
 
 export interface HasilSensor {
+  /** Teks dengan HANYA frasa yang cocok diganti `[dihapus]`. */
   teks: string;
-  /** Kata terlarang yang ditemukan (huruf kecil, unik). */
+  /** Label frasa yang diredaksi (unik, urut kemunculan). */
   kata: string[];
-  /**
-   * Berapa kalimat/klausa yang dibuang seluruhnya. Bisa > 0 walau `kata` kosong
-   * (anjuran pasar tanpa kata terlarang); pemanggil WAJIB memperlakukan ini sama
-   * seriusnya dengan `kata`, kalau tidak teks model yang sudah bolong akan
-   * dikirim ke pengguna seolah bersih.
-   */
-  kalimatDibuang: number;
-  /**
-   * Klausa yang DIPERTAHANKAN karena subjeknya tidak jelas pasar, tetapi tetap
-   * mencurigakan (beranjuran, berorang kedua, bukan soal alarm). Teksnya utuh —
-   * angkanya ada supaya lapis lain masih bisa menandai keluarannya perlu
-   * ditinjau, bukan supaya kalimatnya dibuang.
-   */
-  kalimatRagu: number;
+  /** true bila ada satu pun frasa yang ditemukan. */
+  perluTinjau: boolean;
 }
 
-/** Hasil penilaian satu klausa — dipakai sensorTeks dan diuji langsung. */
-export interface NilaiKlausa {
-  /** Klausa berbentuk anjuran (bingkai "sebaiknya", "kamu harus", …). */
-  bingkai: boolean;
-  /** Subjeknya efek/posisi/uang pengguna — inilah satu-satunya syarat buang. */
-  pasar: boolean;
-  /** Subjeknya konfigurasi alarm atau langkah pemeriksaan. */
-  alarm: boolean;
-  /** Laporan fakta berpelaku pihak ketiga ("asing menjual bersih"). */
-  fakta: boolean;
-  /** Klausa berbicara kepada pengguna ("kamu", "porsimu"). */
-  orangKedua: boolean;
-  /** Penilaian atau ramalan harga ("masih menarik", "berpotensi naik"). */
-  penilaian: boolean;
-  /** Klausa yang justru MENOLAK meramal ("saya tidak bisa menebak saham yang akan naik"). */
-  tolakRamalan: boolean;
-  /** Mencurigakan tetapi subjeknya tidak jelas pasar → dipertahankan + ditandai. */
-  ragu: boolean;
-}
-
-/** `RegExp.test` dengan flag /g aman: lastIndex selalu dikembalikan ke 0. */
-function cocok(pola: readonly RegExp[], teks: string): boolean {
-  return pola.some((p) => {
-    p.lastIndex = 0;
-    return p.test(teks);
-  });
-}
-
-/**
- * Ganti kode emiten (4 huruf kapital: TELE, SRIL, WIKA) dengan kata "emiten"
- * supaya pola subjek bisa memakai flag /i tanpa kehilangan kode emiten sebagai
- * objek anjuran: "Hindari SRIL." harus dinilai sama dengan "hindari emiten".
- * Hanya untuk PENILAIAN klausa — teks yang dikembalikan ke pengguna tidak
- * pernah dinormalkan. Kalimat yang seluruhnya HURUF KAPITAL bisa ikut terbaca
- * sebagai kode emiten; itu memihak ke arah aman (lebih banyak dibuang).
- */
-function normalisasiEmiten(klausa: string): string {
-  return klausa.replace(/\b[A-Z]{4}\b/g, " emiten ");
-}
-
-/** Klasifikasi satu klausa (tanpa melihat kata terlarang). Diekspor untuk tes. */
-export function nilaiKlausa(klausa: string): NilaiKlausa {
-  const t = normalisasiEmiten(klausa);
-  const orangKedua = cocok(POLA_ORANG_KEDUA, t);
-  const alarm = cocok(POLA_SUBJEK_ALARM, t);
-  const bingkai = cocok(POLA_BINGKAI, t);
-  // Perintah/ajakan bertransaksi membatalkan pengecualian fakta: "orang dalam
-  // sudah keluar, lepas saja punyamu" bukan laporan data walau menyebut pelaku
-  // pihak ketiga.
-  const perintah = cocok(POLA_PERINTAH_PASAR, t);
-  const fakta = cocok(POLA_PELAKU_DATA, t) && !orangKedua && !perintah;
-  const pasar = cocok(POLA_SUBJEK_PASAR, t) && !fakta;
-  const penilaian = cocok(POLA_PENILAIAN, t);
-  return {
-    bingkai,
-    pasar,
-    alarm,
-    fakta,
-    orangKedua,
-    penilaian,
-    // Menolak meramal ≠ meramal — tetapi begitu ada kata sambung pertentangan
-    // ("tidak bisa meramal, TAPI SRIL akan naik") atau subjek pasar, pengecualian
-    // ini batal; kalau tidak, pola "sangkal dulu lalu ramal" akan lolos.
-    tolakRamalan: cocok(POLA_TOLAK_RAMALAN, t) && !POLA_PENGGANTI_ARAH.test(t) && !pasar,
-    // Anjuran kepada pengguna yang subjeknya tidak jelas pasar DAN tidak jelas
-    // alarm ("sebaiknya kamu segera bertindak"): pertahankan — membuangnya
-    // berisiko memakan kalimat sah — tetapi tandai supaya bisa ditinjau.
-    ragu: bingkai && orangKedua && !pasar && !alarm && !fakta && !penilaian,
-  };
-}
-
-/** Sensor satu teks. */
+/** Redaksi frasa backstop pada satu teks. Kalimat lain tidak pernah tersentuh. */
 export function sensorTeks(teks: string): HasilSensor {
-  // 1. Lindungi frasa faktual & pengingkar dengan penanda yang tidak mengandung
-  //    kata terlarang. Pengingkar hanya menutupi DIRINYA SENDIRI, bukan sisa
-  //    klausanya, supaya "bukan saran, tapi sebaiknya jual X" tetap tersaring.
-  const simpanan: string[] = [];
-  let kerja = teks;
-  for (const pola of FRASA_DILINDUNGI) {
-    kerja = kerja.replace(pola, (m) => {
-      simpanan.push(m);
-      return `${SENTINEL}${simpanan.length - 1}${SENTINEL}`;
-    });
+  const temuan = cariFrasa(teks);
+  if (temuan.length === 0) return { teks, kata: [], perluTinjau: false };
+  // Gabungkan rentang yang bertumpang-tindih atau bersentuhan.
+  const gabung: { mulai: number; selesai: number }[] = [];
+  for (const x of temuan) {
+    const akhir = gabung[gabung.length - 1];
+    if (akhir && x.mulai <= akhir.selesai) akhir.selesai = Math.max(akhir.selesai, x.selesai);
+    else gabung.push({ mulai: x.mulai, selesai: x.selesai });
   }
-  // 2. Sensor per kalimat/klausa menurut SUBJEK anjurannya.
-  const kena = new Set<string>();
-  let dibuang = 0;
-  let ragu = 0;
-  const bagian = kerja.split(PEMENGGAL);
-  const hasil = bagian.map((sepotong, i) => {
-    if (i % 2 === 1) return sepotong; // pemenggal (tanda baca) — biarkan
-    // Pertahankan spasi pembuka/penutup agar tanda baca tidak menempel aneh.
-    const buang = () => {
-      dibuang += 1;
-      return `${/^\s*/.exec(sepotong)![0]}${PENGGANTI_KALIMAT}${/\s*$/.exec(sepotong)![0]}`;
-    };
-    // Kata terlarang dicatat lebih dulu — juga untuk klausa yang toh akan
-    // dibuang, supaya `kata` tetap melaporkan apa yang sempat ditulis model.
-    const kenaDiSini = new Set<string>();
-    let disensor = sepotong;
-    for (const { kata, pola } of POLA_TERLARANG) {
-      disensor = disensor.replace(pola, () => {
-        kenaDiSini.add(kata);
-        return PENGGANTI;
-      });
-    }
-    kenaDiSini.forEach((k) => kena.add(k));
-    const n = nilaiKlausa(sepotong);
+  let hasil = "";
+  let posisi = 0;
+  for (const g of gabung) {
+    hasil += teks.slice(posisi, g.mulai) + PENGGANTI;
+    posisi = g.selesai;
+  }
+  hasil += teks.slice(posisi);
+  return { teks: hasil, kata: label(temuan), perluTinjau: true };
+}
 
-    // a. Penilaian/ramalan harga selalu tentang efek → buang, kecuali klausa
-    //    yang justru MENOLAK meramal (penolakan sopan /rakit).
-    if (n.penilaian && !n.tolakRamalan) return buang();
-
-    // b. Kata terlarang telanjang (yang faktual sudah terlindung di langkah 1)
-    //    adalah ajakan bertransaksi: buang klausanya, bukan sekadar katanya.
-    //    Kecuali klausa yang jelas membicarakan KONFIGURASI ALARM dan tidak
-    //    berbingkai anjuran maupun bersubjek pasar ("Blok suspensi berbunyi
-    //    2021-05-18, lalu hold sampai jelas."): di sana katanya diganti supaya
-    //    fakta di klausa itu tidak ikut hilang — dan `kata` yang terisi sudah
-    //    membuat pemanggil menandai teksnya perlu ditinjau.
-    if (kenaDiSini.size > 0) {
-      const aman = n.alarm && !n.pasar && !cocok(POLA_ANJURAN, sepotong);
-      return aman ? disensor : buang();
-    }
-
-    // c. SATU-SATUNYA syarat buang berikutnya: subjeknya efek/posisi/uang
-    //    pengguna. Tidak perlu bingkai anjuran, tidak peduli bentuk kalimatnya,
-    //    dan pengingkar di depannya tidak menolong. Klausa campur (pasar +
-    //    konfigurasi alarm) ikut ke sini — hanya klausa itu, bukan tetangganya.
-    if (n.pasar) return buang();
-
-    // d. Subjek alarm, laporan fakta pihak ketiga, dan kalimat netral selamat
-    //    utuh. Yang beranjuran ke pengguna tetapi subjeknya tidak jelas pasar
-    //    dipertahankan juga, hanya dihitung sebagai ragu.
-    if (n.ragu) ragu += 1;
-    return sepotong;
-  });
-  kerja = hasil.join("");
-  // 3. Kembalikan frasa terlindung (yang klausanya tidak dibuang).
-  kerja = kerja.replace(POLA_SENTINEL, (_, i: string) => simpanan[Number(i)]);
-  return { teks: kerja, kata: [...kena], kalimatDibuang: dibuang, kalimatRagu: ragu };
+export interface OpsiSensorObjek {
+  /**
+   * Kunci yang isinya DATA, bukan karangan model (`kind`, `threshold`,
+   * `symbol`, `buktiTanggal`): dikembalikan apa adanya, tidak diperiksa.
+   */
+  lewati?: readonly string[];
+  /**
+   * Kunci prosa yang TIDAK BOLEH digunting. Teksnya dikembalikan utuh; frasa
+   * yang ditemukan hanya dicatat di `kataDisensor` dan menyalakan
+   * `perluTinjau`. Dipakai untuk `usulanBlok[].alasan`: usulan blok tanpa
+   * alasan lebih merugikan pengguna daripada alasan bermasalah yang ditandai.
+   */
+  tandaiSaja?: readonly string[];
 }
 
 export interface HasilSensorObjek<T> {
   hasil: T;
+  /** true bila ada frasa yang diredaksi ATAU ditandai di mana pun dalam objek. */
   perluTinjau: boolean;
+  /** Label frasa yang ditemukan di seluruh objek (unik). */
   kataDisensor: string[];
-  /** Total kalimat/klausa yang dibuang di seluruh objek. */
-  kalimatDibuang: number;
-  /** Total klausa yang dipertahankan tetapi ditandai ragu di seluruh objek. */
-  kalimatRagu: number;
+}
+
+function bacaOpsi(o: readonly string[] | OpsiSensorObjek): Required<OpsiSensorObjek> {
+  if (Array.isArray(o)) return { lewati: o, tandaiSaja: [] };
+  const x = o as OpsiSensorObjek;
+  return { lewati: x.lewati ?? [], tandaiSaja: x.tandaiSaja ?? [] };
 }
 
 /**
- * Sensor semua string di dalam objek/array secara rekursif, KECUALI kunci yang
- * disebut di `lewati` (mis. `kind`, `symbol` yang berasal dari data, bukan
- * karangan model). Mengembalikan salinan baru.
+ * Periksa semua string di dalam objek/array secara rekursif. Mengembalikan
+ * salinan baru; `lewati` dikembalikan apa adanya dan `tandaiSaja` dibiarkan
+ * utuh tetapi temuannya dilaporkan.
  */
-export function sensorObjek<T>(nilai: T, lewati: readonly string[] = []): HasilSensorObjek<T> {
-  const kena = new Set<string>();
-  let dibuang = 0;
-  let ragu = 0;
+export function sensorObjek<T>(
+  nilai: T,
+  opsi: readonly string[] | OpsiSensorObjek = {},
+): HasilSensorObjek<T> {
+  const { lewati, tandaiSaja } = bacaOpsi(opsi);
   const skip = new Set(lewati);
+  const tandai = new Set(tandaiSaja);
+  const kena: string[] = [];
+  const catat = (labels: readonly string[]) => {
+    for (const l of labels) if (!kena.includes(l)) kena.push(l);
+  };
   const jalan = (v: unknown, kunci?: string): unknown => {
     if (typeof v === "string") {
       if (kunci && skip.has(kunci)) return v;
+      if (kunci && tandai.has(kunci)) {
+        catat(periksaFrasa(v));
+        return v;
+      }
       const s = sensorTeks(v);
-      s.kata.forEach((k) => kena.add(k));
-      dibuang += s.kalimatDibuang;
-      ragu += s.kalimatRagu;
+      catat(s.kata);
       return s.teks;
     }
     if (Array.isArray(v)) return v.map((x) => jalan(x, kunci));
@@ -309,14 +204,5 @@ export function sensorObjek<T>(nilai: T, lewati: readonly string[] = []): HasilS
     return v;
   };
   const hasil = jalan(nilai) as T;
-  // Klausa yang dibuang karena beranjuran (tanpa kata terlarang) sama seriusnya
-  // dengan kata terlarang; klausa "ragu" tidak dibuang tetapi tetap menandai
-  // keluaran model perlu ditinjau (aturan 6 koordinator putaran 4).
-  return {
-    hasil,
-    perluTinjau: kena.size > 0 || dibuang > 0 || ragu > 0,
-    kataDisensor: [...kena],
-    kalimatDibuang: dibuang,
-    kalimatRagu: ragu,
-  };
+  return { hasil, perluTinjau: kena.length > 0, kataDisensor: kena };
 }

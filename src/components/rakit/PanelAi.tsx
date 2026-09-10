@@ -2,6 +2,13 @@
 // Panel "Penjelasan AI" (kanan bawah): ringkasan diagnosis, emiten yang
 // dibahas, tombol "+ Tambahkan blok" per usulan, dan trace tool-call
 // bernomor. Bila kunci AI belum diisi (503) → banner sopan.
+//
+// Alasan usulan blok TIDAK PERNAH dikosongkan penjaga (tiket 15 putaran 5):
+// versi lama menggantinya dengan "[kalimat saran dihapus]" dan penyerang
+// membuktikan kedua alasan bisa hilang sekaligus — panel memasang dua tombol
+// usulan blok tanpa satu pun alasan, yaitu justru nilai jual produk. Sekarang
+// `usulanBlok[].perluTinjau` memasang tanda peringatan di atas alasannya dan
+// teks aslinya tetap tampil supaya pengguna bisa menilainya sendiri.
 import type { BlockKind, Threshold } from "@/lib/engine/rules";
 import { labelAmbang, labelBlok } from "@/lib/rakit/blok";
 import { PESAN_AI_NONAKTIF, type ResponDiagnosis } from "@/lib/rakit/api";
@@ -57,8 +64,11 @@ export function PanelAi(p: Props) {
         <div className="flex flex-col gap-2">
           <p>{d.ringkasan}</p>
           {d.perluTinjau ? (
-            <p className="text-xs text-warn">
-              Sebagian kata pada jawaban disamarkan karena menyerupai saran investasi. Alarm Saham hanya alat informasi.
+            <p className="text-xs text-warn" data-testid="tinjau-diagnosis">
+              Penjaga menemukan frasa yang menyerupai saran investasi
+              {d.kataDisensor.length > 0 ? ` (${d.kataDisensor.join(", ")})` : ""}. Frasa pada ringkasan disamarkan; alasan
+              usulan blok dibiarkan utuh tetapi ditandai supaya bisa kamu nilai sendiri. Alarm Saham hanya alat informasi
+              dan analisis.
             </p>
           ) : null}
           {d.emitenDibahas.length > 0 ? (
@@ -85,6 +95,16 @@ export function PanelAi(p: Props) {
                   className="rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-left font-semibold text-ink hover:border-accent"
                 >
                   + Tambahkan blok “{labelBlok(u.kind)}” ({labelAmbang(u.kind, u.threshold)})
+                  {u.perluTinjau ? (
+                    // Alasannya TIDAK digunting: usulan blok tanpa alasan menghapus
+                    // justru inti fitur. Yang dipasang di sini tanda peringatan.
+                    <span
+                      className="block text-[11.5px] font-semibold text-warn"
+                      data-testid={`tinjau-usulan-${u.kind}`}
+                    >
+                      ⚠ Alasan ini perlu kamu nilai sendiri — ada frasa yang menyerupai saran investasi.
+                    </span>
+                  ) : null}
                   <span className="block text-[11.5px] font-normal text-ink-2">{u.alasan}</span>
                 </button>
               ))}

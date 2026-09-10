@@ -89,7 +89,7 @@ function cetakDiagnosis(hasil: DiagnosisResult) {
   }
   console.log("");
   cetakUsage(hasil.usage);
-  if (hasil.perluTinjau) console.log(`PERLU TINJAU: kata rekomendasi disensor: ${hasil.kataDisensor.join(", ")}`);
+  if (hasil.perluTinjau) console.log(`PERLU TINJAU: frasa yang ditemukan penjaga: ${hasil.kataDisensor.join(", ")}`);
   if (hasil.runId) console.log(`Trace tersimpan di runs.id = ${hasil.runId}`);
 }
 
@@ -104,7 +104,7 @@ function cetakRakit(hasil: HasilRakit) {
     console.log("JSON     :", JSON.stringify(hasil.rule));
   }
   cetakUsage(hasil.usage);
-  if (hasil.perluTinjau) console.log(`PERLU TINJAU: kata rekomendasi disensor: ${hasil.kataDisensor.join(", ")}`);
+  if (hasil.perluTinjau) console.log(`PERLU TINJAU: frasa yang ditemukan penjaga: ${hasil.kataDisensor.join(", ")}`);
 }
 
 async function kasusTele(arg: Argumen): Promise<number> {

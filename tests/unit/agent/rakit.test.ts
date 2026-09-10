@@ -108,21 +108,33 @@ describe("rakitAturan: penolakan sopan", () => {
 });
 
 describe("rakitAturan: pengaman", () => {
-  it("guard menyensor kata rekomendasi pada alasan/nama dan menandai perluTinjau", async () => {
+  it("backstop meredaksi frasa pada alasan/nama dan menandai perluTinjau", async () => {
+    // Di jalur perakit `alasan` adalah prosa bebas (bukan alasan usulan blok),
+    // jadi frasanya memang diredaksi — bukan hanya ditandai.
+    const rule: Rule = { name: "Sinyal cut loss murah", combine: "any", blocks: [{ kind: "suspensi", threshold: "longgar" }] };
+    const hasil = await rakitAturan("alarm saham digembok", {
+      model: modelTiruan([diterima(rule, "Kalau disuspensi sebaiknya jual saham ini.")]),
+    });
+    expect(hasil.ditolak).toBe(false);
+    if (hasil.ditolak) return;
+    // Hanya frasanya yang hilang; kata lain di nama aturan tetap ada.
+    expect(hasil.rule.name).toBe("Sinyal [dihapus] murah");
+    expect(hasil.alasan).toBe("Kalau disuspensi sebaiknya [dihapus].");
+    expect(hasil.perluTinjau).toBe(true);
+    expect(hasil.kataDisensor.sort()).toEqual(["cut loss", "jual saham ini"]);
+  });
+
+  it("batas yang diakui: kata 'beli' telanjang TIDAK ditangkap backstop", async () => {
+    // "volume beli bersih ritel 81%" adalah kalimat fakta blok ritel_dominan
+    // yang wajib selamat, jadi kata telanjangnya sengaja tidak didaftar.
     const rule: Rule = { name: "Sinyal beli murah", combine: "any", blocks: [{ kind: "suspensi", threshold: "longgar" }] };
     const hasil = await rakitAturan("alarm saham digembok", {
       model: modelTiruan([diterima(rule, "Kalau disuspensi sebaiknya jual dulu.")]),
     });
     expect(hasil.ditolak).toBe(false);
     if (hasil.ditolak) return;
-    // Nama aturan pun dibuang seluruhnya: "Sinyal [dihapus] murah" masih
-    // terbaca sebagai ajakan bertransaksi.
-    expect(hasil.rule.name).toBe("[kalimat saran dihapus]");
-    // Kalimat beranjuran ("sebaiknya … jual") dibuang seluruhnya, bukan hanya katanya:
-    // mengganti kata saja menyisakan bingkai saran yang utuh.
-    expect(hasil.alasan).toBe("[kalimat saran dihapus].");
-    expect(hasil.perluTinjau).toBe(true);
-    expect(hasil.kataDisensor.sort()).toEqual(["beli", "jual"]);
+    expect(hasil.rule.name).toBe("Sinyal beli murah");
+    expect(hasil.perluTinjau).toBe(false);
   });
 
   it("aturan tidak valid dari model → RakitError (bukan aturan rusak lolos)", async () => {

@@ -96,10 +96,10 @@ describe("templatePenjelasan", () => {
   it("tidak memuat kata rekomendasi (beli/jual/rekomendasi) — frasa faktual 'filing jual' dilindungi guard", () => {
     for (const h of [MERAH, HIJAU]) {
       const t = templatePenjelasan(h, "2026-09-07");
-      // Template deterministik ini juga jadi bahan rapian model: kalau penyaring
-      // subjek-pasar sampai memakan satu klausanya, keluaran AI yang setia pada
-      // template akan selalu ditolak. Jadi bukan cuma `kata` yang harus kosong.
-      expect(sensorTeks(t)).toEqual({ teks: t, kata: [], kalimatDibuang: 0, kalimatRagu: 0 });
+      // Template deterministik ini juga jadi bahan rapian model: kalau backstop
+      // sampai menyala pada teksnya sendiri, keluaran AI yang setia pada template
+      // akan selalu ditolak.
+      expect(sensorTeks(t)).toEqual({ teks: t, kata: [], perluTinjau: false });
       expect(t).not.toMatch(/rekomendasi/i);
       // Selain frasa faktual dari mesin ("filing jual"), tidak ada kata jual/beli lepas.
       expect(t.replace(/filing jual/g, "")).not.toMatch(TERLARANG);
@@ -114,7 +114,7 @@ describe("penjelasanSaham", () => {
     expect(p.teks).toBe(templatePenjelasan(HIJAU, "2026-09-07"));
   });
 
-  it("keluaran model yang memuat kata terlarang DIBUANG: kembali ke template, ditandai perluTinjau", async () => {
+  it("keluaran model yang memuat frasa anjuran DIBUANG: kembali ke template, ditandai perluTinjau", async () => {
     const model = modelTiruan([
       {
         content: [{ type: "text", text: "SRIL alarm berbunyi karena laporan hilang sejak 2024-12-31. Sebaiknya jual sekarang." }],
@@ -124,9 +124,9 @@ describe("penjelasanSaham", () => {
       },
     ]);
     const p = await penjelasanSaham(MERAH, { today: "2026-09-07", model });
-    // Pesan ini dikirim ke kotak masuk & Telegram pengguna: teks model yang
-    // sempat memakai kata rekomendasi tidak dipakai sama sekali (bukan sekadar
-    // disensor), supaya tidak ada sisa bingkai anjuran yang lolos.
+    // Pesan ini dikirim ke kotak masuk & Telegram pengguna, dan templatenya sudah
+    // memuat SELURUH fakta — jadi di jalur ini teks model yang tergelincir tidak
+    // dipakai sama sekali (bukan sekadar diredaksi sebagian).
     expect(p.olehAi).toBe(false);
     expect(p.perluTinjau).toBe(true);
     expect(p.teks).toBe(templatePenjelasan(MERAH, "2026-09-07"));
@@ -136,11 +136,11 @@ describe("penjelasanSaham", () => {
     expect(p.teks.endsWith(DISCLAIMER)).toBe(true);
   });
 
-  it("keluaran model beranjuran TANPA kata terlarang juga dibuang (keberatan 5)", async () => {
+  it("keluaran model beranjuran TANPA kata beli/jual juga dibuang (keberatan 5)", async () => {
     // Kalimat ini tidak memuat satu pun kata terlarang (beli/jual/hold/…), jadi
     // sebelum perbaikan tiket 15 ia lolos utuh ke kotak masuk & Telegram dengan
-    // perluTinjau = false. Sekarang penyaring membuang kalimatnya, dan
-    // pembuangan itu cukup untuk menolak seluruh teks model.
+    // perluTinjau = false. Sekarang frasa "kurangi eksposur" ada di backstop, dan
+    // temuan itu cukup untuk menolak seluruh teks model di jalur jaga.
     const model = modelTiruan([
       {
         content: [
@@ -159,7 +159,7 @@ describe("penjelasanSaham", () => {
     expect(p.perluTinjau).toBe(true);
     expect(p.teks).toBe(templatePenjelasan(MERAH, "2026-09-07"));
     expect(p.teks).not.toMatch(/sebaiknya/i);
-    expect(p.teks).not.toContain("[kalimat saran dihapus]");
+    expect(p.teks).not.toContain("[dihapus]");
   });
 
   it("model tiruan menjawab kosong → kembali ke template", async () => {

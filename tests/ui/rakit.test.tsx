@@ -222,6 +222,40 @@ describe("PapanRakit", () => {
     await waitFor(() => expect(screen.getByTestId("hasil-uji")).toHaveAttribute("data-basi", "false"));
   });
 
+  it("usulan blok yang ditandai penjaga: alasannya TETAP TAMPIL, dengan tanda peringatan", async () => {
+    // Kontrak struktural rancang-ulang putaran 5. Sebelum ini, alasan yang
+    // menyalakan penyensor diganti "[kalimat saran dihapus]" sehingga panel
+    // memasang tombol usulan blok tanpa satu pun alasan — penyerang membuktikan
+    // kedua alasan bisa hilang sekaligus. Sekarang teksnya dibiarkan dan diberi
+    // tanda supaya pengguna menilainya sendiri.
+    const alasan = "Ekuitas TELE minus Rp1,1 triliun pada kuartal 4 2019; kurangi porsimu di TELE.";
+    rute["/api/agent/diagnosis"] = () => ({
+      status: 200,
+      json: {
+        sumber: "fixture",
+        backtest: { hits: 1, total: 4, falseAlarms: 0, controls: 4 },
+        ringkasan: "Alarm bolong di TELE. Sebaiknya [dihapus].",
+        emitenDibahas: [],
+        usulanBlok: [{ kind: "ekuitas_negatif", threshold: "longgar", alasan, perluTinjau: true }],
+        trace: [],
+        langkah: 2,
+        perluTinjau: true,
+        kataDisensor: ["kurangi porsi", "porsimu"],
+        usage: {},
+      },
+    });
+    render(<PapanRakit />);
+    fireEvent.click(screen.getByTestId("palet-laporan_hilang"));
+    fireEvent.click(screen.getByRole("button", { name: TEKS.tombolUji }));
+    await waitFor(() => expect(screen.getByTestId("usulan-ekuitas_negatif")).toBeInTheDocument());
+    const tombol = screen.getByTestId("usulan-ekuitas_negatif");
+    // Teks alasan utuh — termasuk angka & tanggalnya.
+    expect(tombol).toHaveTextContent("Ekuitas TELE minus Rp1,1 triliun pada kuartal 4 2019");
+    expect(screen.getByTestId("tinjau-usulan-ekuitas_negatif")).toBeInTheDocument();
+    // Penanda seluruh jawaban menyebut frasa yang ditemukan.
+    expect(screen.getByTestId("tinjau-diagnosis")).toHaveTextContent("porsimu");
+  });
+
   it("Simpan alarm: server 503 (tanpa DB) → tersimpan di localStorage dengan token pemilik", async () => {
     render(<PapanRakit />);
     expect(screen.getByRole("button", { name: TEKS.tombolSimpan })).toBeDisabled();

@@ -9,6 +9,9 @@ import { generateText, NoObjectGeneratedError, Output, type LanguageModel } from
 import { z } from "zod";
 
 import { parseRule, RuleError, RuleSchema, type Rule } from "../engine/rules";
+// Jalur perakit: `alasan` dan `name` adalah prosa bebas biasa (bukan alasan
+// usulan blok), jadi frasa backstop yang menyala di sana memang diredaksi —
+// bedanya dengan diagnosis dijelaskan di guard.ts.
 import { sensorObjek } from "./guard";
 import { INSTRUKSI_PERAKIT } from "./instructions";
 import { instruksiSistem, opsiProvider, pilihModel, providerDari } from "./model";
@@ -24,7 +27,9 @@ export const RakitOutputSchema = z.object({
   alasan: z
     .string()
     .nullable()
-    .describe("Satu kalimat awam kenapa blok itu dipilih; null bila ditolak"),
+    .describe(
+      "Satu kalimat awam kenapa blok itu dipilih — tentang blok dan datanya, bukan tentang apa yang sebaiknya pengguna lakukan atas sahamnya; null bila ditolak",
+    ),
 });
 export type RakitOutput = z.infer<typeof RakitOutputSchema>;
 
