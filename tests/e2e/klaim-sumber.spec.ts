@@ -12,14 +12,14 @@
 // E2E_TANPA_PGLITE=1) — jadi kedua arah klaim dijaga.
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanKlaimSumberJujur, KLAIM_CAKUPAN_NYATA, KLAIM_SUMBER_RESMI } from "./util";
+import { ADA_PGLITE, buka, harapkanKlaimSumberJujur, KLAIM_CAKUPAN_NYATA, KLAIM_SUMBER_RESMI, muatUlang } from "./util";
 
 const HALAMAN = ["/", "/putar-ulang", "/putar-ulang?kode=SRIL", "/rakit", "/pasang", "/kamus", "/cara-kami-menghitung"];
 
 test.describe("klaim sumber data mengikuti sumber yang benar-benar dipakai", () => {
   for (const jalur of HALAMAN) {
     test(`${jalur} — klaim sumber jujur di seluruh halaman (termasuk footer)`, async ({ page }) => {
-      await page.goto(jalur);
+      await buka(page, jalur);
       await expect(page.getByTestId("disclaimer")).toBeVisible();
       await harapkanKlaimSumberJujur(page, jalur);
     });
@@ -27,9 +27,9 @@ test.describe("klaim sumber data mengikuti sumber yang benar-benar dipakai", () 
 
   test("dialog panduan kunjungan pertama ikut sumber data", async ({ page }) => {
     // Kunjungan pertama: kosongkan penanda 'panduan selesai' dari storageState.
-    await page.goto("/");
+    await buka(page, "/");
     await page.evaluate(() => window.localStorage.removeItem("alarm-saham:panduan-selesai"));
-    await page.reload();
+    await muatUlang(page);
     const dialog = page.getByTestId("overlay-panduan");
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveAttribute("data-sumber", ADA_PGLITE ? "db" : "fixture");

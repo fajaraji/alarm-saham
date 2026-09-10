@@ -128,6 +128,15 @@ body {
   line-height: 1.5;
 }
 
+/* Kontrol yang hanya hidup lewat JavaScript (seret blok) menjanjikan
+   `cursor: grab`. Sebelum React hidrasi, janji itu belum benar: node-nya sudah
+   dirender server tetapi belum punya handler. `<html data-siap="1">` dipasang
+   di effect PanduanProvider begitu hidrasi selesai — selama tandanya belum ada,
+   pakai kursor biasa supaya kursornya tidak berbohong. */
+html:not([data-siap]) .butuh-hidrasi {
+  cursor: default;
+}
+
 /* Blok yang baru masuk papan "melompat" masuk (dimatikan bila pengguna
    meminta gerakan dikurangi). */
 @keyframes blok-masuk {

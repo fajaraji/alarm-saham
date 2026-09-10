@@ -4,12 +4,12 @@
 // fixture (E2E_TANPA_PGLITE=1 atau clone bersih) — bukan gagal.
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanKlaimSumberJujur, harapkanLabelSumber, PESAN_SKIP_PGLITE } from "./util";
+import { ADA_PGLITE, buka, harapkanKlaimSumberJujur, harapkanLabelSumber, PESAN_SKIP_PGLITE } from "./util";
 
 test.describe("/putar-ulang", () => {
   test("cari SRIL → garis waktu dari DB dengan ≥ 3 kejadian, sumber & tautan BEI, lampu", async ({ page }) => {
     test.skip(!ADA_PGLITE, PESAN_SKIP_PGLITE);
-    await page.goto("/putar-ulang");
+    await buka(page, "/putar-ulang");
     await page.getByTestId("kotak-kode").fill("sril");
     await page.getByTestId("tombol-lihat").click();
     await expect(page).toHaveURL(/kode=sril/i);
@@ -39,7 +39,7 @@ test.describe("/putar-ulang", () => {
 
   test("jalur fixture jujur: label 'data contoh', catatan, dan sumber tidak mengaku Sectors", async ({ page }) => {
     test.skip(ADA_PGLITE, "hanya berlaku saat server berjalan pada jalur fixture");
-    await page.goto("/putar-ulang?kode=SRIL");
+    await buka(page, "/putar-ulang?kode=SRIL");
     await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "SRIL");
     await harapkanLabelSumber(page.getByTestId("label-sumber"));
     // Klaim sumber resmi tidak boleh muncul di MANA PUN pada halaman ini —
@@ -57,7 +57,7 @@ test.describe("/putar-ulang", () => {
   });
 
   test("geser slider ke kiri → jumlah kejadian aktif berubah dan lampu ikut", async ({ page }) => {
-    await page.goto("/putar-ulang?kode=SRIL");
+    await buka(page, "/putar-ulang?kode=SRIL");
     const slider = page.getByTestId("slider");
     const semua = await page.getByTestId("kejadian").count();
     const aktifAwal = await page.locator('[data-testid="kejadian"][data-aktif="true"]').count();
@@ -83,7 +83,7 @@ test.describe("/putar-ulang", () => {
   });
 
   test("cari ZZZZ → pesan jujur + tombol minta ditarik hanya mencatat", async ({ page }) => {
-    await page.goto("/putar-ulang?kode=ZZZZ");
+    await buka(page, "/putar-ulang?kode=ZZZZ");
     const kosong = page.getByTestId("tidak-ada");
     await expect(kosong).toContainText("ZZZZ belum ada di data kami");
     await expect(page.getByTestId("putar-ulang")).toHaveCount(0);
@@ -93,7 +93,7 @@ test.describe("/putar-ulang", () => {
 
   test("emiten 404 di sumber (COWL) → hanya suspensi + catatan data laporan tidak tersedia", async ({ page }) => {
     test.skip(!ADA_PGLITE, PESAN_SKIP_PGLITE); // COWL tidak ada di fixture universe-kecil.json
-    await page.goto("/putar-ulang?kode=COWL");
+    await buka(page, "/putar-ulang?kode=COWL");
     await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "COWL");
     await expect(page.locator('[data-testid="kejadian"][data-jenis="suspensi"]')).toHaveCount(1);
     await expect(page.locator('[data-testid="kejadian"]:not([data-jenis="suspensi"])')).toHaveCount(0);
@@ -101,7 +101,7 @@ test.describe("/putar-ulang", () => {
   });
 
   test("chip kasus nyata tampil dan halaman tanpa kata penilaian terlarang", async ({ page }) => {
-    await page.goto("/putar-ulang?kode=WIKA");
+    await buka(page, "/putar-ulang?kode=WIKA");
     for (const k of ["SRIL", "TELE", "WIKA", "INAF", "BTEL", "GOLL"]) {
       await expect(page.getByTestId("chip-kasus").getByRole("link", { name: k, exact: true })).toBeVisible();
     }

@@ -10,14 +10,14 @@
 // diperiksa lewat atribut mesin `data-sumber` (lihat harapkanLabelSumber).
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanLabelSumber, kumpulkanConsoleError } from "./util";
+import { ADA_PGLITE, buka, harapkanLabelSumber, kumpulkanConsoleError } from "./util";
 
 test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   test.setTimeout(120_000);
   const konsol = kumpulkanConsoleError(page);
 
   // Langkah 1: putar ulang SRIL
-  await page.goto("/putar-ulang");
+  await buka(page, "/putar-ulang");
   await page.getByTestId("kotak-kode").fill("SRIL");
   await page.getByTestId("tombol-lihat").click();
   await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "SRIL");

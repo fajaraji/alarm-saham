@@ -9,6 +9,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
+import { buka } from "./util";
+
 const HALAMAN = ["/", "/putar-ulang?kode=SRIL", "/rakit", "/pasang", "/cara-kami-menghitung", "/kamus"] as const;
 const MODE = ["light", "dark"] as const;
 const TAG = ["wcag2a", "wcag2aa", "wcag21aa", "best-practice"];
@@ -48,7 +50,7 @@ for (const mode of MODE) {
     test.use({ colorScheme: mode });
     for (const url of HALAMAN) {
       test(`${url}: 0 pelanggaran serious/critical`, async ({ page }) => {
-        await page.goto(url);
+        await buka(page, url);
         await isiHalaman(page, url);
         const ringkas = await pelanggaranBerat(page);
         expect(ringkas, ringkas.join("\n\n")).toEqual([]);
@@ -56,7 +58,7 @@ for (const mode of MODE) {
     }
 
     test("dialog panduan terbuka: 0 pelanggaran serious/critical", async ({ page }) => {
-      await page.goto("/rakit");
+      await buka(page, "/rakit");
       await page.getByTestId("tombol-panduan").click();
       await expect(page.getByTestId("overlay-panduan")).toBeVisible();
       const ringkas = await pelanggaranBerat(page);
@@ -64,7 +66,7 @@ for (const mode of MODE) {
     });
 
     test("tooltip istilah terbuka: 0 pelanggaran serious/critical", async ({ page }) => {
-      await page.goto("/rakit");
+      await buka(page, "/rakit");
       const pemicu = page.locator('[data-istilah="laporan_hilang"]').first();
       await pemicu.click();
       await expect(page.getByTestId("tooltip-laporan_hilang").first()).toBeVisible();
@@ -75,7 +77,7 @@ for (const mode of MODE) {
 }
 
 test("fokus keyboard terlihat pada pegangan blok /rakit", async ({ page }) => {
-  await page.goto("/rakit");
+  await buka(page, "/rakit");
   await page.getByTestId("palet-suspensi").click();
   const pegangan = page.getByTestId("blok-suspensi").getByRole("button", { name: /Pegang untuk memindahkan/ });
   // Blok ditambahkan lewat klik (modalitas tetikus), sehingga Chromium tidak
@@ -95,7 +97,7 @@ test("fokus keyboard terlihat pada pegangan blok /rakit", async ({ page }) => {
 test("fokus keyboard terlihat pada kotak cari /putar-ulang", async ({ page }) => {
   // Kontrol pertama layar Langkah 1. Penandanya digambar di wadah (.pu-field
   // :focus-within), bukan di <input>, karena outline mengelilingi kotak.
-  await page.goto("/putar-ulang");
+  await buka(page, "/putar-ulang");
   await page.getByTestId("kotak-kode").focus();
   const gaya = await page.getByTestId("kotak-kode").evaluate((el) => {
     const wadah = el.closest(".pu-field") as HTMLElement;
@@ -108,7 +110,7 @@ test("fokus keyboard terlihat pada kotak cari /putar-ulang", async ({ page }) =>
 });
 
 test("dialog panduan menjebak fokus (Tab berputar di dalam kartu)", async ({ page }) => {
-  await page.goto("/rakit");
+  await buka(page, "/rakit");
   await page.getByTestId("tombol-panduan").click();
   await expect(page.getByTestId("overlay-panduan")).toBeVisible();
   // 5 kali Tab jauh melewati jumlah kontrol di kartu (2 tautan/tombol).

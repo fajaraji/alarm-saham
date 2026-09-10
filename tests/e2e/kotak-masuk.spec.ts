@@ -3,8 +3,10 @@
 // (PGlite ./.pglite), kode portofolio untuk /mulai di Telegram ikut tampil.
 import { expect, test } from "@playwright/test";
 
+import { buka } from "./util";
+
 test("kotak masuk tampil dengan keterangan cron; kode portofolio muncul setelah tersimpan di server", async ({ page }) => {
-  await page.goto("/pasang");
+  await buka(page, "/pasang");
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   const kotak = page.getByTestId("kotak-masuk");
   await expect(kotak).toBeVisible();

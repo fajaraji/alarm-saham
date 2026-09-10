@@ -41,7 +41,7 @@ export function BlokPapan({ blok, baruMasuk, onToggleAmbang, onHapus }: Props) {
         {...attributes}
         aria-label={`Pegang untuk memindahkan blok ${info.label}`}
         title="Seret untuk mengurutkan atau membuang"
-        className="cursor-grab rounded px-1 font-mono tracking-[-2px] opacity-60 hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+        className="butuh-hidrasi cursor-grab rounded px-1 font-mono tracking-[-2px] opacity-60 hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
         style={{ touchAction: "none" }}
       >
         ⋮⋮
