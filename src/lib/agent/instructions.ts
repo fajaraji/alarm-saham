@@ -144,6 +144,27 @@ export interface FrasaBackstop {
  *      normalisasi yang mengubah panjang string membuat redaksi frasa tidak
  *      bisa menunjuk posisi aslinya. "Hindari SRIL" karena itu tidak tertangkap.
  */
+/**
+ * Awal klausa = posisi imperatif. Dipakai pola yang verbanya baru bermakna
+ * anjuran bila ia MEMBUKA klausa: awal teks, sesudah tanda baca pemisah, atau
+ * sesudah baris baru; boleh didahului penanda daftar ("2) ") dan paling banyak
+ * dua kata pembingkai anjuran ("sebaiknya", "mending", ...).
+ *
+ * Catatan normalisasi: guard.ts mengubah tanda hubung menjadi spasi, sehingga
+ * penanda daftar "- " menjadi spasi dan tertangkap lewat cabang `\n` + `\s*`.
+ */
+const AWAL_KLAUSA =
+  "(?<=" +
+  // (a) verba membuka klausa, boleh didahului penanda daftar dan kata pembingkai
+  "(?:(?:^|[.!?;:,\\n])\\s*(?:\\d+[).]\\s*)?" +
+  "(?:(?:sebaiknya|mending|segera|tolong|ayo|yuk|coba|lebih\\s+baik)\\s+){0,2})" +
+  "|" +
+  // (b) verba langsung sesudah kata pembingkai anjuran di mana pun letaknya —
+  //     "kalau disuspensi sebaiknya jual saham ini" tetap tertangkap, sementara
+  //     frasa nomina fakta ("rata-rata beli saham ini") tidak punya pembingkai.
+  "(?:(?:sebaiknya|mending|segera|tolong|ayo|yuk|coba|lebih\\s+baik)\\s+)" +
+  ")";
+
 export const FRASA_BACKSTOP: readonly FrasaBackstop[] = [
   // --- A. Istilah transaksi yang tidak punya pemakaian lain ---------------
   {
@@ -170,8 +191,11 @@ export const FRASA_BACKSTOP: readonly FrasaBackstop[] = [
   },
   {
     label: "ambil untung",
-    pola: "\\bambil\\s+untung(?:nya|mu)?\\b|\\brealisasi(?:kan)?\\s+(?:untung|keuntungan|cuan)\\b",
-    alasan: "take profit dalam Bahasa Indonesia",
+    // Bentuk nomina "realisasi keuntungan" DICABUT: itu istilah akuntansi
+    // ("realisasi keuntungan kurs dicatat di laporan laba rugi kuartal 2").
+    // Hanya bentuk imperatif berimbuhan -kan yang dipertahankan.
+    pola: "\\bambil\\s+untung(?:nya|mu)?\\b|\\brealisasikan\\s+(?:untung|keuntungan|cuan)\\b",
+    alasan: "take profit dalam Bahasa Indonesia; 'realisasi keuntungan kurs' (istilah akuntansi) tidak ikut",
   },
   { label: "hold", pola: "\\bhold\\b", alasan: "instruksi menahan posisi; tidak muncul di kalimat fakta Bahasa Indonesia" },
   {
@@ -183,26 +207,36 @@ export const FRASA_BACKSTOP: readonly FrasaBackstop[] = [
 
   // --- B. Ajakan bertransaksi atas efek tertentu --------------------------
   {
-    // Lookbehind menahan frasa nomina fakta ("nilai jual saham ini", "volume
-    // beli saham itu") yang boleh muncul di laporan data.
+    // Verba transaksi hanya dihitung bila berdiri di AWAL KLAUSA (posisi
+    // imperatif), boleh didahului penanda daftar dan kata pembingkai anjuran.
+    //
+    // Kenapa bukan daftar-hitam kata di depannya (versi sebelumnya): daftar itu
+    // memuat nilai|harga|volume|tanggal|total|jumlah|tipe, dan pengukur presisi
+    // membuktikan frasa nomina fakta lain tetap bocor — "Rata-rata beli saham
+    // ini oleh investor asing", "Persentase jual saham ini oleh institusi",
+    // "Frekuensi beli saham itu", "Porsi beli saham ini oleh ritel". Daftar
+    // nomina Bahasa Indonesia tidak pernah habis; posisi klausa habis.
     label: "jual saham ini",
     pola:
-      "(?<!\\b(?:nilai|harga|volume|tanggal|total|jumlah|tipe)\\s)" +
-      "\\b(?:jual|beli|lepas|lepaskan|buang|borong|serok|koleksi|akumulasi(?:kan)?)" +
+      AWAL_KLAUSA +
+      "(?:jual|beli|lepas|lepaskan|buang|borong|serok|koleksi|akumulasi(?:kan)?)" +
       "\\s+(?:saja\\s+|aja\\s+|dulu\\s+|sekarang\\s+)?saham\\s+(?:ini|itu)\\b",
-    alasan: "verba transaksi bentuk perintah + efek yang ditunjuk; bentuk pasif berimbuhan (dijual/dibeli) tidak ikut",
+    alasan: "verba transaksi di posisi imperatif + efek yang ditunjuk; frasa nomina fakta ('rata-rata beli saham ini oleh asing') tidak ikut karena verbanya di tengah klausa",
   },
   {
     label: "jual sekarang",
-    pola:
-      "(?<!\\b(?:nilai|harga|volume|tanggal|total|jumlah|tipe)\\s)" +
-      "\\b(?:jual|beli|sell|buy)\\s+(?:sekarang|now|hari\\s+ini)\\b",
-    alasan: "verba transaksi bentuk perintah + waktu; 'keluar sekarang' pada subjek laporan tidak ikut",
+    pola: AWAL_KLAUSA + "(?:jual|beli|sell|buy)\\s+(?:sekarang|now|hari\\s+ini)\\b",
+    alasan: "verba transaksi di posisi imperatif + waktu; 'nilai jual sekarang Rp1,2 miliar' tidak ikut",
   },
   {
     label: "layak dibeli",
-    pola: "\\b(?:layak|pantas|aman|cocok|bagus)\\s+di(?:beli|koleksi|jual|lepas|buang|pegang|simpan|pertahankan|tahan|lirik)\\b",
-    alasan: "penilaian layak-tidaknya sebuah efek sebagai investasi; 'tidak cocok dipakai' (tentang blok) tidak ikut",
+    // `pertahankan`, `tahan`, dan `simpan` DICABUT: pengukur presisi
+    // membuktikan ketiganya lazim dipakai untuk ambang/blok/perdagangan —
+    // "ambang longgar layak dipertahankan", "blok suspensi cocok
+    // dipertahankan", "blok insider_jual tidak layak dipertahankan",
+    // "perdagangan layak ditahan sampai keterbukaan informasi".
+    pola: "\\b(?:layak|pantas|aman|cocok|bagus)\\s+di(?:beli|koleksi|jual|lepas|buang|pegang|lirik)\\b",
+    alasan: "penilaian layak-tidaknya sebuah efek sebagai investasi; 'tidak cocok dipakai' dan 'layak dipertahankan' (tentang blok/ambang) tidak ikut",
   },
   {
     label: "jangan dilepas",
@@ -212,13 +246,21 @@ export const FRASA_BACKSTOP: readonly FrasaBackstop[] = [
   { label: "tutup posisi", pola: "\\btutup\\s+posisi(?:nya|mu)?\\b", alasan: "menutup posisi; 'tutup buku' tidak ikut" },
   {
     label: "kosongkan portofolio",
-    pola: "\\bkosongkan\\s+(?:saja\\s+|dulu\\s+|isi\\s+){0,3}(?:portofolio|porsi|posisi|lot|eksposur|kepemilikan)",
-    alasan: "perintah menghabiskan seluruh kepemilikan pengguna",
+    // Objek WAJIB milik pengguna: "kosongkan isi portofolio uji sebelum
+    // menjalankan uji ke masa lalu yang baru" adalah langkah kerja yang sah.
+    pola:
+      "\\bkosongkan\\s+(?:saja\\s+|dulu\\s+|isi\\s+){0,3}(?:portofolio|porsi|posisi|lot|eksposur|kepemilikan)" +
+      "(?:(?:nya|mu|ku)\\b|\\s+(?:kamu|anda|kalian)\\b)",
+    alasan: "perintah menghabiskan kepemilikan pengguna; 'kosongkan isi portofolio uji' (langkah kerja) tidak ikut",
   },
   {
     label: "keluar dari posisi",
-    pola: "\\b(?:masuk|keluar)\\s+(?:dulu\\s+|saja\\s+|aja\\s+|sekarang\\s+|lagi\\s+)?(?:dari|ke)\\s+(?:saham|posisi|pasar|emiten)\\b",
-    alasan: "masuk/keluar posisi = waktu bertransaksi. Bentuk telanjang 'keluar sekarang' sengaja TIDAK didaftar karena bentrok dengan 'laporan kuartal 2 baru keluar sekarang'",
+    // `pasar` dan `emiten` DICABUT sebagai objek: pengukur presisi membuktikan
+    // keduanya lazim dipakai untuk fakta pencatatan — "emiten itu masuk ke
+    // pasar modal Indonesia pada Oktober 2014", "setelah delisting, emiten itu
+    // keluar dari pasar reguler".
+    pola: "\\b(?:masuk|keluar)\\s+(?:dulu\\s+|saja\\s+|aja\\s+|sekarang\\s+|lagi\\s+)?(?:dari|ke)\\s+(?:saham|posisi)\\b",
+    alasan: "masuk/keluar posisi = waktu bertransaksi. 'masuk ke pasar modal' dan 'keluar dari pasar reguler' (fakta pencatatan) tidak ikut; bentuk telanjang 'keluar sekarang' juga tidak didaftar",
   },
   {
     label: "tahan dulu",
@@ -232,8 +274,18 @@ export const FRASA_BACKSTOP: readonly FrasaBackstop[] = [
   },
   {
     label: "kurangi porsi",
-    pola: "\\b(?:kurangi|potong|habiskan|tambah)\\s+(?:porsi|eksposur|kepemilikan|posisi)(?:nya|mu|ku)?\\b",
-    alasan: "menyetel porsi kepemilikan pengguna. 'bobot' sengaja TIDAK di sini karena 'kurangi bobot blok jatuh_dari_puncak' adalah usulan alarm yang sah",
+    // Objek WAJIB milik pengguna (akhiran -mu/-nya/-ku atau kata ganti orang
+    // kedua). Tanpa syarat itu, pengukur presisi menunjukkan usulan sah ikut
+    // termakan: "tambah porsi kontrol di universe uji dari 48 menjadi 74",
+    // "kurangi porsi emiten kontrol kalau rasio presisinya jadi tidak terbaca".
+    pola:
+      // (a) kata ganti orang kedua MENDAHULUI verba: "kamu kurangi eksposur"
+      "\\b(?:kamu|anda|kalian)\\s+(?:kurangi|potong|habiskan|tambah)\\s+(?:porsi|eksposur|kepemilikan|posisi)\\b" +
+      "|" +
+      // (b) objeknya bermilik: "kurangi porsimu", "potong posisi kamu"
+      "\\b(?:kurangi|potong|habiskan|tambah)\\s+(?:porsi|eksposur|kepemilikan|posisi)" +
+      "(?:(?:nya|mu|ku)\\b|\\s+(?:kamu|anda|kalian)\\b)",
+    alasan: "menyetel porsi kepemilikan pengguna. 'porsi kontrol'/'porsi emiten' (subjek data) tidak ikut; 'bobot' juga tidak di sini karena 'kurangi bobot blok' adalah usulan alarm yang sah",
   },
   {
     label: "akumulasi bertahap",

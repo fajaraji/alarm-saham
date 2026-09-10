@@ -24,10 +24,10 @@
     "harusUtuhBerubah": 0,
     "presisiPersen": 100,
     "harusDitandaiTotal": 101,
-    "harusDitandaiKena": 59,
-    "recallPersen": 58.4,
+    "harusDitandaiKena": 56,
+    "recallPersen": 55.4,
     "penyerangBocorTotal": 25,
-    "penyerangBocorTertangkap": 12,
+    "penyerangBocorTertangkap": 11,
     "penyerangRakusTotal": 52,
     "penyerangRakusTermakan": 0
   },

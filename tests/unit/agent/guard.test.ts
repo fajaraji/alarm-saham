@@ -272,7 +272,9 @@ describe("FRASA_BACKSTOP — bentuk daftarnya", () => {
       "hajar kanan": "hajar kanan besok pagi",
       "jual saham ini": "jual saham ini besok",
       "jual sekarang": "jual sekarang saja",
-      "layak dibeli": "sudah tidak layak dipertahankan",
+      // "layak dipertahankan" sengaja TIDAK lagi dicakup: kata itu lazim dipakai
+      // untuk ambang/blok ("ambang longgar layak dipertahankan").
+      "layak dibeli": "sudah tidak layak dibeli",
       "jangan dilepas": "jangan dilepas dulu",
       "tutup posisi": "tutup posisinya hari ini",
       "kosongkan portofolio": "kosongkan portofoliomu sekarang",

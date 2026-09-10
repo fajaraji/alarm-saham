@@ -265,9 +265,9 @@ Angka terukur pada tolok ukur `tests/fixtures/korpus-anjuran.json` (106 kalimat 
 | | Sebelum rancang-ulang (`72a33ca`) | Sesudah |
 |---|---|---|
 | Presisi — kalimat sah yang **tidak** berubah isinya | 66/106 = 62,3% | **106/106 = 100%** |
-| Recall — anjuran yang ditandai | 77/101 = 76,2% | 59/101 = 58,4% |
+| Recall — anjuran yang ditandai | 77/101 = 76,2% | 56/101 = 55,4% |
 | Kalimat sah yang termakan | 40 | **0** |
-| Anjuran karangan pemeriksa yang tertangkap | 1/25 | 12/25 |
+| Anjuran karangan pemeriksa yang tertangkap | 1/25 | 11/25 |
 
 Recall turun pada korpus lama karena kami **memilih presisi**: gerbang uji akan merah bila satu kalimat sah berubah, tetapi tidak pernah merah karena recall rendah. Yang ditinggalkan bersama pilihan itu, terang-terangan: kata "beli"/"jual" telanjang tidak disaring (bentrok dengan "volume beli bersih ritel 81%"), "harga wajar" tidak disaring (bentrok dengan kalimat penolakan kami sendiri "harga wajarnya tidak pernah kami hitung"), "akan naik" tidak disaring (bentrok dengan "jumlah temuan akan naik dari 26 menjadi 41"), slang dan salah ketik ("lego", "boncos", "juall", "hol") tidak dikejar, dan kode emiten tidak dinormalkan sehingga "Hindari SRIL" lewat.
 
