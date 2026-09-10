@@ -7,6 +7,7 @@ import HalamanCaraKamiMenghitung from "../../src/app/cara-kami-menghitung/page";
 import { FooterDisclaimer } from "../../src/components/panduan/FooterDisclaimer";
 import { TENGGAT_LAPORAN_HARI } from "../../src/lib/engine/evaluate";
 import { BLOCK_KINDS, LABEL_BLOK } from "../../src/lib/engine/rules";
+import { KORPUS_PENJAGA, PENJAGA_FRASA } from "../../src/lib/metodologi/penjaga";
 import { KREDIT_ANGGARAN, KREDIT_TOTAL_LEDGER, ringkasSkor, SKOR_NYATA } from "../../src/lib/metodologi/skor";
 
 describe("/cara-kami-menghitung", () => {
@@ -70,5 +71,46 @@ describe("/cara-kami-menghitung", () => {
     render(<FooterDisclaimer sumberNyata />);
     expect(screen.getByTestId("disclaimer")).toHaveTextContent("bukan saran investasi");
     expect(document.body.textContent).not.toMatch(/berbahaya|gorengan|akan pailit/i);
+  });
+
+  it("bab penjaga aturan lomba (b): tiga lapis, angka dari snapshot, batas yang diakui", () => {
+    render(<HalamanCaraKamiMenghitung />);
+    const s = PENJAGA_FRASA.sesudah;
+    const l = PENJAGA_FRASA.sebelum;
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: /Bagaimana kami menjaga keluaran AI bukan saran investasi/ }),
+    ).toBeInTheDocument();
+
+    // Tiga lapis dengan peran yang jelas, urut dari kontrol utama.
+    const lapis = within(screen.getByTestId("lapis-penjaga")).getAllByRole("listitem");
+    expect(lapis).toHaveLength(3);
+    expect(lapis[0]).toHaveTextContent(/Instruksi sistem/);
+    expect(lapis[0]).toHaveTextContent(/kontrol utama/);
+    expect(lapis[1]).toHaveTextContent(/Keluaran terstruktur/);
+    expect(lapis[2]).toHaveTextContent(/cadangan terakhir/);
+    // Alasan usulan blok tidak pernah digunting — janji ke pengguna, bukan cuma kode.
+    expect(lapis[2]).toHaveTextContent(/tidak\s+pernah digunting/);
+
+    // Angka dari docs/penjaga-frasa.json, bukan diketik ulang di halaman.
+    expect(screen.getByTestId("penjaga-presisi")).toHaveTextContent(
+      `${s.harusUtuhTotal - s.harusUtuhBerubah}/${s.harusUtuhTotal} = ${s.presisiPersen}%`,
+    );
+    expect(screen.getByTestId("penjaga-recall")).toHaveTextContent(
+      `${s.harusDitandaiKena}/${s.harusDitandaiTotal} = ${s.recallPersen}%`,
+    );
+    const tabel = screen.getByTestId("tabel-penjaga");
+    expect(tabel).toHaveTextContent(l.commit);
+    expect(tabel).toHaveTextContent(`${l.harusUtuhTotal - l.harusUtuhBerubah}/${l.harusUtuhTotal} = ${l.presisiPersen}%`);
+
+    // Batas diakui terang-terangan, termasuk kalimat "TIDAK menjamin".
+    const batasPenjaga = within(screen.getByTestId("batas-penjaga")).getAllByRole("listitem");
+    expect(batasPenjaga).toHaveLength(PENJAGA_FRASA.batasYangDiakui.length);
+    expect(document.body.textContent).toMatch(/tidak menjamin/i);
+    expect(document.body.textContent).toContain(KORPUS_PENJAGA);
+    expect(document.body.textContent).toContain(PENJAGA_FRASA.tanggal);
+    // Tidak ada klaim bahwa penjaga memblokir semua kalimat beranjuran.
+    expect(document.body.textContent).not.toMatch(/memblokir semua kalimat beranjuran(?![^.]*tidak)/i);
+    expect(document.body.textContent).toMatch(/tidak<\/strong> mengklaim|tidak\s+mengklaim/i);
   });
 });

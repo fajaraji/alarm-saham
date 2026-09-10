@@ -13,7 +13,7 @@ Alarm Saham membuat investor biasa bisa melihat tanda bahaya struktural yang sud
 - **Agent:** loop tool-use buatan sendiri (Vercel AI SDK 7) yang menyelidiki **kenapa alarm bolong di emiten tertentu** dengan 7 tool di atas database Sectors, lalu mengusulkan blok — trace tool disusun dari langkah SDK, bukan karangan model. Perakit blok memakai structured output ke skema Zod yang sama dengan mesin uji.
 - **Skor nyata (bukan demo palsu):** aturan bawaan menangkap **26/74** emiten kena rata-rata **9 bulan** sebelum kejadian dengan **1/30** alarm palsu — direproduksi oleh `npm run backtest` dan dijaga tes otomatis. Keterbatasannya ditulis jujur di halaman `/cara-kami-menghitung`.
 - **Sectors adalah inti:** **395** dari 1.000 kredit dipakai untuk menarik universe uji 107 emiten ke database (buku kredit total **467**, termasuk 68 kredit pembuktian data dan 4 kredit satu uji kelas B nyata); tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang.
-- **Status:** ketiga layar, mesin uji, agent, lapisan data, cron harian, dan notifikasi selesai dan teruji (**456 tes** unit/integrasi di 57 berkas, **52 e2e** termasuk smoke alur 1→2→3 dan axe-core di dua mode tema, dijalankan CI pada **dua** konfigurasi data: jalur database dan jalur data contoh). Yang tersisa hanya deploy; blocker: `DATABASE_URL` Neon dan kunci LLM (detail di [Status jujur](#status-jujur)).
+- **Status:** ketiga layar, mesin uji, agent, lapisan data, cron harian, dan notifikasi selesai dan teruji (**668 tes** unit/integrasi di 61 berkas, **52 e2e** termasuk smoke alur 1→2→3 dan axe-core di dua mode tema, dijalankan CI pada **dua** konfigurasi data: jalur database dan jalur data contoh). Yang tersisa hanya deploy; blocker: `DATABASE_URL` Neon dan kunci LLM (detail di [Status jujur](#status-jujur)).
 
 ## Masalah dan pengguna
 
@@ -41,12 +41,12 @@ Untuk hampir semua emiten itu, tanda resminya sudah terbit bertahun-tahun sebelu
 
 Dua kemampuan AI, keduanya di `src/lib/agent/`, keduanya diuji dengan model tiruan sehingga `npm test` tidak butuh kunci:
 
-1. **Perakit blok** (`rakit.ts`): kalimat awam → `generateText` + `Output.object(RuleSchema)` — skema Zod yang **sama** dengan mesin uji — lalu divalidasi ulang `parseRule` dan disensor kata rekomendasi (beli/jual/hold/target harga). Kalimat di luar domain ditolak sopan.
+1. **Perakit blok** (`rakit.ts`): kalimat awam → `generateText` + `Output.object(RuleSchema)` — skema Zod yang **sama** dengan mesin uji — lalu divalidasi ulang `parseRule` dan diperiksa backstop frasa (lihat [batasnya](#bagaimana-kami-menjaga-keluaran-ai-bukan-saran-investasi-dan-apa-batasnya)). Kalimat di luar domain ditolak sopan.
 2. **Agent diagnosis** (`diagnosis.ts`, inti track): diberi aturan + hasil uji, agent menjalankan loop tool-use (`stopWhen: isStepCount(8)`) dan **memutuskan sendiri** tool mana yang dipanggil untuk menjelaskan kenapa alarm tidak berbunyi di emiten tertentu, mencoba blok tambahan lewat mesin uji, lalu mengusulkan maksimal 2 blok. `trace` dibangun dari `result.steps` (tool call sungguhan), bukan dari teks model.
 
 ```mermaid
 flowchart TD
-    A["Kalimat pengguna<br/>&quot;aku mau alarm buat saham yang mau pailit&quot;"] --> B["Perakit blok<br/>generateText + Output.object(RuleSchema)<br/>parseRule ulang + sensor kata terlarang"]
+    A["Kalimat pengguna<br/>&quot;aku mau alarm buat saham yang mau pailit&quot;"] --> B["Perakit blok<br/>generateText + Output.object(RuleSchema)<br/>parseRule ulang + backstop frasa"]
     B --> C["Papan alarm (dnd-kit)<br/>blok · ambang longgar/ketat · ATAU/DAN"]
     C --> D["Mesin uji ke masa lalu<br/>runBacktest: t = akhir bulan, hanya data bertanggal ≤ t"]
     D --> E["Hasil uji<br/>tertangkap · lebih awal · alarm palsu · emiten terlewat"]
@@ -121,7 +121,7 @@ git clone https://github.com/fajaraji/alarm-saham.git
 cd alarm-saham
 npm ci
 cp .env.example .env.local     # PowerShell: Copy-Item .env.example .env.local
-npm test                       # 456 tes di 57 berkas (3 di-skip pada clone bersih tanpa ./.pglite); tanpa kunci, tanpa jaringan
+npm test                       # 668 tes di 61 berkas (2 di-skip pada clone bersih tanpa ./.pglite); tanpa kunci, tanpa jaringan
 npm run dev                    # http://localhost:3000
 ```
 
@@ -188,14 +188,14 @@ Dijalankan **10 September 2026** di Windows 11 (Node 24, npm 11) dari `git clone
 | Perintah | Hasil |
 |---|---|
 | `npm ci` | exit 0 — 500 paket |
-| `npm test` | exit 0 — **57 berkas, 453 tes lulus + 3 di-skip** dengan pesan (hitung ulang snapshot skor & buku kredit butuh `./.pglite`, yang memang tidak ada di clone) |
+| `npm test` | exit 0 — waktu run clone bersih itu **57 berkas, 453 tes lulus + 3 di-skip** dengan pesan (hitung ulang snapshot skor & buku kredit butuh `./.pglite`, yang memang tidak ada di clone). Sesudah rancang-ulang penjaga (10 September 2026) jumlahnya **61 berkas, 666 lulus + 2 di-skip**, diukur ulang dengan `TANPA_PGLITE=1 npm test` — kondisi yang sama dengan clone bersih; run clone bersihnya sendiri belum diulang setelah itu |
 | `npm run e2e:seed -- --dir=.pglite-e2e` | exit 0 — `107 emiten (583 suspensi, 1901 kuartal, 248 filing, 963 aksi korporasi, 91 keuangan) ditanam`; database e2e dibangun dari benih yang di-commit, nol panggilan API |
 | `E2E_PGLITE_DIR=.pglite-e2e npm run test:e2e` | exit 0 — **51 lulus + 1 di-skip** (yang di-skip justru spec khusus jalur data contoh). Ini persis resep job CI `e2e-db`: jalur database — bentuk yang dideploy — berjalan dari clone bersih tanpa satu kunci pun |
 | `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture` | exit 0 — `Sumber: fixture universe-kecil.json (dipaksa)`; tertangkap 2/4 (delisting 2/3, watchlist 0/1), rata-rata 23 bln, alarm palsu 0/4 |
 | `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07` | exit 0 — tanpa `--fixture` pun berjalan: jatuh ke data contoh sambil **mengatakan alasannya**, `Sumber: fixture universe-kecil.json (DATABASE_URL kosong dan ./.pglite tidak ada)` |
 | `npm run scan:history` | exit 0 — `0 temuan. 533 blob teks dipindai (1 dilewati: biner/besar) pada 59 commit` (nol dependensi: hanya Node + git, jadi bisa dijalankan sebelum `npm ci`). Jumlah blob/commit tentu bertambah setiap commit baru; yang dijanjikan adalah **0 temuan**, bukan angka blobnya |
 
-Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) angka penuhnya: `npm test` **456 tes di 57 berkas** (tidak ada yang di-skip — hitung ulang snapshot ikut berjalan); `npm run test:e2e` **52 tes** pada dua varian yang dua-duanya dijalankan CI — jalur database 51 lulus + 1 di-skip, jalur data contoh (`E2E_TANPA_PGLITE=1`) 49 lulus + 3 di-skip berpesan; `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run scan:history` exit 0.
+Di mesin pengembangan (dengan `./.pglite` hasil tiket 07) angka penuhnya per 10 September 2026: `npm test` **668 tes di 61 berkas** (tidak ada yang di-skip — hitung ulang snapshot ikut berjalan); `npm run test:e2e` **52 tes** pada dua varian yang dua-duanya dijalankan CI — jalur database 51 lulus + 1 di-skip, jalur data contoh (`E2E_TANPA_PGLITE=1`) 49 lulus + 3 di-skip berpesan; `npm run lint`, `npm run typecheck`, `npm run build`, dan `npm run scan:history` exit 0.
 
 ## Deploy ke Vercel
 
@@ -241,14 +241,40 @@ Urutannya penting: **isi env dulu, migrasi, salin data, baru deploy** — kalau 
 | `CRON_SECRET` | diisi saat deploy | tanpa itu `/api/cron/jaga` menjawab 503 |
 | `vercel login` | belum diverifikasi | sebelum deploy |
 
-Yang **belum** ada dan tidak kami klaim: deploy hidup; uji AI dengan model sungguhan (semua bukti AI dari model tiruan); notifikasi Telegram yang benar-benar terkirim ke chat nyata (semua bukti Telegram dari mock); pagar laju lintas-instance (pagar yang ada hidup di memori tiap instance, dan pagar kredit yang sesungguhnya adalah buku kredit + cadangan 250).
+Yang **belum** ada dan tidak kami klaim: deploy hidup; uji AI dengan model sungguhan (semua bukti AI dari model tiruan); notifikasi Telegram yang benar-benar terkirim ke chat nyata (semua bukti Telegram dari mock); pagar laju lintas-instance (pagar yang ada hidup di memori tiap instance, dan pagar kredit yang sesungguhnya adalah buku kredit + cadangan 250); **penyensor yang menangkap semua kalimat beranjuran** — recall backstop frasa terukur 58,4% pada tolok ukur penyerang dan kontrol utamanya instruksi sistem, bukan penyaring (angka & batasnya di [bab kepatuhan](#bagaimana-kami-menjaga-keluaran-ai-bukan-saran-investasi-dan-apa-batasnya)).
 
 ## Kepatuhan aturan lomba
 
 - Data Sectors adalah inti: tanpa Sectors tidak ada uji ke masa lalu maupun mode pasang. Setiap panggilan tercatat di buku kredit; **467** dari 1.000 kredit terpakai (395 penarikan universe + 68 pembuktian data + 4 uji kelas B nyata), sisa **533** kredit, 250 cadangan tidak disentuh kode. Angka itu bukan ketikan tangan: `npm run kredit:snapshot -- --pglite` membacanya dari tabel `api_ledger` ke `docs/kredit-ledger.json`, dan halaman `/cara-kami-menghitung`, README ini, serta tes `tests/unit/docs/kredit-ledger.test.ts` sama-sama turun dari berkas itu. Bila sumber data bukan Sectors (jalur data contoh), setiap layar mengatakannya dengan label dan tidak ada kejadian yang diberi atribusi "Sumber: Sectors …".
 - Logika agent buatan sendiri (loop tool-use + structured output di atas mesin uji), bukan sekadar prompt.
-- **Tidak ada eksekusi order beli/jual**; tidak ada blok aksi "beli/jual"; agent menolak kata rekomendasi.
-- **Bukan saran investasi**: disclaimer di footer setiap layar dan di system prompt agent; emiten nyata hanya disebut dengan fakta resmi + tautan sumber.
+- **Tidak ada eksekusi order beli/jual**; tidak ada blok aksi "beli/jual". Tidak ada satu pun jalur di aplikasi ini yang bisa menempatkan order.
+- **Bukan saran investasi**: disclaimer di footer setiap layar dan di system prompt agent; emiten nyata hanya disebut dengan fakta resmi + tautan sumber. Bagaimana itu dijaga pada keluaran AI — beserta batasnya yang terukur — ada di bab berikut.
+
+### Bagaimana kami menjaga keluaran AI bukan saran investasi (dan apa batasnya)
+
+Kami tidak mengklaim punya penyensor yang memblokir semua kalimat beranjuran. Klaim itu pernah ada di dokumen ini dan **tidak benar**: dua pemeriksa adversarial mengukurnya pada 2026-09-10 dan menemukan 60 dari 65 anjuran investasi karangan mereka lolos utuh tanpa satu pun penanda, sementara penyensor yang sama memakan 41 dari 83 kalimat sah — termasuk kedua alasan usulan blok pada satu objek diagnosis realistis. Regex tidak bisa memutuskan apakah subjek sebuah kalimat Bahasa Indonesia adalah portofolio pengguna atau konfigurasi alarm. Karena itu tugasnya dibagi tiga, dan urutannya penting:
+
+| Lapis | Apa yang menjaganya | Kekuatan | Batas |
+|---|---|---|---|
+| 1. **Instruksi sistem** (kontrol utama) | `src/lib/agent/instructions.ts` — butir 1 melarang seluruh POKOK BAHASAN (posisi, porsi, lot, dana, waktu transaksi, penilaian harga), butir 1b menyatakan apa yang justru tugasnya, butir 1c berisi empat contoh negatif *JANGAN → TULIS* | menutup bentuk yang tak terhingga: imbuhan, salah ketik, slang, pengingkar | kepatuhan model, tidak bisa dibuktikan deterministik |
+| 2. **Keluaran terstruktur** | `kind`/`threshold` enum, `buktiTanggal` tanggal, medan prosa sempit; usulan blok tiba sebagai data, bukan paragraf | model tidak punya tempat menulis instruksi transaksi tanpa terlihat | medan prosa (`ringkasan`, `sebab`, `alasan`) tetap bebas |
+| 3. **Backstop frasa** | `src/lib/agent/guard.ts` + `FRASA_BACKSTOP` — hanya frasa yang tidak mungkin bermakna lain ("cut loss", "take profit", "target harga", "layak dibeli", "jangan dilepas", "porsimu") | presisi tinggi; menoleransi tanda hubung & spasi ganda | **recall rendah dengan sengaja; TIDAK menjamin semua anjuran tertangkap** |
+
+Angka terukur pada tolok ukur `tests/fixtures/korpus-anjuran.json` (106 kalimat sah + 101 anjuran, isinya kalimat verbatim dari kedua pemeriksa; diukur 2026-09-10 dengan `node --import tsx scripts/ukur-penjaga.ts`, dan dicetak setiap kali `npm test` menjalankan `tests/unit/agent/guard-korpus.test.ts`):
+
+| | Sebelum rancang-ulang (`72a33ca`) | Sesudah |
+|---|---|---|
+| Presisi — kalimat sah yang **tidak** berubah isinya | 66/106 = 62,3% | **106/106 = 100%** |
+| Recall — anjuran yang ditandai | 77/101 = 76,2% | 59/101 = 58,4% |
+| Kalimat sah yang termakan | 40 | **0** |
+| Anjuran karangan pemeriksa yang tertangkap | 1/25 | 12/25 |
+
+Recall turun pada korpus lama karena kami **memilih presisi**: gerbang uji akan merah bila satu kalimat sah berubah, tetapi tidak pernah merah karena recall rendah. Yang ditinggalkan bersama pilihan itu, terang-terangan: kata "beli"/"jual" telanjang tidak disaring (bentrok dengan "volume beli bersih ritel 81%"), "harga wajar" tidak disaring (bentrok dengan kalimat penolakan kami sendiri "harga wajarnya tidak pernah kami hitung"), "akan naik" tidak disaring (bentrok dengan "jumlah temuan akan naik dari 26 menjadi 41"), slang dan salah ketik ("lego", "boncos", "juall", "hol") tidak dikejar, dan kode emiten tidak dinormalkan sehingga "Hindari SRIL" lewat.
+
+Dua perilaku lain yang berubah karena penyerang membuktikan biayanya:
+
+- Backstop **meredaksi frasa, bukan memenggal kalimat**. "Ekuitas TELE minus Rp1,1 triliun pada kuartal 4 2019, jadi cut loss saja" menjadi "… jadi `[dihapus]` saja" — angka dan tanggalnya tidak ikut hilang.
+- Alasan usulan blok **tidak pernah digunting**. Bila backstop menyala di sana, teksnya dibiarkan utuh dan usulan itu diberi tanda peringatan di panel, karena usulan blok tanpa alasan menghapus justru inti fitur ini. Untuk pesan mode jaga pilihannya berbeda dan lebih ketat: templat deterministik sudah memuat seluruh fakta, jadi begitu backstop menyala pada rapian model, rapian itu dibuang seluruhnya dan templat dipakai.
 - Kunci hanya di `.env.local` (`.gitignore`), tidak pernah dicetak ke log. Dua gerbang: pemindai pre-commit dan `npm run scan:history` yang memeriksa **seluruh riwayat git** di CI pada setiap push — hook lokal saja tidak cukup karena bisa dilewati.
 - Repo dibuat setelah onboarding tim; setelah submit, repo dan aplikasi **dibekukan** (tidak ada commit) dan tetap publik ≥ 90 hari.
 
@@ -270,6 +296,7 @@ Yang **belum** ada dan tidak kami klaim: deploy hidup; uji AI dengan model sungg
 | `npm run sectors -- <endpoint> <symbol>` | panggilan tunggal ke Sectors lewat provider (ledger + cache) |
 | `npm run db:migrate` · `npm run db:sync -- --from=pglite --to=neon` | migrasi Drizzle · salin PGlite → Neon tanpa kredit |
 | `npm run agent:demo -- tele` | diagnosis nyata (butuh kunci LLM, berbiaya) |
+| `node --import tsx scripts/ukur-penjaga.ts [--rinci]` | ukur presisi & recall backstop frasa pada `tests/fixtures/korpus-anjuran.json` (nol API, nol kunci) |
 | `npm run telegram:set-webhook -- https://<app>` | daftarkan webhook bot Telegram sekali setelah deploy (butuh `TELEGRAM_BOT_TOKEN` + `TELEGRAM_WEBHOOK_SECRET`) |
 
 ## Pengecekan pagi otomatis & notifikasi (tiket 12)
@@ -302,6 +329,8 @@ Perkiraan biaya (harga resmi per 1 juta token, dicek 7 September 2026, jam sibuk
 - `docs/mesin-uji.md` — asumsi mesin uji.
 - `docs/skor-nyata.json` — snapshot skor yang dijaga tes.
 - `docs/decisions.md` — log keputusan bertanggal dan aturan cadangan yang terpicu.
+- `tests/fixtures/korpus-anjuran.json` — tolok ukur penjaga aturan lomba (b): 106 kalimat sah yang wajib utuh + 101 anjuran yang diukur.
+- `docs/penjaga-frasa.json` — angka presisi/recall penjaga beserta tanggal, cara mengukur, dan daftar batas yang diakui (satu sumber untuk README + halaman metodologi).
 - `tickets/` — status tiap tiket dengan bukti verifikasi.
 
 ---

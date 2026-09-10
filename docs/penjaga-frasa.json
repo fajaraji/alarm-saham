@@ -1,0 +1,43 @@
+{
+  "tentang": "Angka terukur penjaga aturan lomba (b). Satu sumber kebenaran untuk halaman /cara-kami-menghitung, README, dan docs/decisions.md — supaya tidak ada angka penjaga yang diketik ulang di tiga tempat lalu menyimpang.",
+  "korpus": "tests/fixtures/korpus-anjuran.json",
+  "perintah": "node --import tsx scripts/ukur-penjaga.ts --snapshot",
+  "tanggal": "2026-09-10",
+  "caraMengukur": "Setiap baris korpus dijalankan lewat sensorTeks() yang sungguhan. PRESISI = bagian `harusUtuh` yang teksnya kembali IDENTIK (satu karakter berubah = gagal). RECALL = bagian `harusDitandai` yang menghasilkan minimal satu temuan frasa. Nol panggilan API, nol kunci, nol database.",
+  "sebelum": {
+    "commit": "72a33ca",
+    "keterangan": "Penyensor kalimat berbasis daftar kata + klasifikasi subjek klausa (empat putaran tambalan). TIDAK bisa dihitung ulang oleh tes karena kodenya sudah diganti; angka ini direkam saat pengukuran pada commit tersebut, korpus yang sama.",
+    "harusUtuhTotal": 106,
+    "harusUtuhBerubah": 40,
+    "presisiPersen": 62.3,
+    "harusDitandaiTotal": 101,
+    "harusDitandaiKena": 77,
+    "recallPersen": 76.2,
+    "penyerangBocorTotal": 25,
+    "penyerangBocorTertangkap": 1,
+    "penyerangRakusTotal": 52,
+    "penyerangRakusTermakan": 40
+  },
+  "sesudah": {
+    "harusUtuhTotal": 106,
+    "harusUtuhBerubah": 0,
+    "presisiPersen": 100,
+    "harusDitandaiTotal": 101,
+    "harusDitandaiKena": 59,
+    "recallPersen": 58.4,
+    "penyerangBocorTotal": 25,
+    "penyerangBocorTertangkap": 12,
+    "penyerangRakusTotal": 52,
+    "penyerangRakusTermakan": 0
+  },
+  "batasYangDiakui": [
+    "Kata \"beli\"/\"jual\" telanjang tidak disaring: bentrok dengan kalimat fakta \"volume beli bersih ritel 81%\" dan \"nilai jual saham oleh orang dalam Rp88 miliar\".",
+    "\"harga wajar\" tidak disaring: bentrok dengan kalimat penolakan alat ini sendiri, \"harga wajarnya tidak pernah kami hitung\".",
+    "\"akan naik/turun\" tidak disaring: bentrok dengan angka backtest \"jumlah temuan akan naik dari 26 menjadi 41\".",
+    "\"alokasi dana\" tidak disaring: bentrok dengan fakta prospektus \"alokasi dana hasil rights issue dipakai untuk melunasi utang bank\".",
+    "\"tidak cocok\" tidak disaring: bentrok dengan \"blok insider_jual tidak cocok dipakai untuk kejadian sebelum 2024\".",
+    "Slang bursa dan salah ketik (lego, boncos, nyangkut, juall, bli, hol, cutlos) tidak dikejar — perlombaan yang tidak bisa dimenangkan daftar kata.",
+    "Kode emiten tidak dinormalkan menjadi kata \"saham\", sehingga \"Hindari SRIL\" lewat.",
+    "Kata Inggris \"buy\"/\"sell\" telanjang tidak disaring: nilai transactionType di data filing memang \"buy\"/\"sell\"."
+  ]
+}
