@@ -6,6 +6,8 @@
 // menandai panduan selesai untuk spec tiket lain agar overlay tidak menghalangi).
 import { expect, test } from "@playwright/test";
 
+import { buka, muatUlang } from "./util";
+
 const DISCLAIMER = "Alarm Saham adalah alat informasi dan analisis, bukan saran investasi.";
 const HALAMAN = ["/putar-ulang", "/rakit", "/pasang", "/cara-kami-menghitung", "/kamus"] as const;
 
@@ -13,7 +15,7 @@ test.describe("panduan & kamus", () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test("kunjungan pertama → overlay → Saya sudah paham → muat ulang tidak muncul → tombol Panduan → muncul", async ({ page }) => {
-    await page.goto("/rakit");
+    await buka(page, "/rakit");
     const dialog = page.getByRole("dialog", { name: /cara pakainya dalam 3 langkah/ });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("listitem")).toHaveCount(3);
@@ -21,7 +23,7 @@ test.describe("panduan & kamus", () => {
     await expect(dialog).toBeHidden();
     expect(await page.evaluate(() => window.localStorage.getItem("alarm-saham:panduan-selesai"))).toBe("1");
 
-    await page.reload();
+    await muatUlang(page);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Rakit alarmmu");
     await expect(page.getByRole("dialog")).toHaveCount(0);
 
@@ -32,7 +34,7 @@ test.describe("panduan & kamus", () => {
   });
 
   test("'Mulai dari langkah 1' membawa ke /putar-ulang dan tidak muncul lagi di sana", async ({ page }) => {
-    await page.goto("/pasang");
+    await buka(page, "/pasang");
     await page.getByTestId("panduan-mulai").click();
     await expect(page).toHaveURL(/\/putar-ulang$/);
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -43,7 +45,7 @@ test.describe("panduan & kamus", () => {
 test.describe("footer disclaimer & header di semua halaman", () => {
   for (const url of HALAMAN) {
     test(`${url}: satu footer disclaimer, header dengan Kamus & Panduan`, async ({ page }) => {
-      await page.goto(url);
+      await buka(page, url);
       await expect(page.getByTestId("disclaimer")).toHaveCount(1);
       await expect(page.getByTestId("disclaimer")).toContainText(DISCLAIMER);
       await expect(page.getByTestId("tombol-panduan")).toBeVisible();
@@ -54,7 +56,7 @@ test.describe("footer disclaimer & header di semua halaman", () => {
 });
 
 test("tooltip kamus: hover/fokus membuka, Esc menutup, tautan ke /kamus#istilah", async ({ page }) => {
-  await page.goto("/rakit");
+  await buka(page, "/rakit");
   const tombol = page.locator("button[data-istilah='alarm_palsu']").first();
   const tipId = await tombol.getAttribute("aria-describedby");
   expect(tipId).toBeTruthy();
@@ -78,7 +80,7 @@ test("tooltip kamus: hover/fokus membuka, Esc menutup, tautan ke /kamus#istilah"
 });
 
 test("/kamus memuat istilah wajib dengan perumpamaan dan tautan halaman", async ({ page }) => {
-  await page.goto("/kamus");
+  await buka(page, "/kamus");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Istilah yang dipakai");
   for (const id of ["suspensi", "delisting", "laporan_hilang", "insider_jual", "ekuitas_negatif", "rights_issue", "free_float", "ritel_dominan", "alarm_palsu", "lebih_awal", "kontrol_sehat"]) {
     await expect(page.getByTestId(`kamus-${id}`)).toBeVisible();

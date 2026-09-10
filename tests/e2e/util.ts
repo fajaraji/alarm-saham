@@ -30,6 +30,45 @@ export const PESAN_SKIP_PGLITE = `butuh data nyata ${DIR_PGLITE_E2E} (server ber
 export const HARI_INI_E2E = "2026-09-07";
 
 /**
+ * Tunggu sampai halaman benar-benar interaktif sebelum menyentuh apa pun.
+ *
+ * Setiap layar dirender di server, jadi tombol/slider/blok sudah TERLIHAT dan
+ * `locator.click()` sudah dianggap sah oleh Playwright jauh sebelum bundel
+ * kliennya tiba. Klik sedini itu hilang tanpa jejak: tidak ada handler yang
+ * terpasang, tidak ada galat, dan tesnya baru gagal beberapa baris kemudian
+ * dengan pesan yang menyesatkan ("elemen X tidak muncul") — persis kelas bug
+ * yang membuat CI merah.
+ *
+ * `<html data-siap="1">` dipasang di effect PanduanProvider (layout akar), jadi
+ * tandanya berlaku untuk SEMUA halaman. Ini bukan sleep dan bukan atribut
+ * khusus tes: ia menyatakan fakta yang sama yang dipakai produk untuk berhenti
+ * menampilkan kursor "bisa diseret" pada kontrol yang belum hidup.
+ */
+export async function tungguSiap(page: Page): Promise<void> {
+  await expect(page.locator("html")).toHaveAttribute("data-siap", "1");
+}
+
+/**
+ * Buka satu halaman aplikasi dan tunggu sampai ia interaktif.
+ *
+ * Pakai ini, JANGAN `page.goto`, di setiap spec yang menyentuh kontrol klien —
+ * satu tes yang lupa menunggu cukup untuk membuat CI merah sesekali, dan
+ * kegagalannya muncul di baris lain sehingga sulit dilacak. Navigasi di dalam
+ * aplikasi (klik tautan) tidak perlu diulang: `data-siap` dipasang di layout
+ * akar dan bertahan selama pindah halaman sisi klien.
+ */
+export async function buka(page: Page, jalur: string): Promise<void> {
+  await page.goto(jalur);
+  await tungguSiap(page);
+}
+
+/** `page.reload()` + penantian yang sama — muat ulang berarti hidrasi dari nol. */
+export async function muatUlang(page: Page): Promise<void> {
+  await page.reload();
+  await tungguSiap(page);
+}
+
+/**
  * Assertion label sumber yang TIDAK bisa lolos palsu.
  *
  * Teks label fixture berbunyi "data contoh (bukan data Sectors nyata)" — ia

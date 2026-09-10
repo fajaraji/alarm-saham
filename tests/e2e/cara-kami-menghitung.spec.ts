@@ -2,10 +2,11 @@
 import { expect, test } from "@playwright/test";
 
 import skor from "../../docs/skor-nyata.json";
+import { buka } from "./util";
 
 test.describe("/cara-kami-menghitung", () => {
   test("halaman tampil dengan skor snapshot, tabel per emiten bisa dibuka, dan disclaimer", async ({ page }) => {
-    await page.goto("/cara-kami-menghitung");
+    await buka(page, "/cara-kami-menghitung");
     await expect(page.getByRole("heading", { level: 1, name: "Cara kami menghitung" })).toBeVisible();
     await expect(page.getByTestId("stat-tertangkap")).toContainText(`${skor.hits}/${skor.total}`);
     await expect(page.getByTestId("stat-alarm-palsu")).toContainText(`${skor.falseAlarms}/${skor.controls}`);
@@ -17,7 +18,7 @@ test.describe("/cara-kami-menghitung", () => {
   });
 
   test("tautan nav dari layar lain mengarah ke halaman ini", async ({ page }) => {
-    await page.goto("/rakit");
+    await buka(page, "/rakit");
     await page.getByRole("link", { name: "Cara kami menghitung" }).first().click();
     await expect(page).toHaveURL(/\/cara-kami-menghitung$/);
     await expect(page.getByTestId("metodologi")).toBeVisible();

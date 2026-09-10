@@ -4,10 +4,10 @@
 // terkini" (kelas B) sengaja TIDAK dijalankan agar tidak memakai kredit Sectors.
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanLabelSumber } from "./util";
+import { ADA_PGLITE, buka, harapkanLabelSumber, muatUlang } from "./util";
 
 test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ulang tetap ada", async ({ page }) => {
-  await page.goto("/pasang");
+  await buka(page, "/pasang");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Pasang alarmmu");
   await expect(page.getByTestId("disclaimer")).toContainText("bukan saran investasi");
   await expect(page.getByTestId("portofolio-kosong")).toBeVisible();
@@ -58,7 +58,7 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   await expect(page.getByTestId("bendera").first()).toContainText("SRIL");
 
   // Muat ulang: portofolio & hasil terakhir tetap ada
-  await page.reload();
+  await muatUlang(page);
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await expect(page.getByTestId("tile-BBCA")).toBeVisible();
   await expect(page.getByTestId("tile-SRIL")).toBeVisible();
@@ -67,14 +67,14 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
 });
 
 test("saham di luar data kami ditandai 'tidak ada data'; hapus saham menyimpan ulang", async ({ page }) => {
-  await page.goto("/pasang");
+  await buka(page, "/pasang");
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await page.getByTestId("kotak-kode").fill("ZZZZ");
   await page.getByTestId("tombol-tambah").click();
   await expect(page.getByTestId("tanpa-data-ZZZZ")).toBeVisible();
   await page.getByRole("button", { name: "Hapus ZZZZ" }).click();
   await expect(page.getByTestId("tile-ZZZZ")).toHaveCount(0);
-  await page.reload();
+  await muatUlang(page);
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await expect(page.getByTestId("tile-ZZZZ")).toHaveCount(0);
 });

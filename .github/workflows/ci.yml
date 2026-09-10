@@ -102,9 +102,17 @@ jobs:
       - name: E2E (fixture)
         run: npm run test:e2e
 
+      # v7, bukan v5: v5 masih `runs.using: node20` secara default, jadi runner
+      # tetap memperingatkan "Node.js 20 is deprecated ... forced to run on
+      # Node.js 24". v6 adalah major pertama yang benar-benar node24; v7 =
+      # node24 juga dan hanya menambah input opsional `archive` (default true =
+      # perilaku lama), sehingga `name`/`path`/`retention-days` di bawah tidak
+      # berubah artinya. Butuh runner ≥ 2.327.1 — runner GitHub selalu di atas
+      # itu; kalau suatu saat dipakai runner sendiri yang lebih tua, turunkan
+      # ke v6. checkout@v5 dan setup-node@v5 sudah node24, jadi tidak diutak-atik.
       - name: Simpan laporan Playwright bila gagal
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-fixture
           path: playwright-report/
@@ -148,9 +156,10 @@ jobs:
       - name: E2E (database)
         run: npm run test:e2e
 
+      # Alasan versinya sama dengan job `e2e` di atas.
       - name: Simpan laporan Playwright bila gagal
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-db
           path: playwright-report/

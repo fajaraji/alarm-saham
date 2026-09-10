@@ -3,7 +3,7 @@
 // dan screenshot mode terang & gelap (folder ter-gitignore).
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { ADA_PGLITE, harapkanLabelSumber } from "./util";
+import { ADA_PGLITE, buka, harapkanLabelSumber } from "./util";
 
 const FOLDER_SCREENSHOT = "tests/e2e/screenshots";
 
@@ -28,7 +28,7 @@ async function seret(page: Page, dari: Locator, ke: Locator) {
 test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil & banner AI", async ({ page }) => {
   // Viewport tinggi agar palet, papan, dan area buang terlihat bersamaan (seret memakai koordinat viewport).
   await page.setViewportSize({ width: 1280, height: 1400 });
-  await page.goto("/rakit");
+  await buka(page, "/rakit");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Rakit alarmmu");
   await expect(page.getByText("Alarm Saham adalah alat informasi dan analisis, bukan saran investasi.")).toBeVisible();
 
@@ -90,8 +90,46 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+/**
+ * Regresi CI: klik yang datang SEGERA setelah seret tidak boleh hilang.
+ *
+ * @dnd-kit/core meredam semua klik di `document` selama 50 ms setelah seret
+ * (AbstractPointerSensor.detach) — lihat src/components/rakit/sensor.ts. Tes
+ * di atas tidak menangkapnya di laptop karena `locator.click()` di Windows
+ * butuh ~148 ms; di runner Linux hanya 41 ms, jadi kliknya jatuh di dalam
+ * jendela peredam dan papan diam-diam tidak berubah ATAU → DAN
+ * (run 34427424551).
+ *
+ * Tes ini menghafal titik tombolnya dulu, lalu mengulang alurnya dan mengklik
+ * titik itu tanpa satu pun perjalanan bolak-balik setelah `mouse.up()`,
+ * sehingga jaraknya ≤ jarak CI di mesin mana pun. Penguncian yang benar-benar
+ * bebas waktu ada di tests/ui/rakit-sensor.test.tsx; yang ini memastikan
+ * perilakunya juga benar pada build produksi + React sungguhan.
+ */
+test("klik tepat sesudah seret tetap sampai ke papan (peredam klik dnd-kit)", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1400 });
+
+  async function rakitSampaiDrop() {
+    await page.getByTestId("palet-suspensi").click();
+    await expect(page.getByTestId("blok-suspensi")).toBeVisible();
+    await seret(page, page.getByTestId("palet-ekuitas_negatif"), page.getByTestId("papan-dropzone"));
+  }
+
+  // Putaran 1: hafalkan posisi tombol gabung sesudah drop.
+  await buka(page, "/rakit");
+  await rakitSampaiDrop();
+  const kotak = await page.getByTestId("tombol-gabung").boundingBox();
+  if (!kotak) throw new Error("tombol-gabung tidak terlihat sesudah seret dari palet");
+
+  // Putaran 2: papan bersih, alur sama, klik langsung di titik hafalan.
+  await buka(page, "/rakit");
+  await rakitSampaiDrop();
+  await page.mouse.click(kotak.x + kotak.width / 2, kotak.y + kotak.height / 2);
+  await expect(page.getByTestId("tombol-gabung")).toHaveText("DAN");
+});
+
 test("Minta AI rakit tanpa kunci → banner sopan, papan tetap bisa dirakit sendiri", async ({ page }) => {
-  await page.goto("/rakit");
+  await buka(page, "/rakit");
   await page.getByRole("textbox", { name: /Ceritakan alarm/ }).fill("aku mau alarm buat saham yang mau pailit");
   await page.getByRole("button", { name: "Minta AI rakit" }).click();
   await expect(page.getByTestId("catatan-rakit")).toContainText("Fitur AI belum aktif");
@@ -100,7 +138,7 @@ test("Minta AI rakit tanpa kunci → banner sopan, papan tetap bisa dirakit send
 });
 
 test("keyboard: pegang blok, panah bawah, lepas → urutan berubah", async ({ page }) => {
-  await page.goto("/rakit");
+  await buka(page, "/rakit");
   await page.getByTestId("palet-suspensi").click();
   await page.getByTestId("palet-aksi_dilutif").click();
   const pegangan = page.getByTestId("blok-suspensi").getByRole("button", { name: /Pegang untuk memindahkan/ });

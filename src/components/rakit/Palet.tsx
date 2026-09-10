@@ -42,7 +42,7 @@ function ItemPalet({ info, sudahAda, onTambah }: PropsItem) {
       disabled={sudahAda}
       title={info.tooltip}
       data-testid={`palet-${info.kind}`}
-      className={`flex w-full cursor-grab flex-wrap items-center gap-2 rounded-lg bg-b-cond px-3 py-2 text-left text-[13px] font-semibold text-b-text shadow-[0_2px_0_rgba(0,0,0,.2)] transition-opacity active:cursor-grabbing disabled:cursor-default disabled:opacity-40 ${isDragging ? "opacity-50" : ""}`}
+      className={`butuh-hidrasi flex w-full cursor-grab flex-wrap items-center gap-2 rounded-lg bg-b-cond px-3 py-2 text-left text-[13px] font-semibold text-b-text shadow-[0_2px_0_rgba(0,0,0,.2)] transition-opacity active:cursor-grabbing disabled:cursor-default disabled:opacity-40 ${isDragging ? "opacity-50" : ""}`}
       style={{ touchAction: "manipulation" }}
     >
       <span aria-hidden="true" className="font-mono tracking-[-2px] opacity-60">
