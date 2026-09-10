@@ -25,6 +25,23 @@ async function seret(page: Page, dari: Locator, ke: Locator) {
   await page.mouse.up();
 }
 
+/**
+ * Seret pendek yang dibatalkan: lewati jarak aktivasi (4 px) lalu kembali dan
+ * lepas di titik semula, sehingga peramban mengirim klik kompatibilitas ke
+ * elemen yang sama.
+ */
+async function seretLaluBatal(page: Page, dari: Locator) {
+  const a = await dari.boundingBox();
+  if (!a) throw new Error("Elemen seret tidak terlihat");
+  const x = a.x + a.width / 2;
+  const y = a.y + a.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 12, y + 12, { steps: 4 });
+  await page.mouse.move(x, y, { steps: 4 });
+  await page.mouse.up();
+}
+
 test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil & banner AI", async ({ page }) => {
   // Viewport tinggi agar palet, papan, dan area buang terlihat bersamaan (seret memakai koordinat viewport).
   await page.setViewportSize({ width: 1280, height: 1400 });
@@ -105,6 +122,13 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
  * sehingga jaraknya ≤ jarak CI di mesin mana pun. Penguncian yang benar-benar
  * bebas waktu ada di tests/ui/rakit-sensor.test.tsx; yang ini memastikan
  * perilakunya juga benar pada build produksi + React sungguhan.
+ *
+ * Ia TETAP merah waktu peredamnya cuma diperpendek jadi `setTimeout(..., 0)`
+ * (run 34437835563): task timer kalah prioritas dari task input, jadi klik yang
+ * disuntikkan masih menyalip callback timernya. Jangan "memperbaiki" tes ini
+ * dengan menambah jeda — jeda apa pun di sini menyembunyikan justru jendela
+ * yang sedang diukur. Penutup di sensor.ts sekarang tidak memakai timer sama
+ * sekali; tes ini yang menjaga janji itu.
  */
 test("klik tepat sesudah seret tetap sampai ke papan (peredam klik dnd-kit)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1400 });
@@ -126,6 +150,48 @@ test("klik tepat sesudah seret tetap sampai ke papan (peredam klik dnd-kit)", as
   await rakitSampaiDrop();
   await page.mouse.click(kotak.x + kotak.width / 2, kotak.y + kotak.height / 2);
   await expect(page.getByTestId("tombol-gabung")).toHaveText("DAN");
+});
+
+/**
+ * Sisi lain dari kontrak yang sama: peredamnya memang masih meredam.
+ *
+ * Blok palet adalah <button> yang bisa diseret SEKALIGUS punya onClick "tambah"
+ * (Palet.tsx), jadi klik kompatibilitas milik seret pendek yang dibatalkan di
+ * atasnya HARUS tetap ditelan. Kejadiannya tidak bisa dibaca dari isi papan:
+ * `deteksiTabrakan` jatuh ke `closestCenter` kalau penunjuk tidak di atas
+ * droppable mana pun, jadi seret yang dibatalkan tetap mendarat di papan, dan
+ * `reducerPapan` menolak blok kembar — dua jalur itu menutupi kliknya. Yang
+ * diukur di sini adalah faktanya langsung: apakah klik sampai ke fase bubble
+ * `document`, tempat React App Router memasang seluruh onClick-nya.
+ *
+ * Satu angka mengunci KEDUA arah sekaligus, tanpa asumsi urutan: sesudah blok
+ * kedua muncul, perekam harus memuat TEPAT satu klik. Dua = klik milik seret
+ * bocor (peredam dicabut terlalu dini); nol = peredamnya tidak pernah dicabut,
+ * dan bloknya bahkan tidak akan muncul. Titik klik kedua dihafal SEBELUM seret
+ * supaya tidak ada perjalanan bolak-balik sesudah `mouse.up()` — sama ketatnya
+ * dengan tes di atas.
+ *
+ * Tes ini juga yang akan memberi tahu kalau Chromium suatu saat berhenti
+ * memberi klik kompatibilitas stempel yang sama dengan `pointerup`-nya —
+ * dasar empiris seluruh penutup di src/components/rakit/sensor.ts.
+ */
+test("klik milik seret ditelan, klik sesudahnya lolos (dua sisi peredam)", async ({ page }) => {
+  await buka(page, "/rakit");
+  await page.evaluate(() => {
+    (window as unknown as { __klik: number }).__klik = 0;
+    document.addEventListener("click", () => (window as unknown as { __klik: number }).__klik++);
+  });
+  // Palet tidak bergeser saat papan bertambah blok (aside `self-start`), jadi
+  // titik ini masih sahih sesudah seret.
+  const kotak = await page.getByTestId("palet-aksi_dilutif").boundingBox();
+  if (!kotak) throw new Error("palet-aksi_dilutif tidak terlihat");
+
+  await seretLaluBatal(page, page.getByTestId("palet-suspensi"));
+  await page.mouse.click(kotak.x + kotak.width / 2, kotak.y + kotak.height / 2);
+  await expect(page.getByTestId("blok-aksi_dilutif")).toBeVisible();
+
+  const sampai = await page.evaluate(() => (window as unknown as { __klik: number }).__klik);
+  expect(sampai, "2 = klik milik seret bocor; 1 = tepat klik kedua saja").toBe(1);
 });
 
 test("Minta AI rakit tanpa kunci → banner sopan, papan tetap bisa dirakit sendiri", async ({ page }) => {
