@@ -48,7 +48,7 @@ export class AiKeyMissingError extends Error {
   constructor(pesan?: string) {
     super(
       pesan ??
-        "Kunci AI belum diset. Isi DEEPSEEK_API_KEY (disarankan: murah, prabayar) atau ANTHROPIC_API_KEY di .env.local (lihat .env.example) agar fitur AI (perakit blok & diagnosis) bisa dipakai. Provider bisa dipaksa lewat LLM_PROVIDER=deepseek|anthropic.",
+        "Kunci AI belum diset. Isi LLM_API_KEY (kunci gateway OpenAI-compatible, mis. Command Code — sekalian set LLM_BASE_URL dan LLM_MODEL), atau DEEPSEEK_API_KEY, atau ANTHROPIC_API_KEY di .env.local (lihat .env.example) agar fitur AI (perakit blok & diagnosis) bisa dipakai. Provider bisa dipaksa lewat LLM_PROVIDER=deepseek|anthropic.",
     );
     this.name = "AiKeyMissingError";
   }
@@ -63,8 +63,23 @@ function isProvider(s: string): s is Provider {
   return (PROVIDERS as readonly string[]).includes(s);
 }
 
-/** Kunci API provider dari lingkungan proses (undefined bila kosong). */
+/**
+ * Apakah jalur DeepSeek dialihkan ke gateway pihak ketiga yang OpenAI-compatible
+ * (mis. Command Code: `https://api.commandcode.ai/provider/v1`). `createDeepSeek`
+ * menerima `baseURL`, jadi tidak perlu provider terpisah — cukup arahkan
+ * endpointnya dan pakai nama model milik gateway itu.
+ */
+export function pakaiGateway(): boolean {
+  return Boolean(env("LLM_BASE_URL"));
+}
+
+/**
+ * Kunci API provider dari lingkungan proses (undefined bila kosong).
+ * Jalur DeepSeek menerima `LLM_API_KEY` (kunci gateway) lebih dulu, lalu
+ * `DEEPSEEK_API_KEY` (kunci DeepSeek langsung).
+ */
 export function kunciProvider(provider: Provider): string | undefined {
+  if (provider === "deepseek") return env("LLM_API_KEY") ?? env(ENV_KUNCI.deepseek);
   return env(ENV_KUNCI[provider]);
 }
 
@@ -97,9 +112,22 @@ export function hasAiKey(): boolean {
   }
 }
 
-/** ID model untuk provider + peran, memperhatikan DEEPSEEK_MODEL / DEEPSEEK_REASONER. */
+/**
+ * ID model untuk provider + peran. Urutan pada jalur DeepSeek:
+ * `LLM_MODEL_RINGAN` (peran ringan) → `LLM_MODEL` → `DEEPSEEK_REASONER=1` →
+ * `DEEPSEEK_MODEL` → default. Nama model gateway berbeda dari nama DeepSeek
+ * langsung (mis. `deepseek/deepseek-v4-flash` vs `deepseek-v4-flash`), jadi
+ * saat memakai gateway WAJIB set `LLM_MODEL`.
+ */
 export function idModel(provider: Provider, peran: PeranModel): string {
   if (provider === "anthropic") return MODEL_ID.anthropic[peran];
+  if (peran === "ringan") {
+    const ringan = env("LLM_MODEL_RINGAN") ?? env("LLM_MODEL");
+    if (ringan) return ringan;
+  } else {
+    const penalaran = env("LLM_MODEL");
+    if (penalaran) return penalaran;
+  }
   if (peran === "penalaran" && env("DEEPSEEK_REASONER") === "1") return DEEPSEEK_MODEL_PENALARAN;
   return env("DEEPSEEK_MODEL") ?? MODEL_ID.deepseek[peran];
 }
@@ -118,7 +146,9 @@ export function pilihModel(peran: PeranModel, override?: LanguageModel): Languag
     );
   }
   const id = idModel(provider, peran);
-  return provider === "anthropic" ? createAnthropic({ apiKey })(id) : createDeepSeek({ apiKey })(id);
+  if (provider === "anthropic") return createAnthropic({ apiKey })(id);
+  const baseURL = env("LLM_BASE_URL");
+  return createDeepSeek(baseURL ? { apiKey, baseURL } : { apiKey })(id);
 }
 
 /**
@@ -160,6 +190,11 @@ export function opsiProvider(provider: Provider, effort: Effort = "high"): Provi
   if (provider === "anthropic") {
     return { anthropic: { thinking: { type: "adaptive" }, effort } satisfies AnthropicLanguageModelOptions };
   }
+  // Lewat gateway: JANGAN kirim opsi khusus DeepSeek (thinking/reasoning_effort).
+  // Gateway meneruskan body ke hulu dan bisa menolak field yang tidak dikenalnya
+  // dengan HTTP 400 — yang hilang cuma penyetelan kedalaman berpikir, sementara
+  // tool calling dan structured output tetap jalan.
+  if (pakaiGateway()) return {};
   return {
     deepseek: { thinking: { type: "enabled" }, reasoningEffort: EFFORT_DEEPSEEK[effort] } satisfies DeepSeekLanguageModelOptions,
   };
