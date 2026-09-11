@@ -3,12 +3,19 @@
 // Provider default tes: DeepSeek (tool-calling tanpa opsi Anthropic).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { diagnosis, MAKS_USULAN, type RekamanRun } from "../../../src/lib/agent/diagnosis";
-import { DISCLAIMER } from "../../../src/lib/agent/instructions";
+import {
+  diagnosis,
+  MAKS_EMITEN_DIBAHAS,
+  MAKS_TERLEWAT_DISODORKAN,
+  MAKS_USULAN,
+  pilihTerlewat,
+  type RekamanRun,
+} from "../../../src/lib/agent/diagnosis";
+import { DISCLAIMER, INSTRUKSI_DIAGNOSIS, INSTRUKSI_RANGKUM } from "../../../src/lib/agent/instructions";
 import { fromFixture } from "../../../src/lib/engine/events";
 import universeKecil from "../../../src/lib/engine/fixtures/universe-kecil.json";
 import type { Rule } from "../../../src/lib/engine/rules";
-import { runBacktest } from "../../../src/lib/engine/score";
+import { runBacktest, type BacktestResult, type PerSymbolResult } from "../../../src/lib/engine/score";
 import { langkahProsa, langkahTeks, langkahTool, modelTiruan, usageTiruan } from "./mock-model";
 
 const sumber = fromFixture(universeKecil);
@@ -94,7 +101,8 @@ describe("diagnosis (model tiruan)", () => {
       [1, "getReportDates"],
       [1, "runAlarmOn"],
     ]);
-    expect(hasil.trace[0].ringkasanHasil).toMatch(/terlewat: .*TELE.*WIKA/);
+    // Jumlah disebut lebih dulu, potongan disebut "contoh" (lihat ringkasHasilTool).
+    expect(hasil.trace[0].ringkasanHasil).toMatch(/^4 terlewat; 3 contoh: TELE, SRIL, WIKA; di luar jangkauan data: GOLL/);
     expect(hasil.trace[1].input).toEqual({ symbol: "TELE" }); // .trim().toUpperCase() di skema tool
     expect(hasil.trace[1].ringkasanHasil).toBe("1 suspensi: 2024-12-27");
     expect(hasil.trace[2].ringkasanHasil).toMatch(/^TELE @ 2025-05-31 \[laporan_hilang\(longgar\)\] → diam$/);
@@ -357,4 +365,201 @@ describe("diagnosis lewat gateway (dua fase)", () => {
       perluTinjau: true,
     });
   });
+});
+
+// ---------------------------------------------------------------------------
+// Batas beban kerja: universe DB sungguhan meninggalkan 59 emiten terlewat.
+// Tanpa potongan ini satu panggilan nyata berjalan 366 detik dan tetap gagal
+// (habis langkah sebelum menyimpulkan), sementara batas fungsi Vercel Hobby
+// 300 detik. Lihat docs/decisions.md.
+// ---------------------------------------------------------------------------
+
+describe("pilihTerlewat: memotong & memprioritaskan emiten terlewat", () => {
+  const baris = (symbol: string, group: "delisting" | "watchlist", targetEventDate: string): PerSymbolResult => ({
+    symbol,
+    group,
+    targetEventDate,
+    scanFrom: "2020-01-31",
+    scanTo: targetEventDate,
+    fired: false,
+    firstFireDate: null,
+    leadMonths: null,
+    reasons: [],
+    excludedFromLead: false,
+  });
+  const buat = (perSymbol: PerSymbolResult[]): BacktestResult => ({ ...backtest, scanStart: "2020-01-31", perSymbol });
+
+  it("memotong di MAKS_TERLEWAT_DISODORKAN, delisting & kejadian terbaru lebih dulu", () => {
+    const banyak: PerSymbolResult[] = [];
+    for (let i = 0; i < 12; i++) banyak.push(baris(`W${i}`, "watchlist", `2023-01-${String(i + 10).padStart(2, "0")}`));
+    for (let i = 0; i < 12; i++) banyak.push(baris(`D${i}`, "delisting", `2024-06-${String(i + 10).padStart(2, "0")}`));
+    const pilihan = pilihTerlewat(buat(banyak));
+
+    expect(pilihan.total).toBe(24);
+    expect(pilihan.dipilih).toHaveLength(MAKS_TERLEWAT_DISODORKAN);
+    // Semua yang terpilih delisting (peringkat grup), dan yang terbaru di depan.
+    expect(pilihan.dipilih.every((r) => r.group === "delisting")).toBe(true);
+    expect(pilihan.dipilih[0].symbol).toBe("D11"); // target 2024-06-21, paling baru
+    expect(pilihan.dipilih.map((r) => r.targetEventDate)).toEqual(
+      [...pilihan.dipilih.map((r) => r.targetEventDate)].sort().reverse(),
+    );
+  });
+
+  it("kejadian sebelum awal pindai masuk diluarJangkauan, bukan dipilih", () => {
+    const pilihan = pilihTerlewat(
+      buat([baris("GOLL", "delisting", "2019-01-30"), baris("TELE", "delisting", "2025-06-06")]),
+    );
+    expect(pilihan.diluarJangkauan).toEqual(["GOLL"]);
+    expect(pilihan.dipilih.map((r) => r.symbol)).toEqual(["TELE"]);
+    expect(pilihan.total).toBe(2); // angka jujur: GOLL tetap dihitung terlewat
+  });
+
+  it("prompt & listMissed ikut terpotong, dan angka sebenarnya tetap disebut", async () => {
+    const banyak = Array.from({ length: 20 }, (_, i) =>
+      baris(`X${String(i).padStart(2, "0")}`, "delisting", `2024-0${(i % 9) + 1}-15`),
+    );
+    banyak.push(baris("TUA", "delisting", "2019-05-05"));
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahTeks({ ringkasan: "ok", emitenDibahas: [], usulanBlok: [] }),
+    ]);
+    await diagnosis({ rule, backtest: buat(banyak), source: sumber, model, simpan: async () => undefined });
+
+    const promptPengguna = JSON.stringify(model.doGenerateCalls[0].prompt[1]);
+    expect(promptPengguna).toContain("Jumlah emiten kena yang TERLEWAT = 21.");
+    expect(promptPengguna).toContain(`hanya ${MAKS_TERLEWAT_DISODORKAN} CONTOH dari 21`);
+    // Angka yang boleh disebut model adalah 21, bukan 8 — pernah salah terbaca.
+    expect(promptPengguna).toContain(`${MAKS_TERLEWAT_DISODORKAN} BUKAN jumlah yang terlewat`);
+    expect(promptPengguna).toContain("DI LUAR jangkauan data");
+    expect(promptPengguna).toContain("TUA");
+    expect(promptPengguna).toContain(`Bahas paling banyak ${MAKS_EMITEN_DIBAHAS} emiten`);
+
+    // Hasil tool listMissed: dipotong, tapi jumlah sebenarnya ikut dikirim.
+    const pesanTool = model.doGenerateCalls[1].prompt.filter((m) => m.role === "tool");
+    const isi = JSON.stringify(pesanTool);
+    expect(isi).toContain('"jumlahTerlewatSeluruhnya":21');
+    expect(isi).toContain("Jangan sebut 8 sebagai jumlah yang terlewat");
+    expect(isi).toContain('"diluarJangkauanData":["TUA"]');
+  });
+
+  it("keluaran dipotong di MAKS_EMITEN_DIBAHAS", async () => {
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahTeks({
+        ringkasan: "ok",
+        emitenDibahas: Array.from({ length: 7 }, (_, i) => ({
+          symbol: `Z${i}`,
+          sebab: "laporan lengkap sampai 2025-03-31",
+          buktiTanggal: ["2025-03-31"],
+        })),
+        usulanBlok: [],
+      }),
+    ]);
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
+    expect(hasil.emitenDibahas).toHaveLength(MAKS_EMITEN_DIBAHAS);
+    expect(hasil.emitenDibahas.map((e) => e.symbol)).toEqual(["Z0", "Z1", "Z2", "Z3"]);
+  });
+});
+
+describe("fase 2: instruksi ringkas + satu kali coba lagi", () => {
+  it("memakai INSTRUKSI_RANGKUM (tanpa narasi alur tool), bukan INSTRUKSI_DIAGNOSIS", async () => {
+    const model = modelDuaFase();
+    await diagnosis({ rule, backtest, source: sumber, model, duaFase: true, simpan: async () => undefined });
+    const sistemFase1 = String(model.doGenerateCalls[0].prompt[0].content);
+    const sistemFase2 = String(model.doGenerateCalls[2].prompt[0].content);
+    expect(sistemFase1).toBe(INSTRUKSI_DIAGNOSIS);
+    expect(sistemFase2).toBe(INSTRUKSI_RANGKUM);
+    // Lapis 1 (kepatuhan) utuh di kedua fase; alur tool hanya di fase 1.
+    expect(sistemFase2).toContain(DISCLAIMER);
+    expect(sistemFase1).toContain("Panggil `listMissed`");
+    expect(sistemFase2).not.toContain("Panggil `listMissed`");
+    expect(sistemFase2).toContain("TIDAK punya tool di panggilan ini");
+  });
+
+  it("fase 2 yang tidak terparse dicoba sekali lagi, dan token percobaan gagal tetap dihitung", async () => {
+    // Panggilan ke-3 (fase 2) mengembalikan teks yang bukan JSON → gagal parse;
+    // panggilan ke-4 mengembalikan JSON yang benar.
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahProsa(PROSA_FASE_1),
+      langkahProsa("Maaf, saya perlu memanggil listMissed dulu.", usageTiruan(9, 4, 0)),
+      langkahTeks(JAWABAN_RAPI, usageTiruan(7, 5, 3)),
+    ]);
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, duaFase: true, simpan: async () => undefined });
+
+    expect(model.doGenerateCalls).toHaveLength(4);
+    expect(hasil.ringkasan).toBe(JAWABAN_RAPI.ringkasan);
+    // Trace tetap dari fase 1; percobaan ulang tidak menambah langkah tool.
+    expect(hasil.trace.map((t) => t.tool)).toEqual(["listMissed"]);
+    // Biaya: fase 1 (2 × 100/20) + fase 2 gagal (9/4) + fase 2 berhasil (7/5).
+    expect(hasil.usage.inputTokens).toBe(200 + 9 + 7);
+    expect(hasil.usage.outputTokens).toBe(40 + 4 + 5);
+  });
+
+  it("gagal dua kali berturut-turut dilempar apa adanya", async () => {
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahProsa(PROSA_FASE_1),
+      langkahProsa("bukan JSON sama sekali"),
+    ]);
+    await expect(
+      diagnosis({ rule, backtest, source: sumber, model, duaFase: true, simpan: async () => undefined }),
+    ).rejects.toThrow(/No object generated/i);
+    expect(model.doGenerateCalls).toHaveLength(4); // 2 fase 1 + 2 percobaan fase 2
+  });
+});
+
+it("fase 2 memakai modelRangkum bila disuntik; fase 1 tetap di model penalaran", async () => {
+  const modelJelajah = modelTiruan([
+    langkahTool([{ toolName: "listMissed", input: {} }]),
+    langkahProsa(PROSA_FASE_1),
+  ]);
+  const modelPerangkum = modelTiruan([langkahTeks(JAWABAN_RAPI, usageTiruan(7, 5, 3))]);
+  const hasil = await diagnosis({
+    rule,
+    backtest,
+    source: sumber,
+    model: modelJelajah,
+    modelRangkum: modelPerangkum,
+    duaFase: true,
+    simpan: async () => undefined,
+  });
+
+  // Pembagian kerja: tool hanya di model jelajah, skema hanya di perangkum.
+  expect(modelJelajah.doGenerateCalls).toHaveLength(2);
+  expect(modelJelajah.doGenerateCalls.every((c) => (c.tools?.length ?? 0) === 7)).toBe(true);
+  expect(modelJelajah.doGenerateCalls.every((c) => c.responseFormat === undefined)).toBe(true);
+  expect(modelPerangkum.doGenerateCalls).toHaveLength(1);
+  expect(modelPerangkum.doGenerateCalls[0].tools).toBeUndefined();
+  expect(modelPerangkum.doGenerateCalls[0].responseFormat?.type).toBe("json");
+  expect(String(modelPerangkum.doGenerateCalls[0].prompt[0].content)).toBe(INSTRUKSI_RANGKUM);
+
+  expect(hasil.ringkasan).toBe(JAWABAN_RAPI.ringkasan);
+  expect(hasil.trace.map((t) => t.tool)).toEqual(["listMissed"]);
+  expect(hasil.usage.inputTokens).toBe(200 + 7); // kedua model dijumlahkan
+});
+
+it("ringkasan trace listMissed menyebut jumlah lebih dulu, potongannya disebut 'contoh'", async () => {
+  // Regresi: kalimat ini ikut dikirim ke fase 2, jadi kata-katanya sendiri
+  // pernah membuat model menulis "Delapan dari 59 emiten terlewat".
+  const baris = (symbol: string, targetEventDate: string): PerSymbolResult => ({
+    symbol, group: "delisting", targetEventDate,
+    scanFrom: "2020-01-31", scanTo: targetEventDate, fired: false,
+    firstFireDate: null, leadMonths: null, reasons: [], excludedFromLead: false,
+  });
+  const banyak = Array.from({ length: 11 }, (_, i) => baris(`X${i}`, `2024-0${(i % 9) + 1}-15`));
+  const model = modelTiruan([
+    langkahTool([{ toolName: "listMissed", input: {} }]),
+    langkahTeks({ ringkasan: "ok", emitenDibahas: [], usulanBlok: [] }),
+  ]);
+  const hasil = await diagnosis({
+    rule,
+    backtest: { ...backtest, scanStart: "2020-01-31", perSymbol: banyak },
+    source: sumber,
+    model,
+    simpan: async () => undefined,
+  });
+  const ringkas = hasil.trace[0].ringkasanHasil;
+  expect(ringkas).toMatch(/^11 terlewat; 8 contoh: /);
+  expect(ringkas).not.toMatch(/8 dari 11/);
 });

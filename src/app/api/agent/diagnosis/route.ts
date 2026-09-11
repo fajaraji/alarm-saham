@@ -8,7 +8,14 @@ import { AiKeyMissingError, diagnosis, hasAiKey, pilihSumber } from "@/lib/agent
 import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { GROUPS, RuleError, RuleSchema, runBacktest, type BacktestResult } from "@/lib/engine";
 
-export const maxDuration = 120;
+// 300 detik = batas maksimum fungsi Vercel pada plan Hobby dengan fluid compute
+// (docs "Configuring Maximum Duration", diperiksa 2026-09-12: Hobby default 300
+// dan maksimum 300; Pro sampai 800). Diagnosis nyata lewat gateway terukur
+// ~170 detik untuk 3-4 emiten, jadi 120 detik yang lama terlalu mepet: satu
+// percobaan tanpa batas emiten terlewat berjalan 366 detik dan tetap gagal.
+// Batas jumlah emiten (MAKS_TERLEWAT_DISODORKAN) yang menjaga agar tidak
+// mendekati langit-langit ini; angka di sini hanya jaring terakhir.
+export const maxDuration = 300;
 
 // Diagnosis adalah panggilan LLM termahal di produk ini (loop tool-use sampai 8
 // langkah). Publik, tetapi dibatasi lajunya agar URL deploy tidak bisa dipakai

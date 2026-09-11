@@ -207,3 +207,42 @@ Isi jawabannya diperiksa terhadap data, bukan cuma "tidak galat": ia menemukan k
 ## Data pindah ke Neon (2026-09-12)
 
 `npm run db:sync -- --from=pglite --to=neon` selesai exit 0; jumlah baris **sama** di sumber dan tujuan untuk kedelapan tabel: `symbols` 107, `suspensions` 583, `report_dates` 1901, `corporate_actions` 963, `filings` 248, `financials_q` 91, `api_ledger` 923, `api_cache` 366. Nol kredit Sectors terpakai (salinan database ke database). Dengan ini `DATABASE_URL` bukan lagi blocker tiket 16, dan buku kredit (`api_ledger`) ikut pindah sehingga pagar cadangan 250 kredit tetap berlaku di produksi.
+
+## Diagnosis di jalur web: batas 300 detik Vercel, dan model yang dipilih (2026-09-12)
+
+Uji nyata pertama (bagian sebelumnya) memakai universe fixture 7 emiten. Begitu jalurnya diuji seperti yang akan dipakai juri — `next start` + POST `/api/agent/diagnosis` dengan hasil backtest Neon sungguhnya (104 emiten, 44,8 KB body, **59 emiten terlewat**) — muncul dua masalah yang tidak terlihat di fixture. Keduanya ditemukan sebelum deploy, bukan sesudah.
+
+**Masalah 1: melampaui batas waktu fungsi.** Permintaan pertama berjalan **366 detik** lalu gagal tanpa jawaban. Batas maksimum fungsi Vercel plan Hobby dengan fluid compute adalah **300 detik** (dokumen resmi "Configuring Maximum Duration", diperiksa 2026-09-12: Hobby default 300 / maksimum 300; Pro 800). `maxDuration` route masih 120 detik, jadi di produksi ia akan dipotong lebih awal lagi.
+
+**Masalah 2: yang mahal itu LANGKAH, bukan tool call.** Dugaan pertama saya salah: memotong daftar 59 emiten terlewat menjadi 8 kasus terpilih (`pilihTerlewat`) justru membuat panggilan LEBIH lambat — 418 detik — karena model memakai langkah yang tersisa untuk memeriksa kedelapan emiten itu sampai habis. Angkanya jelas begitu dibandingkan:
+
+| Langkah model | Tool call | Waktu |
+|---|---|---|
+| 4 | 10 | 169 s |
+| 7 | 44 | 418 s |
+
+Tool call membaca data lokal (mikrodetik). Yang memakan waktu adalah setiap putaran balik ke model. Karena itu `MAKS_LANGKAH_DEFAULT` diturunkan **8 → 4**. Itu baru aman SETELAH jalur dua fase ada: sebelumnya kehabisan langkah berarti `NoObjectGeneratedError` dan seluruh kerja hangus, sekarang fase 2 tetap menyusun jawaban dari trace yang sudah terkumpul.
+
+**Masalah 3, yang paling menentukan: model `deepseek-v4-pro` tidak layak dipakai di jalur permintaan web.** Kegagalan yang tadinya saya baca sebagai "skema kadang tidak terparse" ternyata sebagian besar adalah **kapasitas gateway**. Diukur langsung, 3 percobaan per kombinasi, `DiagnosisOutputSchema` sungguhan, prompt fase 2 yang realistis:
+
+| Model | Kanal keluaran | Berhasil | Rata-rata |
+|---|---|---|---|
+| `deepseek-v4-flash` | tool | **3/3** | 20 s |
+| `deepseek-v4-flash` | response_format | **3/3** | 6 s (dua di antaranya kena cache gateway) |
+| `deepseek-v4-pro` | tool | 0/3 | — galat "Layanan sedang penuh" / "Bad Gateway" |
+| `deepseek-v4-pro` | response_format | 0/3 | — galat kapasitas yang sama |
+
+Nol kegagalannya bergaya parse; semuanya HTTP dari gateway. Maka: kedua kanal keluaran sama-sama jalan (jadi `Output.object` dipertahankan, tidak perlu pindah ke kanal tool), dan **model ringanlah yang dipakai**. Fase 2 sekarang memakai peran `ringan` (`DiagnosisInput.modelRangkum`) karena tugasnya memang merapikan, bukan menalar; dan `.env.example` + `.env.local` diubah memakai `deepseek-v4-flash` untuk `LLM_MODEL` juga.
+
+Hasil diagnosis penuh pada universe Neon dengan flash — bukan cuma "tidak galat", isinya diperiksa:
+
+| Jalur | Hasil |
+|---|---|
+| Skrip, 2 kali | 2/2 berhasil, 52 s dan 63 s, ~52 ribu token |
+| `next start` + POST route, 4 kali | 4/4 berhasil, 71 s / 77 s / 196 s / 238 s, ~55 ribu token |
+
+Rentang 71-238 detik terhadap langit-langit 300 detik; sebaran lebarnya mengikuti kepadatan gateway, bukan besar datanya. Kalau log Vercel nanti menunjukkan pemotongan, tuas pertama yang ditarik adalah `MAKS_LANGKAH_DEFAULT` 4 → 3 (bukan `maxDuration`, yang sudah di maksimum plan).
+
+Isi jawabannya menemukan sebab yang benar dan tidak sepele: baris suspensi di data **bertanggal sama dengan tanggal kejadian target**, sehingga `suspensi(longgar)` secara struktural tidak bisa berbunyi lebih awal — lalu ia membuktikan alternatifnya dengan `runAlarmOn`: `laporan_hilang(longgar)` berbunyi untuk DUCK pada 2021-04-30 (≈4 bulan sebelum target) dan UNIT pada 2021-01-31, sementara kontrol BBCA/TLKM/ASII tetap diam (tidak menambah alarm palsu). Untuk TOYS dan SRIL ia menyatakan tidak ada blok yang berbunyi lebih awal dengan data yang ada — jawaban yang benar, dan ia mengatakannya alih-alih mengarang.
+
+**Satu cacat yang sempat lolos, dan asalnya dari kata-kata kami sendiri.** Ringkasan model menulis "Delapan dari 59 emiten terlewat" — padahal 59 yang terlewat dan 8 hanya contoh yang dikirim. Sumbernya bukan model: `ringkasHasilTool` merangkai kalimat `terlewat: A, B, ... (8 dari 59 terlewat)`, dan kalimat itu ikut dikirim ke fase 2 sebagai langkah data, lalu disalin. Diperbaiki di tiga tempat sekaligus — jumlah ditulis lebih dulu (`59 terlewat; 8 contoh: ...`), kunci tool diganti `terlewat` → `terlewatContoh` plus medan `catatan`, dan prompt menyebut eksplisit angka mana yang benar. Sesudahnya 2/2 permintaan menulis angkanya dengan benar ("Alarm melewatkan 59 emiten; 8 contoh ... diperiksa"). Satu tes regresi mengunci kalimat itu, karena ia bukan sekadar tampilan melainkan masukan model.

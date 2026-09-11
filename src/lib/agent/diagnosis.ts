@@ -1,16 +1,25 @@
 // Agent diagnosis (inti tiket 08): "kenapa alarm bolong di emiten X?"
 //
-// Loop tool-use (AI SDK v7 `generateText` + `stopWhen: isStepCount(8)`) dengan
-// tools yang membaca EventSource (suspensi, tanggal laporan, filing, aksi
-// korporasi, financials), menjalankan mesin uji pada satu emiten/tanggal
-// (`runAlarmOn` → `fires`), dan daftar emiten terlewat dari hasil backtest.
+// Loop tool-use (AI SDK v7 `generateText` + `stopWhen: isStepCount`, batas di
+// MAKS_LANGKAH_DEFAULT) dengan tools yang membaca EventSource (suspensi,
+// tanggal laporan, filing, aksi korporasi, financials), menjalankan mesin uji
+// pada satu emiten/tanggal (`runAlarmOn` → `fires`), dan daftar emiten terlewat.
 // Jawaban akhir terstruktur (Output.object); `trace` disusun dari
 // `result.steps` (tool call sungguhan), bukan dari karangan model.
 //
 // Dua jalur panggilan model — lihat `jalankanModel`: satu fase untuk provider
 // langsung, DUA fase saat lewat gateway OpenAI-compatible (LLM_BASE_URL), yang
 // tidak bisa menegakkan skema dan loop tool sekaligus.
-import { generateText, isStepCount, Output, tool, type LanguageModel, type StepResult, type ToolSet } from "ai";
+import {
+  generateText,
+  isStepCount,
+  NoObjectGeneratedError,
+  Output,
+  tool,
+  type LanguageModel,
+  type StepResult,
+  type ToolSet,
+} from "ai";
 import { z } from "zod";
 
 import { getDb, hasDb, schema, type Db } from "../db";
@@ -19,7 +28,7 @@ import type { EmitenEvents, EventSource } from "../engine/events";
 import { BLOCK_KINDS, LABEL_BLOK, ringkasAturan, THRESHOLDS, type BlockKind, type Rule, type Threshold } from "../engine/rules";
 import type { BacktestResult, PerSymbolResult } from "../engine/score";
 import { periksaFrasa, sensorObjek } from "./guard";
-import { INSTRUKSI_DIAGNOSIS } from "./instructions";
+import { INSTRUKSI_DIAGNOSIS, INSTRUKSI_RANGKUM } from "./instructions";
 import { instruksiSistem, opsiProvider, pakaiGateway, pilihModel, providerDari, type Provider } from "./model";
 import { gabungUsage, ringkasUsage, type UsageRingkas } from "./usage";
 
@@ -115,7 +124,22 @@ export interface DiagnosisInput {
   source: EventSource;
   /** Model suntikan (tes memakai MockLanguageModelV4). Default: model peran 'penalaran' dari provider terpilih. */
   model?: LanguageModel;
-  /** Batas langkah loop tool-use (default 8). */
+  /**
+   * Model untuk FASE 2 (perangkum) pada jalur dua fase. Default: `model` bila
+   * disuntik (supaya tes memakai satu tiruan), kalau tidak model peran
+   * 'ringan'.
+   *
+   * Kenapa 'ringan' dan bukan 'penalaran': fase 2 hanya merapikan temuan yang
+   * sudah ada menjadi objek — tidak memilih tool, tidak menyusun hipotesis.
+   * Terukur di gateway Kagiro (2026-09-12, 3 percobaan per kombinasi dengan
+   * DiagnosisOutputSchema sungguhan): `deepseek-v4-flash` **6/6 berhasil**
+   * rata-rata 20 detik, sedangkan `deepseek-v4-pro` 0/6 — semuanya galat
+   * KAPASITAS gateway ("Layanan sedang penuh", "Bad Gateway"), bukan galat
+   * skema. Memakai model ringan di sini memotong waktu, biaya, DAN
+   * ketergantungan pada model yang sedang padat.
+   */
+  modelRangkum?: LanguageModel;
+  /** Batas langkah loop tool-use (default MAKS_LANGKAH_DEFAULT). */
   maxSteps?: number;
   /**
    * Paksa jalur DUA FASE (lihat `jalankanModel`). Default: `pakaiGateway()` —
@@ -128,8 +152,41 @@ export interface DiagnosisInput {
   simpan?: PenyimpanRun;
 }
 
-export const MAKS_LANGKAH_DEFAULT = 8;
+/**
+ * Batas langkah loop tool-use.
+ *
+ * Diturunkan 8 → 4 setelah pengukuran di `next start` + gateway Kagiro
+ * (2026-09-12): yang menentukan waktu dinding BUKAN jumlah tool call (data
+ * lokal, mikrodetik) melainkan jumlah PANGGILAN MODEL, karena setiap langkah
+ * model penalaran memakan 30-60 detik. Terukur: 4 langkah / 10 tool call = 169
+ * detik; 7 langkah / 44 tool call = 418 detik. Batas fungsi Vercel Hobby 300
+ * detik, jadi 8 langkah memang di luar jangkauan.
+ *
+ * Menurunkannya baru AMAN sejak jalur dua fase ada: dulu habis langkah berarti
+ * gagal total (`NoObjectGeneratedError`), sekarang fase 2 tetap menyusun
+ * jawaban dari trace yang sudah terkumpul. Model dipaksa memanggil banyak tool
+ * sekaligus per langkah — itu memang yang diminta instruksinya.
+ */
+export const MAKS_LANGKAH_DEFAULT = 4;
 export const MAKS_USULAN = 2;
+
+/**
+ * Batas emiten terlewat yang disodorkan ke model, dan batas emiten yang
+ * diminta dibahas.
+ *
+ * Kenapa ada batas: pada universe DB sungguhan (104 emiten) satu aturan
+ * sempit meninggalkan **59** emiten terlewat. Tanpa batas, `listMissed` dan
+ * prompt mengirim keenam-puluhnya, model memakai seluruh 8 langkah untuk
+ * menarik data belasan emiten, dan panggilannya berakhir 366 detik kemudian
+ * TANPA jawaban (habis langkah sebelum menyimpulkan) — terukur 2026-09-12 di
+ * `next start` + gateway Kagiro. Batas fungsi Vercel Hobby 300 detik, jadi
+ * jalur itu memang tidak bisa dipakai.
+ *
+ * Diagnosis yang menyebut 3-4 kasus mewakili juga LEBIH berguna daripada
+ * daftar 59 baris, jadi batas ini bukan cuma penghematan waktu.
+ */
+export const MAKS_TERLEWAT_DISODORKAN = 8;
+export const MAKS_EMITEN_DIBAHAS = 4;
 
 // ---------------------------------------------------------------------------
 // Tools
@@ -145,6 +202,44 @@ function emitenTerlewat(backtest: BacktestResult): PerSymbolResult[] {
   return backtest.perSymbol.filter((r) => r.group !== "control" && !r.fired);
 }
 
+/** Emiten terlewat setelah diprioritaskan dan dipotong (lihat MAKS_TERLEWAT_DISODORKAN). */
+export interface TerlewatTerpilih {
+  /** Yang benar-benar dikirim ke model, sudah diurut. */
+  dipilih: PerSymbolResult[];
+  /** Seluruh emiten kena yang terlewat, termasuk yang tidak dikirim. */
+  total: number;
+  /**
+   * Terlewat yang kejadian targetnya mendahului awal pindai, jadi datanya
+   * memang tidak ada (mis. GOLL 2019-01-30 sedangkan data mulai 2020).
+   * Dikirim sebagai DAFTAR KODE saja: model boleh menyebutnya tanpa
+   * membuang langkah menarik data yang tidak akan ada.
+   */
+  diluarJangkauan: string[];
+}
+
+/**
+ * Pilih emiten terlewat yang paling bisa dijelaskan datanya:
+ * kejadian target di dalam rentang data lebih dulu, `delisting` sebelum
+ * `watchlist` (kasus terkuat), lalu kejadian terbaru lebih dulu (cakupan data
+ * paling tebal — filing baru ada sejak 2024). Dipotong di
+ * MAKS_TERLEWAT_DISODORKAN.
+ */
+export function pilihTerlewat(backtest: BacktestResult): TerlewatTerpilih {
+  const semua = emitenTerlewat(backtest);
+  const diluar = semua.filter((r) => r.targetEventDate !== null && r.targetEventDate < backtest.scanStart);
+  const bisaDijelaskan = semua.filter((r) => !(r.targetEventDate !== null && r.targetEventDate < backtest.scanStart));
+  const peringkatGrup = (r: PerSymbolResult) => (r.group === "delisting" ? 0 : 1);
+  const urut = [...bisaDijelaskan].sort(
+    (a, b) =>
+      peringkatGrup(a) - peringkatGrup(b) || (b.targetEventDate ?? "").localeCompare(a.targetEventDate ?? ""),
+  );
+  return {
+    dipilih: urut.slice(0, MAKS_TERLEWAT_DISODORKAN),
+    total: semua.length,
+    diluarJangkauan: diluar.map((r) => r.symbol),
+  };
+}
+
 function buatTools(input: DiagnosisInput) {
   const { source, rule, backtest } = input;
   const cache = new Map<string, Promise<EmitenEvents>>();
@@ -157,24 +252,33 @@ function buatTools(input: DiagnosisInput) {
   return {
     listMissed: tool({
       description:
-        "Daftar emiten kena (delisting/watchlist) yang alarmnya TERLEWAT pada backtest, beserta tanggal kejadian target dan rentang pindai. Panggil ini dulu.",
+        "Daftar emiten kena (delisting/watchlist) yang alarmnya TERLEWAT pada backtest, beserta tanggal kejadian target dan rentang pindai. Panggil ini dulu. Daftarnya DIPOTONG ke kasus paling bisa dijelaskan datanya; `jumlahTerlewatSeluruhnya` menyebut angka sebenarnya.",
       inputSchema: z.object({}),
-      execute: async () => ({
-        aturan: ringkasAturan(rule),
-        terlewat: emitenTerlewat(backtest).map((r) => ({
-          symbol: r.symbol,
-          group: r.group,
-          targetEventDate: r.targetEventDate,
-          scanFrom: r.scanFrom,
-          scanTo: r.scanTo,
-        })),
-        tertangkap: backtest.perSymbol
-          .filter((r) => r.group !== "control" && r.fired)
-          .map((r) => ({ symbol: r.symbol, firstFireDate: r.firstFireDate, leadMonths: r.leadMonths })),
-        alarmPalsu: backtest.perSymbol
-          .filter((r) => r.group === "control" && r.fired)
-          .map((r) => ({ symbol: r.symbol, firstFireDate: r.firstFireDate })),
-      }),
+      execute: async () => {
+        const pilihan = pilihTerlewat(backtest);
+        return {
+          aturan: ringkasAturan(rule),
+          jumlahTerlewatSeluruhnya: pilihan.total,
+          // Nama kunci + catatan ini menutup satu salah-baca yang benar-benar
+          // terjadi: model menulis "dari 59 emiten yang dipindai, 8 terlewat"
+          // karena menghitung panjang array alih-alih membaca angkanya.
+          catatan: `terlewatContoh hanya ${pilihan.dipilih.length} CONTOH; jumlah emiten kena yang terlewat = jumlahTerlewatSeluruhnya (${pilihan.total}). Jangan sebut ${pilihan.dipilih.length} sebagai jumlah yang terlewat.`,
+          diluarJangkauanData: pilihan.diluarJangkauan,
+          terlewatContoh: pilihan.dipilih.map((r) => ({
+            symbol: r.symbol,
+            group: r.group,
+            targetEventDate: r.targetEventDate,
+            scanFrom: r.scanFrom,
+            scanTo: r.scanTo,
+          })),
+          tertangkap: backtest.perSymbol
+            .filter((r) => r.group !== "control" && r.fired)
+            .map((r) => ({ symbol: r.symbol, firstFireDate: r.firstFireDate, leadMonths: r.leadMonths })),
+          alarmPalsu: backtest.perSymbol
+            .filter((r) => r.group === "control" && r.fired)
+            .map((r) => ({ symbol: r.symbol, firstFireDate: r.firstFireDate })),
+        };
+      },
     }),
     getSuspensions: tool({
       description: "Semua kejadian suspensi satu emiten (tanggal + alasan dari bursa).",
@@ -264,9 +368,20 @@ function ringkasHasilTool(tool: string, output: unknown): string {
   if (!o || typeof o !== "object") return potong(JSON.stringify(output ?? null));
   switch (tool) {
     case "listMissed": {
-      const t = (o.terlewat as { symbol: string }[]) ?? [];
+      const t = (o.terlewatContoh as { symbol: string }[]) ?? [];
       const k = (o.tertangkap as { symbol: string }[]) ?? [];
-      return `terlewat: ${t.map((x) => x.symbol).join(", ") || "-"}; tertangkap: ${k.map((x) => x.symbol).join(", ") || "-"}`;
+      const total = typeof o.jumlahTerlewatSeluruhnya === "number" ? o.jumlahTerlewatSeluruhnya : t.length;
+      const luar = (o.diluarJangkauanData as string[]) ?? [];
+      const catatanLuar = luar.length ? `; di luar jangkauan data: ${luar.join(", ")}` : "";
+      const kode = t.map((x) => x.symbol).join(", ") || "-";
+      // Kalimat ini BUKAN sekadar tampilan: ia ikut dikirim ke fase 2 sebagai
+      // langkah data. Versi lamanya berbunyi "terlewat: A, B, ... (8 dari 59
+      // terlewat)", dan fase 2 menyalinnya menjadi "Delapan dari 59 emiten
+      // terlewat" — angka yang salah, dari kata-kata kami sendiri. Karena itu
+      // jumlah ditulis lebih dulu dan potongan disebut "contoh", bukan "dari".
+      return `${total} terlewat${total > t.length ? `; ${t.length} contoh: ${kode}` : `: ${kode}`}${catatanLuar}; tertangkap: ${
+        k.map((x) => x.symbol).join(", ") || "-"
+      }`;
     }
     case "getSuspensions": {
       const s = (o.suspensions as { date: string }[]) ?? [];
@@ -329,22 +444,41 @@ export function susunTrace(steps: ReadonlyArray<StepResult<DiagnosisTools>>): Tr
 
 function susunPrompt(input: DiagnosisInput): string {
   const { rule, backtest, targetSymbol } = input;
-  const terlewat = emitenTerlewat(backtest);
+  const pilihan = pilihTerlewat(backtest);
   const baris = [
     `Aturan alarm: "${rule.name}" = ${ringkasAturan(rule)}.`,
     `Hasil backtest (${backtest.scanStart} .. ${backtest.today}, sumber ${input.source.name}): tertangkap ${backtest.hits}/${backtest.total} emiten kena; alarm palsu ${backtest.falseAlarms}/${backtest.controls} kontrol.`,
-    terlewat.length
-      ? `Emiten kena yang TERLEWAT: ${terlewat
-          .map((r) => `${r.symbol} (${r.group}, target ${r.targetEventDate}, pindai ${r.scanFrom ?? "-"}..${r.scanTo ?? "-"})`)
-          .join("; ")}.`
-      : "Tidak ada emiten kena yang terlewat.",
   ];
+  if (pilihan.dipilih.length) {
+    // Daftarnya dipotong DI PROMPT juga, bukan cuma di tool: 59 baris emiten
+    // terlewat pernah membuat model menghabiskan seluruh langkah menarik data
+    // tanpa pernah menyimpulkan. Kalimatnya sengaja menegaskan mana angka
+    // "terlewat" dan mana angka "dipilih": versi sebelumnya ("8 kasus terpilih
+    // dari 59") terbaca model sebagai "8 emiten terlewat" dan masuk ke
+    // ringkasan sebagai angka yang salah.
+    const daftar = pilihan.dipilih
+      .map((r) => `${r.symbol} (${r.group}, target ${r.targetEventDate}, pindai ${r.scanFrom ?? "-"}..${r.scanTo ?? "-"})`)
+      .join("; ");
+    baris.push(
+      pilihan.total > pilihan.dipilih.length
+        ? `Jumlah emiten kena yang TERLEWAT = ${pilihan.total}. Itu satu-satunya angka yang benar kalau kamu menyebut berapa yang terlewat. Yang dikirim ke kamu hanya ${pilihan.dipilih.length} CONTOH dari ${pilihan.total} itu supaya langkahmu cukup; ${pilihan.dipilih.length} BUKAN jumlah yang terlewat, jadi jangan menulis kalimat seperti "dari ${pilihan.total} emiten yang dipindai, ${pilihan.dipilih.length} terlewat". Contohnya: ${daftar}.`
+        : `Emiten kena yang TERLEWAT: ${daftar}.`,
+    );
+  } else {
+    baris.push("Tidak ada emiten kena yang terlewat di dalam rentang data.");
+  }
+  if (pilihan.diluarJangkauan.length) {
+    baris.push(
+      `Terlewat tapi DI LUAR jangkauan data (kejadiannya mendahului ${backtest.scanStart}, jangan buang langkah menariknya): ${pilihan.diluarJangkauan.join(", ")}.`,
+    );
+  }
   if (targetSymbol) {
     baris.push(`Fokuskan pembahasan pada emiten ${targetSymbol.trim().toUpperCase()}.`);
   }
   baris.push(
     `Blok yang tersedia: ${BLOCK_KINDS.map((k) => `${k} (${LABEL_BLOK[k]})`).join(", ")}.`,
-    "Jelaskan kenapa alarm bolong pada emiten terlewat (utamakan kasus nyata) dan usulkan maksimal 2 blok tambahan/pengetatan, semua berbasis data tool.",
+    `Kamu punya paling banyak ${input.maxSteps ?? MAKS_LANGKAH_DEFAULT} langkah. Panggil banyak tool SEKALIGUS dalam satu langkah — itu satu-satunya cara menarik data beberapa emiten tanpa kehabisan langkah.`,
+    `Bahas paling banyak ${MAKS_EMITEN_DIBAHAS} emiten — pilih yang paling mewakili, jangan semuanya. Jelaskan kenapa alarm bolong di sana dan usulkan maksimal ${MAKS_USULAN} blok tambahan/pengetatan, semua berbasis data tool.`,
   );
   return baris.join("\n");
 }
@@ -503,21 +637,42 @@ async function jalankanModel(
     providerOptions,
   });
   const trace = susunTrace(jelajah.steps);
-  const rangkum = await generateText({
-    model,
-    instructions,
-    prompt: promptRangkum(jelajah.text, trace),
-    output,
-    providerOptions,
-  });
+  const usageJelajah = ringkasUsage(jelajah.usage, jelajah.providerMetadata);
+  // Model perangkum: 'ringan' di produksi (lihat DiagnosisInput.modelRangkum),
+  // tapi `model` yang disuntik tes dipakai apa adanya supaya satu tiruan cukup.
+  const modelRangkum = input.modelRangkum ?? input.model ?? pilihModel("ringan");
+  const panggilRangkum = () =>
+    generateText({
+      model: modelRangkum,
+      instructions: instruksiSistem(INSTRUKSI_RANGKUM, providerDari(modelRangkum)),
+      prompt: promptRangkum(jelajah.text, trace),
+      output,
+      providerOptions,
+    });
+
+  // Satu kali coba lagi bila fase 2 gagal diparse. Pada gateway, skema
+  // disuntikkan ke pesan sistem alih-alih ditegakkan provider, sehingga
+  // keluarannya kadang tidak terparse untuk permintaan yang PERSIS sama
+  // (terukur gagal lalu berhasil, 2026-09-12). Fase 2 murah — satu panggilan
+  // tanpa tool — jadi mengulangnya jauh lebih baik daripada membuang seluruh
+  // kerja fase 1. Galat percobaan kedua dilempar apa adanya.
+  let rangkum: Awaited<ReturnType<typeof panggilRangkum>>;
+  let usageGagal: UsageRingkas | undefined;
+  try {
+    rangkum = await panggilRangkum();
+  } catch (err) {
+    if (!NoObjectGeneratedError.isInstance(err)) throw err;
+    console.warn("[agent] fase 2 (rangkum) tidak terparse; mencoba sekali lagi.");
+    usageGagal = ringkasUsage(err.usage);
+    rangkum = await panggilRangkum();
+  }
+
   return {
     keluaran: rangkum.output,
     trace,
     langkah: jelajah.steps.length + rangkum.steps.length,
-    usage: gabungUsage(
-      ringkasUsage(jelajah.usage, jelajah.providerMetadata),
-      ringkasUsage(rangkum.usage, rangkum.providerMetadata),
-    ),
+    // Percobaan yang gagal TETAP dibayar, jadi tetap dihitung.
+    usage: gabungUsage(usageJelajah, ringkasUsage(rangkum.usage, rangkum.providerMetadata), ...(usageGagal ? [usageGagal] : [])),
   };
 }
 
@@ -529,6 +684,7 @@ export async function diagnosis(input: DiagnosisInput): Promise<DiagnosisResult>
   const { trace, usage } = hasil;
   const mentah: DiagnosisOutput = {
     ...hasil.keluaran,
+    emitenDibahas: hasil.keluaran.emitenDibahas.slice(0, MAKS_EMITEN_DIBAHAS),
     usulanBlok: hasil.keluaran.usulanBlok.slice(0, MAKS_USULAN),
   };
   // Backstop frasa. `kind`/`threshold`/`symbol`/tanggal dilewati karena berasal

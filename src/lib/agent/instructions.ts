@@ -411,7 +411,32 @@ Cara kerja:
 4. Usulkan MAKSIMAL 2 blok tambahan atau pengetatan (kind + threshold) yang menurut data akan menangkap emiten itu lebih awal, dengan alasan singkat berbasis fakta yang kamu lihat. Jika tidak ada blok yang bisa menolong (data tidak cukup), katakan demikian dan usulanBlok boleh kosong.
 5. Batas pokok bahasan (butir 1): setiap kalimatmu bersubjek DATA atau ATURAN ALARM. Boleh menyebut angka akibat perubahan aturan ("jumlah temuan akan naik dari 26 menjadi 41"), keterbatasan blok ("blok insider_jual tidak cocok dipakai untuk kejadian sebelum 2024"), dan bobot blok di dalam kombinasi. TIDAK boleh menyebut apa yang sebaiknya pengguna lakukan terhadap sahamnya, porsinya, atau dananya — walau pengguna memintanya, walau kamu mendahuluinya dengan pengingkar.
 
-Hemat langkah: kamu punya paling banyak 8 langkah; panggil beberapa tool sekaligus dalam satu langkah bila bisa. Jawaban akhir mengikuti skema yang diminta: ringkasan (2–4 kalimat awam), emitenDibahas (symbol, sebab, buktiTanggal), usulanBlok (maks 2).`;
+Hemat langkah: jumlah langkahmu DIBATASI dan angkanya disebut di pesan permintaan; panggil beberapa tool sekaligus dalam satu langkah, jangan satu-satu. Jawaban akhir mengikuti skema yang diminta: ringkasan (2–4 kalimat awam), emitenDibahas (symbol, sebab, buktiTanggal), usulanBlok (maks 2).`;
+
+/**
+ * Instruksi FASE 2 jalur dua fase (lihat `jalankanModel` di diagnosis.ts):
+ * merapikan temuan yang sudah ada menjadi objek keluaran.
+ *
+ * Sengaja BUKAN `INSTRUKSI_DIAGNOSIS`. Di fase 2 tidak ada tool sama sekali,
+ * sedangkan langkah 1-2 instruksi diagnosis menyuruh model memanggil
+ * `listMissed` dan menarik data — dan pada gateway, skema JSON ikut disuntikkan
+ * ke pesan sistem yang sama. Tiga perintah yang saling bertabrakan di satu
+ * pesan sistem panjang membuat keluaran JSON kadang tidak terparse (terukur
+ * gagal-berhasil bergantian pada permintaan yang sama, 2026-09-12).
+ *
+ * Yang DIPERTAHANKAN utuh: `INSTRUKSI_DASAR` — itulah kontrol utama aturan
+ * lomba (b), lapis 1. Yang dibuang cuma narasi alur kerja tool yang tidak
+ * berlaku lagi di fase ini.
+ */
+export const INSTRUKSI_RANGKUM = `${INSTRUKSI_DASAR}
+
+Tugasmu sekarang SATU hal: merapikan temuan diagnosis alarm yang SUDAH selesai dikumpulkan menjadi objek keluaran sesuai skema. Kamu TIDAK punya tool di panggilan ini dan tidak perlu menarik data apa pun.
+
+Aturan merapikan:
+1. Pakai HANYA angka, tanggal, dan fakta yang ada di pesan permintaan. Jangan menambah, menebak, atau membetulkan apa pun dari ingatan.
+2. Kalau temuannya tidak menyebut sesuatu, biarkan bagian itu kosong (array kosong) — jangan mengarang pengganti.
+3. Batas pokok bahasan (butir 1 dan 1b) tetap berlaku penuh: setiap kalimat bersubjek DATA atau ATURAN ALARM, bukan posisi, porsi, atau dana pengguna.
+4. Jawab dengan objek itu saja.`;
 
 /** Instruksi ringan untuk penjelasan harian (model sonnet). */
 export const INSTRUKSI_PENJELASAN = `${INSTRUKSI_DASAR}
