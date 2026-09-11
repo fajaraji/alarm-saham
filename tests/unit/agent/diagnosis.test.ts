@@ -9,7 +9,7 @@ import { fromFixture } from "../../../src/lib/engine/events";
 import universeKecil from "../../../src/lib/engine/fixtures/universe-kecil.json";
 import type { Rule } from "../../../src/lib/engine/rules";
 import { runBacktest } from "../../../src/lib/engine/score";
-import { langkahTeks, langkahTool, modelTiruan } from "./mock-model";
+import { langkahProsa, langkahTeks, langkahTool, modelTiruan, usageTiruan } from "./mock-model";
 
 const sumber = fromFixture(universeKecil);
 const TODAY = "2026-09-07";
@@ -226,5 +226,135 @@ describe("diagnosis (model tiruan)", () => {
       diagnosis({ rule, backtest, source: sumber, model, maxSteps: 3, simpan: async () => undefined }),
     ).rejects.toThrow();
     expect(model.doGenerateCalls).toHaveLength(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Jalur DUA FASE (gateway OpenAI-compatible, mis. Kagiro)
+//
+// Gateway tidak menegakkan skema secara native: SDK memperingatkan "JSON
+// response schema is injected into the system message", dan perintah "jawab
+// JSON saja" itu bertabrakan dengan loop tool sehingga DiagnosisOutputSchema
+// gagal diparse. Tes di sini memastikan pemisahannya: fase 1 pakai tool TANPA
+// responseFormat, fase 2 pakai responseFormat TANPA tool, trace tetap dari tool
+// call sungguhan fase 1, dan biaya kedua fase dijumlahkan.
+// ---------------------------------------------------------------------------
+
+const PROSA_FASE_1 = [
+  "Alarm hanya memakai blok laporan hilang, sedangkan TELE melapor lengkap sampai 2025-03-31.",
+  "- TELE: suspensi 2024-12-27 tidak tercakup blok laporan hilang. Bukti: 2024-12-27, 2025-03-31.",
+  "- Usulan 1: suspensi (longgar) - suspensi 2024-12-27 terjadi 5 bulan sebelum target.",
+].join("\n");
+
+const JAWABAN_RAPI = {
+  ringkasan:
+    "Alarm hanya memakai blok laporan hilang, sedangkan TELE masih melapor lengkap sampai kuartal terakhir sebelum kejadian.",
+  emitenDibahas: [
+    {
+      symbol: "TELE",
+      sebab: "Suspensi 2024-12-27 tidak tercakup blok laporan hilang.",
+      buktiTanggal: ["2024-12-27", "2025-03-31"],
+    },
+  ],
+  usulanBlok: [
+    { kind: "suspensi", threshold: "longgar", alasan: "Suspensi 2024-12-27 terjadi 5 bulan sebelum target." },
+  ],
+};
+
+/** [tool call] -> [prosa, menutup fase 1] -> [JSON fase 2, usage sengaja berbeda]. */
+function modelDuaFase(prosa = PROSA_FASE_1, jawaban: unknown = JAWABAN_RAPI) {
+  return modelTiruan([
+    langkahTool([{ toolName: "listMissed", input: {} }, { toolName: "getSuspensions", input: { symbol: "TELE" } }]),
+    langkahProsa(prosa),
+    langkahTeks(jawaban, usageTiruan(7, 5, 3)),
+  ]);
+}
+
+describe("diagnosis lewat gateway (dua fase)", () => {
+  it("fase 1 = tool tanpa responseFormat, fase 2 = responseFormat tanpa tool", async () => {
+    const model = modelDuaFase();
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, duaFase: true, simpan: async () => undefined });
+
+    expect(model.doGenerateCalls).toHaveLength(3);
+    const [fase1a, fase1b, fase2] = model.doGenerateCalls;
+
+    // Fase 1: tool lengkap terdaftar, TIDAK ada permintaan JSON terstruktur.
+    for (const c of [fase1a, fase1b]) {
+      expect(c.tools).toHaveLength(7);
+      expect(c.responseFormat).toBeUndefined();
+    }
+    // Prompt fase 1 melarang model menulis JSON di tengah loop tool.
+    expect(JSON.stringify(fase1a.prompt[1])).toContain("JANGAN menulis JSON");
+
+    // Fase 2: skema diminta, tool DICABUT supaya tidak ada pilihan bercabang.
+    expect(fase2.tools).toBeUndefined();
+    expect(fase2.responseFormat?.type).toBe("json");
+    expect(JSON.stringify(fase2.responseFormat)).toContain("usulanBlok");
+    // Fase 2 menerima prosa fase 1 DAN hasil tool sungguhan (bukan ingatan model).
+    const promptFase2 = JSON.stringify(fase2.prompt);
+    expect(promptFase2).toContain("Penarikan data SUDAH SELESAI");
+    expect(promptFase2).toContain("suspensi 2024-12-27 tidak tercakup");
+    expect(promptFase2).toContain("1 suspensi: 2024-12-27"); // ringkasan hasil tool getSuspensions
+    expect(promptFase2).toContain("getSuspensions");
+    // Instruksi sistem (lapis 1) tetap terpasang di fase 2.
+    expect(String(fase2.prompt[0].content)).toContain(DISCLAIMER);
+
+    // Keluaran: dari fase 2; trace: dari tool call fase 1.
+    expect(hasil.ringkasan).toBe(JAWABAN_RAPI.ringkasan);
+    expect(hasil.emitenDibahas).toEqual(JAWABAN_RAPI.emitenDibahas);
+    expect(hasil.usulanBlok).toEqual([
+      { kind: "suspensi", threshold: "longgar", alasan: JAWABAN_RAPI.usulanBlok[0].alasan, perluTinjau: false },
+    ]);
+    expect(hasil.trace.map((t) => [t.step, t.tool])).toEqual([
+      [0, "listMissed"],
+      [0, "getSuspensions"],
+    ]);
+    expect(hasil.trace[1].ringkasanHasil).toBe("1 suspensi: 2024-12-27");
+    expect(hasil.langkah).toBe(3); // 2 langkah fase 1 + 1 panggilan perangkum
+
+    // Biaya = fase 1 (2 langkah x 100/20, cacheRead 40) + fase 2 (7/5, cacheRead 3).
+    expect(hasil.usage).toEqual({
+      inputTokens: 207,
+      outputTokens: 45,
+      totalTokens: 252,
+      cacheReadTokens: 83,
+      cacheWriteTokens: 0,
+    });
+  });
+
+  it("LLM_BASE_URL terisi menyalakan jalur dua fase tanpa flag", async () => {
+    vi.stubEnv("LLM_BASE_URL", "https://api.contoh.test/v1");
+    const model = modelDuaFase();
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
+    expect(model.doGenerateCalls).toHaveLength(3);
+    expect(model.doGenerateCalls[0].responseFormat).toBeUndefined();
+    expect(model.doGenerateCalls[2].tools).toBeUndefined();
+    expect(hasil.ringkasan).toBe(JAWABAN_RAPI.ringkasan);
+  });
+
+  it("tanpa LLM_BASE_URL tetap satu panggilan: responseFormat + tool sekaligus", async () => {
+    const model = modelTiruan([langkahTool([{ toolName: "listMissed", input: {} }]), langkahTeks(JAWABAN_RAPI)]);
+    await diagnosis({ rule, backtest, source: sumber, model, simpan: async () => undefined });
+    expect(model.doGenerateCalls).toHaveLength(2);
+    expect(model.doGenerateCalls[0].tools).toHaveLength(7);
+    expect(model.doGenerateCalls[0].responseFormat?.type).toBe("json");
+  });
+
+  it("backstop frasa tetap berlaku pada keluaran fase 2", async () => {
+    const model = modelDuaFase(PROSA_FASE_1, {
+      ringkasan: "Alarm bolong sejak 2021-05-18. Sebaiknya jual saham ini.",
+      emitenDibahas: [{ symbol: "TELE", sebab: "ekuitas negatif; cut loss saja", buktiTanggal: ["2025-03-31"] }],
+      usulanBlok: [{ kind: "suspensi", threshold: "longgar", alasan: "Suspensi 2024-12-27; kurangi porsimu di TELE." }],
+    });
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, duaFase: true, simpan: async () => undefined });
+    expect(hasil.perluTinjau).toBe(true);
+    expect(hasil.ringkasan).toBe("Alarm bolong sejak 2021-05-18. Sebaiknya [dihapus].");
+    expect(hasil.emitenDibahas[0].sebab).toBe("ekuitas negatif; [dihapus] saja");
+    expect(hasil.usulanBlok[0]).toEqual({
+      kind: "suspensi",
+      threshold: "longgar",
+      alasan: "Suspensi 2024-12-27; kurangi porsimu di TELE.",
+      perluTinjau: true,
+    });
   });
 });

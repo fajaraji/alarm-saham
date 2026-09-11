@@ -164,13 +164,46 @@ Angka "sebelum" bisa diulang siapa pun tanpa kepercayaan: `git checkout 72a33ca 
 
 **Tes yang diubah, dan kenapa itu bukan pelonggaran.** Assertion yang menuntut satu kalimat menjadi persis `[kalimat saran dihapus]` dihapus karena perilaku itu **ditinggalkan** — bukan karena gerbangnya dilemahkan. Buktinya arah perubahannya: sisi "wajib dipertahankan" tabel lama (39 baris) naik status dari satu berkas tes biasa menjadi bagian gerbang presisi 100% bersama 67 baris baru, dan tuntutan barunya lebih keras (`teks` harus **identik**, bukan sekadar "tidak memuat frasa"). Sisi "wajib dibuang" tabel lama tetap diukur setiap `npm test`, hanya tidak lagi menjadi gerbang — status yang jujur, karena angkanya memang 59/101. Tiga tes yang mengunci pemenggalan kalimat pada `usulanBlok[].alasan`, nama aturan perakit, dan `sebab` diagnosis diubah menjadi tes redaksi frasa + penandaan; dua tes baru **mengunci batas yang diakui** ("buy" telanjang dan "beli" telanjang tidak tertangkap) supaya batas itu tidak bisa hilang dari dokumen tanpa tes ikut merah. Jumlah tes 629 → 668 (60 → 61 berkas).
 
-## Kunci & akun yang belum ada (status 2026-09-10, cek keberadaan nilai saja)
+## Kunci & akun (status 2026-09-12, cek keberadaan nilai saja)
 
 | Variabel | Status | Dampak |
 |---|---|---|
 | `SECTORS_API_KEY` | terisi | penarikan data selesai (buku kredit 467: 395 universe + 68 pembuktian data + 4 uji kelas B) |
-| `DATABASE_URL` (Neon) | **kosong** | data hanya di PGlite lokal; blocker deploy production (tiket 16) |
-| `DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` | **kosong** | fitur AI belum diuji nyata; UI jalur 503 |
+| `DATABASE_URL` (Neon) | terisi | 8 tabel sudah disalin dari PGlite, jumlah baris sama (lihat "Data pindah ke Neon"); bukan lagi blocker tiket 16 |
+| `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` (gateway Kagiro) | terisi | jalur AI dipakai; agent diagnosis lolos uji nyata 2026-09-12, 34.669 token |
+| `DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` | kosong, dan memang tidak perlu | alternatif provider langsung; jalur gateway di atas yang dipakai |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET` | **kosong** | §7.5: notifikasi in-app; jalur Telegram teruji dengan mock |
 | `CRON_SECRET` | diisi saat deploy | tanpa itu `/api/cron/jaga` menjawab 503 |
-| `vercel login` | belum diverifikasi | sebelum tiket 16 |
+| `vercel login` | tidak dipakai | deploy lewat impor GitHub di dasbor Vercel (tiket 16), bukan CLI |
+
+## Agent diagnosis lewat gateway: dua panggilan, bukan satu (2026-09-12)
+
+**Gejalanya.** Dengan `LLM_BASE_URL=https://api.kagiro.net/v1` dan `LLM_MODEL=kagiro/deepseek-v4-pro`, panggilan sampai ke gateway dan model benar-benar memakai tool, tapi hasil akhirnya selalu `AI_NoObjectGeneratedError: No object generated: could not parse the response` — pada `kagiro/deepseek-v4-pro` maupun `kagiro/deepseek-v4-flash`. SDK memberi petunjuknya di peringatan yang sama: *"The feature 'responseFormat JSON schema' is used in a compatibility mode. JSON response schema is injected into the system message."*
+
+**Sebabnya, diukur bukan dikira.** Satu probe kecil (skema `{ringkasan: string, angka: number}`, tanpa tool) BERHASIL lewat gateway yang sama. Jadi yang rusak bukan gatewaynya dan bukan `Output.object`, melainkan kombinasinya: karena gateway tidak menegakkan skema secara native, ia menyuntikkan skema + perintah "jawab JSON saja" ke pesan sistem — dan perintah itu bertabrakan dengan loop tool. Di setiap langkah model dipaksa memilih antara memanggil tool dan menulis JSON; dengan `DiagnosisOutputSchema` (nested, tiga tingkat) yang keluar adalah JSON separuh jadi.
+
+**Perbaikannya.** `jalankanModel` di `src/lib/agent/diagnosis.ts` sekarang punya dua jalur, dipilih otomatis dari `pakaiGateway()` (bisa dipaksa lewat `DiagnosisInput.duaFase` untuk tes):
+
+- **Satu fase** (DeepSeek/Anthropic langsung): tetap seperti semula — satu `generateText` dengan `tools` + `stopWhen` + `output`. Provider menegakkan skema secara native, jadi tidak ada yang perlu dipisah.
+- **Dua fase** (gateway): fase 1 memakai tool **tanpa** `output` dan menutup dengan prosa; fase 2 satu panggilan **tanpa** tool dengan `output` untuk merapikannya menjadi objek. Fase 2 menerima prosa fase 1 **dan** daftar langkah data sungguhan (tool + ringkasan hasilnya), supaya tanggal dan angka tidak perlu diingat-ingat model.
+
+Yang TIDAK berubah: `trace` tetap dibangun dari `steps` fase 1, jadi bukti tool call tetap bukti tool call — dan fase 2 tidak bisa menambah langkah palsu karena di sana tool memang tidak terdaftar. Penjaga frasa (lapis 3) tetap dijalankan pada keluaran fase 2, dan instruksi sistem (lapis 1) terpasang di kedua fase. Empat tes baru di `tests/unit/agent/diagnosis.test.ts` mengunci pemisahan itu: fase 1 punya 7 tool dan `responseFormat` kosong, fase 2 `tools` kosong dan `responseFormat.type === "json"`, `LLM_BASE_URL` menyalakan jalurnya tanpa flag, jalur tanpa gateway tetap satu panggilan, dan backstop tetap menandai `alasan` bermasalah dari fase 2.
+
+**Uji nyata pertama agent diagnosis — menutup butir yang menggantung sejak tiket 08.** `npm run agent:demo -- tele`, 2026-09-12, `deepseek/kagiro/deepseek-v4-pro`, 0 kredit Sectors (data dari database):
+
+| Ukuran | Hasil |
+|---|---|
+| Waktu | 207,4 detik |
+| Langkah model | 4 (2 fase) |
+| Tool call sungguhan | 24 (`listMissed`, `getReportDates`, `getSuspensions`, `getFinancials`, `getCorporateActions`, `getFilings`, `runAlarmOn` ×6) |
+| Token | input 25.741, output 8.928, total **34.669** (cache read 0 — gateway tidak melaporkan cache hit) |
+| Biaya @ US$0,03/1 juta token (Kagiro) | ≈ **US$0,0010 per diagnosis** → 10 juta token (top up US$0,21) ≈ **288 diagnosis** |
+| Trace | tersimpan di Neon, `runs.id = 0fbf7c4e-4217-463e-be1b-7cfad96652f3` |
+
+Isi jawabannya diperiksa terhadap data, bukan cuma "tidak galat": ia menemukan ketiga emiten nyata rajin melapor (TELE sampai 2025-06-30, WIKA sampai 2026-03-31, SRIL sampai 2024-09-30) sehingga blok `laporan_hilang` memang tidak punya apa pun untuk dipegang, lalu **membuktikan** usulannya dengan `runAlarmOn`: `suspensi(longgar)` berbunyi untuk TELE pada 2025-01-31 (5 bulan sebelum delisting 2025-06-06) dan SRIL pada 2021-07-31, `aksi_dilutif(ketat)` berbunyi untuk WIKA pada 2024-05-31 (9 bulan sebelum watchlist 2025-02-18, rights issue rasio 5,22×). GOLL dinyatakan tidak bisa ditolong karena kejadiannya 2019-01-30 di luar jangkauan data — jawaban yang benar, dan yang penting: ia mengatakannya alih-alih mengarang.
+
+**Catatan biaya yang sebelumnya salah saya sebut.** Angka "US$2 cukup untuk ratusan diagnosis" di `.env.example` berasal dari harga DeepSeek langsung (≈US$0,017/diagnosis → US$2 ≈ 120 diagnosis), bukan dari harga gateway. Keduanya kini punya dasar ukur: DeepSeek dari daftar harga resminya, Kagiro dari US$0,03/1 juta token × 34.669 token terukur di atas.
+
+## Data pindah ke Neon (2026-09-12)
+
+`npm run db:sync -- --from=pglite --to=neon` selesai exit 0; jumlah baris **sama** di sumber dan tujuan untuk kedelapan tabel: `symbols` 107, `suspensions` 583, `report_dates` 1901, `corporate_actions` 963, `filings` 248, `financials_q` 91, `api_ledger` 923, `api_cache` 366. Nol kredit Sectors terpakai (salinan database ke database). Dengan ini `DATABASE_URL` bukan lagi blocker tiket 16, dan buku kredit (`api_ledger`) ikut pindah sehingga pagar cadangan 250 kredit tetap berlaku di produksi.

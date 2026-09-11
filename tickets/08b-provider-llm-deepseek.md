@@ -4,7 +4,7 @@
 
 **Blocked by:** 08 (Agent diagnosis + perakit blok)
 
-**Status:** done (kode) — diverifikasi 2026-09-07 di worktree t08b (lint/typecheck/test/build exit 0; 169 tes). Temuan: alias `deepseek-chat`/`deepseek-reasoner` dipensiunkan DeepSeek 2026-07-24 → default `deepseek-v4-flash`, `DEEPSEEK_REASONER=1` → `deepseek-v4-pro`. Uji nyata menunggu `DEEPSEEK_API_KEY`.
+**Status:** done — kode diverifikasi 2026-09-07 di worktree t08b (lint/typecheck/test/build exit 0; 169 tes). Temuan: alias `deepseek-chat`/`deepseek-reasoner` dipensiunkan DeepSeek 2026-07-24 → default `deepseek-v4-flash`, `DEEPSEEK_REASONER=1` → `deepseek-v4-pro`. Uji nyata model DeepSeek dijalankan lewat jalur gateway (tiket 08c) karena kunci DeepSeek langsung tidak dibeli; lihat tiket 08.
 
 - [x] `.env.example` memuat `LLM_PROVIDER`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` (default deepseek-v4-flash) dengan komentar awam
 - [x] Tes (model tiruan): pemilihan provider sesuai env untuk 4 kombinasi

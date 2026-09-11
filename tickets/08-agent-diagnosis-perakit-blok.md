@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (`ANTHROPIC_API_KEY`), 06 (Mesin uji)
 
-**Status:** done (kode) — diverifikasi 2026-09-07 di worktree t08 (lint/typecheck/test/build exit 0; 149 tes; route /api/agent/rakit & /api/agent/diagnosis terdaftar). **Uji nyata tertunda**: `ANTHROPIC_API_KEY` di `.env.local` masih kosong (dicek 2026-09-07 pagi). Jalankan `npm run agent:demo -- tele` setelah kunci diisi dan catat biaya token di docs/decisions.md.
+**Status:** done — kode diverifikasi 2026-09-07 (lint/typecheck/test/build exit 0). **Uji nyata SELESAI 2026-09-12** lewat gateway Kagiro (`kagiro/deepseek-v4-pro`): `npm run agent:demo -- tele` menghasilkan diagnosis lengkap dalam 207,4 detik, 4 langkah, 24 tool call sungguhan, 34.669 token (≈US$0,0010), trace tersimpan di Neon `runs.id=0fbf7c4e-4217-463e-be1b-7cfad96652f3`. Angka & isi jawabannya dicatat di docs/decisions.md.
 
 - [x] Tes (model tiruan): perakit menghasilkan aturan valid untuk 3 kalimat contoh; kalimat di luar domain ditolak sopan
 - [x] Tes (model tiruan): diagnosis memanggil ≥2 tool dan mengembalikan usulan blok + trace terstruktur

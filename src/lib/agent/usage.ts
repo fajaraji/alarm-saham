@@ -31,3 +31,21 @@ export function ringkasUsage(u: LanguageModelUsage | undefined, meta?: ProviderM
     cacheWriteTokens: u?.inputTokenDetails?.cacheWriteTokens ?? 0,
   };
 }
+
+/**
+ * Jumlahkan beberapa ringkasan usage. Dipakai jalur dua fase (jelajah tool +
+ * panggilan perangkum): biaya yang dilaporkan harus mencakup KEDUA panggilan,
+ * bukan cuma yang terakhir.
+ */
+export function gabungUsage(...bagian: UsageRingkas[]): UsageRingkas {
+  return bagian.reduce(
+    (a, b) => ({
+      inputTokens: a.inputTokens + b.inputTokens,
+      outputTokens: a.outputTokens + b.outputTokens,
+      totalTokens: a.totalTokens + b.totalTokens,
+      cacheReadTokens: a.cacheReadTokens + b.cacheReadTokens,
+      cacheWriteTokens: a.cacheWriteTokens + b.cacheWriteTokens,
+    }),
+    { inputTokens: 0, outputTokens: 0, totalTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 },
+  );
+}

@@ -6,6 +6,10 @@
 // (`runAlarmOn` → `fires`), dan daftar emiten terlewat dari hasil backtest.
 // Jawaban akhir terstruktur (Output.object); `trace` disusun dari
 // `result.steps` (tool call sungguhan), bukan dari karangan model.
+//
+// Dua jalur panggilan model — lihat `jalankanModel`: satu fase untuk provider
+// langsung, DUA fase saat lewat gateway OpenAI-compatible (LLM_BASE_URL), yang
+// tidak bisa menegakkan skema dan loop tool sekaligus.
 import { generateText, isStepCount, Output, tool, type LanguageModel, type StepResult, type ToolSet } from "ai";
 import { z } from "zod";
 
@@ -16,8 +20,8 @@ import { BLOCK_KINDS, LABEL_BLOK, ringkasAturan, THRESHOLDS, type BlockKind, typ
 import type { BacktestResult, PerSymbolResult } from "../engine/score";
 import { periksaFrasa, sensorObjek } from "./guard";
 import { INSTRUKSI_DIAGNOSIS } from "./instructions";
-import { instruksiSistem, opsiProvider, pilihModel, providerDari } from "./model";
-import { ringkasUsage, type UsageRingkas } from "./usage";
+import { instruksiSistem, opsiProvider, pakaiGateway, pilihModel, providerDari, type Provider } from "./model";
+import { gabungUsage, ringkasUsage, type UsageRingkas } from "./usage";
 
 // ---------------------------------------------------------------------------
 // Skema keluaran model (tanpa trace — trace dibangun dari langkah SDK)
@@ -113,6 +117,11 @@ export interface DiagnosisInput {
   model?: LanguageModel;
   /** Batas langkah loop tool-use (default 8). */
   maxSteps?: number;
+  /**
+   * Paksa jalur DUA FASE (lihat `jalankanModel`). Default: `pakaiGateway()` —
+   * menyala sendiri saat LLM_BASE_URL diisi. Diset eksplisit oleh tes.
+   */
+  duaFase?: boolean;
   /** Alarm pemilik trace (opsional) untuk penyimpanan ke tabel `runs`. */
   alarmId?: string;
   /** Penyimpan trace; default menulis ke DB bila `hasDb()`, dilewati bila tidak. */
@@ -340,6 +349,40 @@ function susunPrompt(input: DiagnosisInput): string {
   return baris.join("\n");
 }
 
+/**
+ * Tambahan prompt FASE 1 pada jalur dua fase. Di fase ini `output` tidak
+ * dikirim, jadi model tidak tahu bentuk yang diharapkan fase 2 — bagian ini
+ * yang memberitahunya, sekaligus melarangnya menulis JSON (JSON separuh jadi di
+ * tengah loop tool adalah persis yang membuat parse gagal di mode kompatibilitas).
+ */
+const TAMBAHAN_JELAJAH = `Di panggilan ini JANGAN menulis JSON. Pakai tool sebanyak yang perlu, lalu tutup dengan prosa singkat berpoin:
+- Ringkasan 2-4 kalimat awam: kenapa alarm bolong.
+- Tiap emiten yang dibahas: kode emiten, sebab 1-2 kalimat, dan tanggal buktinya (YYYY-MM-DD).
+- Maksimal 2 usulan blok: nama blok + ambang (pakai nama persis dari daftar blok di atas) + satu kalimat alasan.`;
+
+/**
+ * Prompt FASE 2: merapikan temuan fase 1 menjadi objek keluaran. Langkah data
+ * sungguhan ikut dikirim supaya tanggal dan angka tidak perlu diingat-ingat
+ * model (dan tidak ada alasan mengarang) — teks fase 1 saja pernah membuat
+ * model mengulang tanggal dengan keliru saat prosanya panjang.
+ */
+function promptRangkum(teks: string, trace: TraceStep[]): string {
+  const langkahData = trace.length
+    ? trace.map((t, i) => `${i + 1}. ${t.tool}(${JSON.stringify(t.input)}) -> ${t.ringkasanHasil}`).join("\n")
+    : "(tidak ada tool yang dipanggil)";
+  return [
+    "Penarikan data SUDAH SELESAI. Tugasmu di panggilan ini hanya memindahkan temuan di bawah ke objek keluaran sesuai skema: jangan memanggil tool, jangan menambah fakta, jangan mengubah angka atau tanggal. Batas pokok bahasan (butir 1 dan 1b) tetap berlaku.",
+    "",
+    "Langkah data yang sudah dijalankan (hasil sungguhan):",
+    langkahData,
+    "",
+    "Temuan yang kamu tulis sendiri:",
+    teks.trim() || "(kosong - susun keluaran dari langkah data di atas saja)",
+    "",
+    `Nama blok yang sah: ${BLOCK_KINDS.join(", ")}. Ambang yang sah: ${THRESHOLDS.join(", ")}. Maksimal ${MAKS_USULAN} usulan blok; kosongkan bila data tidak cukup.`,
+  ].join("\n");
+}
+
 // ---------------------------------------------------------------------------
 // Penyimpanan trace ke tabel `runs`
 // ---------------------------------------------------------------------------
@@ -401,25 +444,92 @@ export async function simpanRunKeDb(rekaman: RekamanRun, db?: Db): Promise<strin
 // Inti
 // ---------------------------------------------------------------------------
 
+interface HasilModel {
+  keluaran: DiagnosisOutput;
+  trace: TraceStep[];
+  /** Jumlah panggilan model (loop tool + perangkum pada jalur dua fase). */
+  langkah: number;
+  usage: UsageRingkas;
+}
+
+/**
+ * Jalankan model, satu fase atau dua.
+ *
+ * SATU FASE (DeepSeek/Anthropic langsung): satu `generateText` dengan `tools`,
+ * `stopWhen`, dan `output` sekaligus. Provider menegakkan skema secara native
+ * (response_format / tool khusus), jadi loop tool dan keluaran terstruktur
+ * hidup berdampingan.
+ *
+ * DUA FASE (gateway OpenAI-compatible, mis. Kagiro): gateway TIDAK menegakkan
+ * skema secara native — ia menyuntikkan skema JSON ke pesan sistem ("JSON
+ * response schema is injected into the system message", peringatan SDK) dan
+ * menyuruh model menjawab JSON saja. Perintah itu bertabrakan dengan loop
+ * tool: di setiap langkah model dipaksa memilih antara memanggil tool dan
+ * menulis JSON, dan hasilnya `AI_NoObjectGeneratedError: could not parse the
+ * response` pada DiagnosisOutputSchema (skema sederhana lolos — jadi yang
+ * bermasalah kombinasinya, bukan gatewaynya). Karena itu tugasnya dipisah:
+ * fase 1 memakai tool tanpa `output` (bebas menulis prosa), fase 2 satu
+ * panggilan tanpa tool dengan `output` untuk merapikannya menjadi objek.
+ * `trace` TETAP dibangun dari langkah fase 1 — bukti tool call sungguhan tidak
+ * berubah, dan fase 2 tidak bisa menambah langkah palsu karena tanpa tool.
+ */
+async function jalankanModel(
+  input: DiagnosisInput,
+  model: LanguageModel,
+  provider: Provider,
+  tools: DiagnosisTools,
+): Promise<HasilModel> {
+  const instructions = instruksiSistem(INSTRUKSI_DIAGNOSIS, provider);
+  const providerOptions = opsiProvider(provider, "high");
+  const stopWhen = isStepCount(input.maxSteps ?? MAKS_LANGKAH_DEFAULT);
+  const output = Output.object({ schema: DiagnosisOutputSchema, name: "hasil_diagnosis" });
+
+  if (!(input.duaFase ?? pakaiGateway())) {
+    const hasil = await generateText({ model, tools, instructions, prompt: susunPrompt(input), stopWhen, output, providerOptions });
+    return {
+      keluaran: hasil.output,
+      trace: susunTrace(hasil.steps),
+      langkah: hasil.steps.length,
+      usage: ringkasUsage(hasil.usage, hasil.providerMetadata),
+    };
+  }
+
+  const jelajah = await generateText({
+    model,
+    tools,
+    instructions,
+    prompt: `${susunPrompt(input)}\n\n${TAMBAHAN_JELAJAH}`,
+    stopWhen,
+    providerOptions,
+  });
+  const trace = susunTrace(jelajah.steps);
+  const rangkum = await generateText({
+    model,
+    instructions,
+    prompt: promptRangkum(jelajah.text, trace),
+    output,
+    providerOptions,
+  });
+  return {
+    keluaran: rangkum.output,
+    trace,
+    langkah: jelajah.steps.length + rangkum.steps.length,
+    usage: gabungUsage(
+      ringkasUsage(jelajah.usage, jelajah.providerMetadata),
+      ringkasUsage(rangkum.usage, rangkum.providerMetadata),
+    ),
+  };
+}
+
 export async function diagnosis(input: DiagnosisInput): Promise<DiagnosisResult> {
   const model = pilihModel("penalaran", input.model);
   const provider = providerDari(model);
-  const tools = buatTools(input);
-  const hasil = await generateText({
-    model,
-    tools,
-    instructions: instruksiSistem(INSTRUKSI_DIAGNOSIS, provider),
-    prompt: susunPrompt(input),
-    stopWhen: isStepCount(input.maxSteps ?? MAKS_LANGKAH_DEFAULT),
-    output: Output.object({ schema: DiagnosisOutputSchema, name: "hasil_diagnosis" }),
-    providerOptions: opsiProvider(provider, "high"),
-  });
+  const hasil = await jalankanModel(input, model, provider, buatTools(input));
 
-  const trace = susunTrace(hasil.steps);
-  const usage = ringkasUsage(hasil.usage, hasil.providerMetadata);
+  const { trace, usage } = hasil;
   const mentah: DiagnosisOutput = {
-    ...hasil.output,
-    usulanBlok: hasil.output.usulanBlok.slice(0, MAKS_USULAN),
+    ...hasil.keluaran,
+    usulanBlok: hasil.keluaran.usulanBlok.slice(0, MAKS_USULAN),
   };
   // Backstop frasa. `kind`/`threshold`/`symbol`/tanggal dilewati karena berasal
   // dari data (enum & tanggal), bukan karangan model — itu kontrol strukturalnya.
@@ -447,7 +557,7 @@ export async function diagnosis(input: DiagnosisInput): Promise<DiagnosisResult>
   return {
     ...keluaran,
     trace,
-    langkah: hasil.steps.length,
+    langkah: hasil.langkah,
     perluTinjau: sensor.perluTinjau,
     kataDisensor: sensor.kataDisensor,
     usage,

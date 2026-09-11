@@ -6,7 +6,7 @@ Ganti menjadi provider **OpenAI-compatible** dengan base URL yang bisa diatur, s
 
 **Blocked by:** 08b (Provider LLM dapat dipilih)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-12. `createDeepSeek` menerima `baseURL`, jadi cukup mengarahkan endpoint + memakai nama model gateway (commit 7a8ea57). Gateway ternyata tidak bisa menegakkan skema JSON bersamaan dengan loop tool (mode kompatibilitas menyuntikkan skema ke pesan sistem) → `jalankanModel` dipecah dua fase untuk jalur gateway; uji nyata lolos, lihat docs/decisions.md.
 
 - [ ] `.env.example` memuat `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_MODEL_RINGAN` dengan komentar awam + contoh nilai Kagiro
 - [ ] Kunci lama (`DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`) tetap bekerja; pemilihan provider terdokumentasi dan diuji untuk semua kombinasi
