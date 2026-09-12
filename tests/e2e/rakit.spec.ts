@@ -96,7 +96,12 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
 
   // Panel AI: kunci belum diisi → banner sopan (503). Dilewati bila server
   // yang diuji justru punya kunci (E2E_AI=aktif, mis. URL produksi).
-  if (!AI_AKTIF) await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
+  if (!AI_AKTIF) {
+    // Bannernya hanya muncul SESUDAH tombolnya ditekan — diagnosis tidak lagi
+    // dipanggil otomatis di akhir uji ke masa lalu.
+    await page.getByRole("button", { name: /Minta diagnosis AI/ }).click();
+    await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
+  }
 
   // Screenshot dua mode (hanya dilaporkan bahwa keduanya dirender)
   await page.emulateMedia({ colorScheme: "light" });

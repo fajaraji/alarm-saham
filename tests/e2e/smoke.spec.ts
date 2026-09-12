@@ -46,16 +46,18 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await harapkanLabelSumber(page.getByTestId("label-sumber"));
   if (ADA_PGLITE) await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
   await expect(page.getByTestId("sel-SRIL")).toBeVisible();
-  // Panel AI. Tanpa kunci ia menyatakan dirinya nonaktif; dengan kunci ia
-  // SUDAH berjalan sendiri — PapanRakit memanggil jalankanDiagnosis otomatis
-  // begitu uji ke masa lalu selesai. Jadi yang diperiksa di sini cuma bahwa
-  // kuncinya benar-benar terpasang (banner nonaktif tidak ada); hasil
-  // diagnosisnya TIDAK ditunggu, karena satu panggilan model memakan puluhan
-  // detik sampai ~4 menit dan menghabiskan token tiap kali smoke dijalankan.
+  // Panel AI. Tanpa kunci: banner nonaktif setelah 503. Dengan kunci: tombol
+  // "Minta diagnosis AI" siap ditekan — dan itu sekaligus bukti kuncinya
+  // terpasang. Tombolnya sengaja TIDAK diklik di smoke: satu panggilan model
+  // memakan 50-240 detik dan token tiap kali gerbang ini dijalankan.
   await expect(page.getByTestId("panel-ai")).toBeVisible();
   if (AI_AKTIF) {
+    await expect(page.getByRole("button", { name: /Minta diagnosis AI/ })).toBeVisible();
     await expect(page.getByTestId("banner-ai-diagnosis")).toHaveCount(0);
   } else {
+    // Tanpa kunci, bannernya baru muncul sesudah tombolnya ditekan dan 503
+    // tiba — sejak diagnosis tidak lagi jalan otomatis di akhir uji.
+    await page.getByRole("button", { name: /Minta diagnosis AI/ }).click();
     await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
   }
 

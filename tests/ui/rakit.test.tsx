@@ -56,6 +56,18 @@ function papan() {
   return screen.getByTestId("papan-dropzone");
 }
 
+/**
+ * Klik tombol "Minta diagnosis AI".
+ *
+ * Sejak diagnosis tidak lagi dipanggil otomatis oleh `uji` (lihat komentar di
+ * PapanRakit), setiap tes yang menguji panel AI harus menekan tombolnya
+ * sendiri — persis seperti pengguna. `findByRole` sekalian menunggu hasil uji
+ * tiba, karena tombolnya baru dirender saat `adaHasil` true.
+ */
+async function klikMintaDiagnosis() {
+  fireEvent.click(await screen.findByRole("button", { name: /Minta diagnosis (AI|ulang)/ }));
+}
+
 describe("PapanRakit", () => {
   it("merender palet lima blok, papan kosong, KALAU/MAKA, dan area buang", () => {
     render(<PapanRakit />);
@@ -177,12 +189,37 @@ describe("PapanRakit", () => {
     expect(screen.getByTestId("sel-SRIL")).toHaveAttribute("data-fired", "true");
     expect(screen.getByTestId("sel-SRIL")).toHaveAttribute("title", expect.stringMatching(/tertangkap/));
     expect(screen.getByTestId("sel-BBCA")).toHaveAttribute("title", expect.stringMatching(/SRIL|bersih|alarm palsu/));
+    // Uji ke masa lalu TIDAK memanggil AI sendiri (keputusan sesudah deploy
+    // pertama); bannernya baru muncul setelah tombolnya ditekan dan 503 tiba.
+    expect(panggilan.some((x) => x.url === "/api/agent/diagnosis")).toBe(false);
+    await klikMintaDiagnosis();
     await waitFor(() => expect(screen.getByTestId("banner-ai-diagnosis")).toHaveTextContent(PESAN_AI_NONAKTIF));
     const diag = panggilan.find((p) => p.url === "/api/agent/diagnosis");
     expect(diag?.body).toMatchObject({ rule: { combine: "any" }, backtest: { today: "2026-01-31" } });
     // Papan berubah → hasil ditandai basi
     fireEvent.click(screen.getByTestId("tombol-gabung"));
     expect(screen.getByTestId("hasil-uji")).toHaveAttribute("data-basi", "true");
+  });
+
+  it("uji ke masa lalu TIDAK memanggil diagnosis AI sampai tombolnya diklik", async () => {
+    // Regresi keputusan sesudah deploy production pertama. Versi lama
+    // memanggil jalankanDiagnosis otomatis di akhir `uji`; efeknya tak
+    // pernah terlihat karena e2e lokal & CI berjalan tanpa kunci AI, lalu di
+    // produksi tiap klik membakar ~55-66 ribu token, menahan panel 50-240
+    // detik, dan memunculkan galat AI walau backtest-nya sendiri sukses.
+    render(<PapanRakit />);
+    fireEvent.click(screen.getByTestId("palet-laporan_hilang"));
+    fireEvent.click(screen.getByRole("button", { name: TEKS.tombolUji }));
+    await waitFor(() => expect(screen.getByTestId("skor-tertangkap")).not.toHaveTextContent("–"));
+
+    // Backtest jalan, diagnosis tidak.
+    expect(panggilan.filter((x) => x.url === "/api/backtest")).toHaveLength(1);
+    expect(panggilan.filter((x) => x.url === "/api/agent/diagnosis")).toHaveLength(0);
+
+    // Baru setelah tombolnya ditekan.
+    await klikMintaDiagnosis();
+    await waitFor(() => expect(panggilan.filter((x) => x.url === "/api/agent/diagnosis")).toHaveLength(1));
+    expect(panggilan.filter((x) => x.url === "/api/backtest")).toHaveLength(1);
   });
 
   it("diagnosis AI: ringkasan, emiten, trace bernomor; '+ Tambahkan blok' mengubah papan lalu uji ulang", async () => {
@@ -207,6 +244,7 @@ describe("PapanRakit", () => {
     render(<PapanRakit />);
     fireEvent.click(screen.getByTestId("palet-laporan_hilang"));
     fireEvent.click(screen.getByRole("button", { name: TEKS.tombolUji }));
+    await klikMintaDiagnosis();
     await waitFor(() => expect(screen.getByText(/Alarm bolong di TELE/)).toBeInTheDocument());
     expect(screen.getByRole("list", { name: /Emiten yang dibahas/ })).toHaveTextContent("TELE");
     const jejak = screen.getByRole("list", { name: /Jejak pemeriksaan AI/ });
@@ -247,6 +285,7 @@ describe("PapanRakit", () => {
     render(<PapanRakit />);
     fireEvent.click(screen.getByTestId("palet-laporan_hilang"));
     fireEvent.click(screen.getByRole("button", { name: TEKS.tombolUji }));
+    await klikMintaDiagnosis();
     await waitFor(() => expect(screen.getByTestId("usulan-ekuitas_negatif")).toBeInTheDocument());
     const tombol = screen.getByTestId("usulan-ekuitas_negatif");
     // Teks alasan utuh — termasuk angka & tanggalnya.

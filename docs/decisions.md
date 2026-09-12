@@ -271,3 +271,13 @@ Diagnosis di produksi sendiri sehat: HTTP 200 dalam **98,7 detik**, 5 langkah, 5
 **Gerbang smoke produksi.** `playwright.config.ts` menerima `E2E_BASE_URL` (webServer dimatikan), `E2E_SUMBER=db|contoh`, dan `E2E_AI=aktif`, dengan batas tunggu assertion 60 detik dan batas tes 180 detik khusus jalur itu. Tiga hal harus diperbaiki agar spec yang sama bisa dipakai untuk dua sasaran: batas tunggu 10 detik (cukup untuk PGlite berkas lokal, tidak pernah cukup untuk jaringan), satu assertion URL yang memaku `127.0.0.1` (kini dicocokkan sebagai path), dan ekspektasi panel AI yang mengira kunci selalu kosong. Hasil akhir: **smoke alur penuh 1→2→3 lulus terhadap URL produksi dalam 6,9 detik**, nol console.error, nol kredit Sectors.
 
 Cron `/api/cron/jaga` terdaftar dari `vercel.json` dengan jadwal `30 23 * * *` (06:30 WIB). Catatan paket: cron Hobby dibatasi **sekali sehari** dengan presisi **per jam (±59 menit)** — jadi pengecekan pagi berjalan antara 06:30 dan 07:29 WIB, bukan tepat 06:30 (dokumen resmi "Usage & Pricing for Cron Jobs", diperiksa 2026-09-12).
+
+### Keputusan: diagnosis AI jadi manual (2026-09-12)
+
+Pemilik memilih **manual** atas temuan di atas. `uji` tidak lagi memanggil `jalankanDiagnosis`; AI berjalan hanya lewat tombol "Minta diagnosis AI" yang sudah ada di `PanelAi` (`onMintaDiagnosis` → `jalankanDiagnosis`, dirender saat `!aiNonaktif && adaHasil && !sedang`).
+
+Yang menentukan keputusannya bukan biaya token, melainkan tampilan kegagalan: gateway Kagiro terbukti bisa menjawab "Layanan sedang penuh", dan pada mode otomatis galat itu muncul di SETIAP uji ke masa lalu — padahal backtest-nya sendiri sukses dalam 2 detik. Hasil uji sekarang berdiri sendiri, dan AI menjadi tindakan sadar.
+
+Konsekuensi yang harus diikuti tes: banner "Fitur AI belum aktif" tidak lagi muncul sendiri, karena ia adalah hasil 503 dari panggilan diagnosis. Enam tes bergantung pada perilaku lama — tiga di `tests/ui/rakit.test.tsx`, dua di `tests/e2e/aksesibilitas.spec.ts` (axe perlu memeriksa panel AI dalam keadaan terisi), satu di `tests/e2e/rakit.spec.ts` — semuanya kini menekan tombolnya lebih dulu, persis seperti pengguna. Ditambah satu tes regresi baru yang mengunci keputusan ini: *"uji ke masa lalu TIDAK memanggil diagnosis AI sampai tombolnya diklik"*, memeriksa langsung daftar panggilan fetch (`/api/backtest` 1 kali, `/api/agent/diagnosis` 0 kali sebelum klik).
+
+Gerbang sesudah perubahan: lint 0, typecheck 0, **683 tes unit** (62 berkas), build 0, e2e jalur database 53 lulus / 1 skip, e2e jalur data contoh 51 lulus / 3 skip.
