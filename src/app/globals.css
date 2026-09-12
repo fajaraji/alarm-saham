@@ -153,3 +153,22 @@ html:not([data-siap]) .butuh-hidrasi {
     animation: none;
   }
 }
+
+/* Baris linimasa bukti di beranda masuk berurutan tanggal.
+   MOTION_INTENSITY 4 (transisi CSS saja, tanpa library animasi). Alasannya bisa
+   ditulis satu kalimat, seperti yang dituntut taste-skill: klaim produk ini
+   adalah bahwa tanda bahayanya datang BERURUTAN sebelum kejadian, jadi urutan
+   itulah yang dianimasikan. Hanya transform + opacity (Section 6.A), dan seluruh
+   gerakan dibatalkan saat pengguna meminta gerakan dikurangi (Section 6.B). */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes beranda-masuk {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .beranda-masuk {
+    animation: beranda-masuk 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+}
