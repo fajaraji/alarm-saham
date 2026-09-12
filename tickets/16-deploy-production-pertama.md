@@ -6,10 +6,10 @@
 
 **Blocked by:** 01 (`vercel login`), 15 (Pengerasan)
 
-**Status:** ready-for-agent (setelah persetujuan)
+**Status:** selesai — live https://alarm-saham.vercel.app (commit 7710083, 2026-09-12), di-deploy manual oleh pemilik lewat dasbor Vercel. Smoke alur penuh terhadap URL produksi lulus 6,9 detik; diagnosis AI produksi HTTP 200 dalam 98,7 detik. Region fungsi dipindah ke sin1 (satu region dengan Neon): uji ke masa lalu 27 s → 2 s. Rincian di docs/decisions.md bagian "Deploy production pertama".
 
-- [ ] Persetujuan pemilik tercatat sebelum `vercel --prod`
-- [ ] `vercel --prod` exit 0; URL production terbuka
-- [ ] Smoke test Playwright terhadap URL production: lulus
-- [ ] Cron terdaftar di dashboard Vercel (bukti: `vercel crons ls` atau tangkapan layar)
-- [ ] Tidak ada rahasia di repo; semua env ada di Vercel
+- [x] Persetujuan pemilik tercatat ("gas", 2026-09-12); deploy dijalankan pemilik sendiri lewat dasbor, bukan `vercel --prod`
+- [x] URL production terbuka: https://alarm-saham.vercel.app (HTTP 200, `data-sumber="db"`)
+- [x] Smoke Playwright terhadap URL production: lulus (6,9 s, nol console.error)
+- [ ] Cron terdaftar di dashboard Vercel — menunggu tangkapan layar dari pemilik (terdaftar di vercel.json; Hobby: sekali sehari, presisi ±59 menit)
+- [x] Tidak ada rahasia di repo (husky check-secrets lolos tiap commit); 7 env di Vercel

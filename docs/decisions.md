@@ -246,3 +246,28 @@ Rentang 71-238 detik terhadap langit-langit 300 detik; sebaran lebarnya mengikut
 Isi jawabannya menemukan sebab yang benar dan tidak sepele: baris suspensi di data **bertanggal sama dengan tanggal kejadian target**, sehingga `suspensi(longgar)` secara struktural tidak bisa berbunyi lebih awal — lalu ia membuktikan alternatifnya dengan `runAlarmOn`: `laporan_hilang(longgar)` berbunyi untuk DUCK pada 2021-04-30 (≈4 bulan sebelum target) dan UNIT pada 2021-01-31, sementara kontrol BBCA/TLKM/ASII tetap diam (tidak menambah alarm palsu). Untuk TOYS dan SRIL ia menyatakan tidak ada blok yang berbunyi lebih awal dengan data yang ada — jawaban yang benar, dan ia mengatakannya alih-alih mengarang.
 
 **Satu cacat yang sempat lolos, dan asalnya dari kata-kata kami sendiri.** Ringkasan model menulis "Delapan dari 59 emiten terlewat" — padahal 59 yang terlewat dan 8 hanya contoh yang dikirim. Sumbernya bukan model: `ringkasHasilTool` merangkai kalimat `terlewat: A, B, ... (8 dari 59 terlewat)`, dan kalimat itu ikut dikirim ke fase 2 sebagai langkah data, lalu disalin. Diperbaiki di tiga tempat sekaligus — jumlah ditulis lebih dulu (`59 terlewat; 8 contoh: ...`), kunci tool diganti `terlewat` → `terlewatContoh` plus medan `catatan`, dan prompt menyebut eksplisit angka mana yang benar. Sesudahnya 2/2 permintaan menulis angkanya dengan benar ("Alarm melewatkan 59 emiten; 8 contoh ... diperiksa"). Satu tes regresi mengunci kalimat itu, karena ia bukan sekadar tampilan melainkan masukan model.
+
+## Deploy production pertama: region fungsi, dan dua hal yang hanya terlihat di produksi (2026-09-12)
+
+Live di **https://alarm-saham.vercel.app**, commit `7710083` (merge PR #2), pemilik men-deploy manual lewat dasbor Vercel (import repo GitHub, 7 environment variable, tanpa `vercel login`). Integrasi "Neon" di layar import sengaja TIDAK dipakai: ia akan menyediakan database Neon baru yang kosong dan menyuntikkan `DATABASE_URL`-nya sendiri, menimpa Neon yang sudah berisi data.
+
+Deploy pertama langsung benar pada hal yang penting — `data-sumber="db"` di seluruh halaman (bukan data contoh), `/api/backtest` menjawab HTTP 200 dari `neon` dengan hasil nyata 26/74 tertangkap dan 1/30 alarm palsu. Tetapi dua hal baru kelihatan setelah ada URL hidup, dan keduanya tidak mungkin ketangkap di laptop maupun CI.
+
+**1. Fungsi berjalan 15 ribu km dari databasenya.** Satu klik "Uji ke masa lalu" memakan **27 detik** — 27,1 / 28,3 / 26,4 detik pada tiga panggilan berturut, jadi bukan cold start. Sebabnya: Vercel menjalankan fungsi di `iad1` (Washington DC) untuk semua project baru, sedangkan endpoint Neon ada di `ap-southeast-1`. Memindai 104 emiten berarti ratusan query yang semuanya menyeberangi Pasifik dua kali.
+
+Perbaikannya satu baris di `vercel.json` — `"regions": ["sin1"]`, dan `sin1` adalah `ap-southeast-1`, region yang sama dengan Neon (daftar region resmi Vercel, diperiksa 2026-09-12). Paket Hobby boleh memilih satu region (Pro 5, Enterprise semua), jadi ini masih di dalam paket gratis; bonusnya jauh lebih dekat ke pengguna dan juri di Indonesia.
+
+| | Sebelum (`iad1`) | Sesudah (`sin1`) |
+|---|---|---|
+| Uji ke masa lalu | 27,1 / 28,3 / 26,4 s | **2,9 / 1,9 / 1,8 s** |
+| Hasil | 26/74, 1/30 | 26/74, 1/30 (identik) |
+
+**14x lebih cepat tanpa mengubah satu baris kode aplikasi.** Terverifikasi lewat header `x-vercel-id: sin1::sin1::…`.
+
+**2. Diagnosis AI berjalan OTOMATIS tiap uji ke masa lalu.** `PapanRakit` memanggil `jalankanDiagnosis` sendiri begitu backtest selesai (`if (!aiNonaktif) void jalankanDiagnosis(...)`), di samping tombol "Minta diagnosis AI" yang manual. Perilaku ini tidak pernah terlihat selama pengembangan karena server e2e lokal dan CI sengaja dijalankan tanpa kunci AI — panel selalu berhenti di banner 503. Baru di produksi, dengan kunci terpasang, jalur itu hidup. Konsekuensinya nyata dan perlu diputuskan pemilik: setiap klik "Uji ke masa lalu" membakar ~55-66 ribu token (~$0,002) dan menambah 50-240 detik sebelum panelnya terisi.
+
+Diagnosis di produksi sendiri sehat: HTTP 200 dalam **98,7 detik**, 5 langkah, 53 tool call, 66.428 token, `perluTinjau` false, seluruh tanggal bukti nyata. Angka "terlewat" juga sudah benar sejak perbaikan kalimat trace — ia menulis "Delapan emiten contoh dari 48 yang terlewat", bukan membalik kedua angka itu.
+
+**Gerbang smoke produksi.** `playwright.config.ts` menerima `E2E_BASE_URL` (webServer dimatikan), `E2E_SUMBER=db|contoh`, dan `E2E_AI=aktif`, dengan batas tunggu assertion 60 detik dan batas tes 180 detik khusus jalur itu. Tiga hal harus diperbaiki agar spec yang sama bisa dipakai untuk dua sasaran: batas tunggu 10 detik (cukup untuk PGlite berkas lokal, tidak pernah cukup untuk jaringan), satu assertion URL yang memaku `127.0.0.1` (kini dicocokkan sebagai path), dan ekspektasi panel AI yang mengira kunci selalu kosong. Hasil akhir: **smoke alur penuh 1→2→3 lulus terhadap URL produksi dalam 6,9 detik**, nol console.error, nol kredit Sectors.
+
+Cron `/api/cron/jaga` terdaftar dari `vercel.json` dengan jadwal `30 23 * * *` (06:30 WIB). Catatan paket: cron Hobby dibatasi **sekali sehari** dengan presisi **per jam (±59 menit)** — jadi pengecekan pagi berjalan antara 06:30 dan 07:29 WIB, bukan tepat 06:30 (dokumen resmi "Usage & Pricing for Cron Jobs", diperiksa 2026-09-12).
