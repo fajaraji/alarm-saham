@@ -63,8 +63,11 @@ const HARI_INI = "2026-09-07";
 
 export default defineConfig({
   testDir: "tests/e2e",
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  // URL hidup: satu klik "Uji ke masa lalu" memindai 104 emiten lewat jaringan,
+  // jadi 10 detik (cukup untuk PGlite di berkas lokal) pasti kehabisan waktu.
+  // Terukur 27 detik dari iad1 ke Neon ap-southeast-1 sebelum `regions: sin1`.
+  timeout: BASE_URL_HIDUP ? 180_000 : 60_000,
+  expect: { timeout: BASE_URL_HIDUP ? 60_000 : 10_000 },
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
