@@ -182,9 +182,20 @@ export function PapanRakit() {
       }
       const tersimpan: HasilTersimpan = { ...r.data, tanda: ringkasAturan(rule) };
       setHasil(tersimpan);
-      if (!aiNonaktif) void jalankanDiagnosis(rule, tersimpan);
+      // Diagnosis TIDAK dipanggil di sini. Dulu baris ini berbunyi
+      // `if (!aiNonaktif) void jalankanDiagnosis(rule, tersimpan)`, dan selama
+      // pengembangan efeknya tidak pernah terlihat karena server e2e lokal dan
+      // CI sengaja berjalan tanpa kunci AI — panel selalu berhenti di banner
+      // 503. Di produksi (kunci terpasang) jalur itu hidup, dan konsekuensinya
+      // diukur: tiap klik "Uji ke masa lalu" membakar ~55-66 ribu token dan
+      // menahan panel 50-240 detik. Yang menentukan keputusannya bukan biaya
+      // itu, melainkan bahwa kegagalan gateway ("Layanan sedang penuh", yang
+      // memang pernah terjadi) lalu memunculkan galat AI pada SETIAP uji ke
+      // masa lalu — padahal backtest-nya sendiri sukses dalam 2 detik.
+      // Sekarang hasil uji berdiri sendiri dan AI adalah tindakan sadar lewat
+      // tombol "Minta diagnosis AI" (PanelAi → onMintaDiagnosis).
     },
-    [state, aiNonaktif, jalankanDiagnosis],
+    [state],
   );
 
   // ----- AI merakit ------------------------------------------------------

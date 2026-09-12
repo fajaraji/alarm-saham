@@ -21,6 +21,10 @@ async function isiHalaman(page: Page, url: string) {
     await page.getByTestId("palet-laporan_hilang").click();
     await page.getByRole("button", { name: "Uji ke masa lalu" }).click();
     await expect(page.getByTestId("skor-tertangkap")).toHaveText(/^\d+\/\d+$/);
+    // Diagnosis tidak lagi jalan otomatis di akhir uji, jadi bannernya baru
+    // ada sesudah tombolnya ditekan (server e2e tanpa kunci → 503). Axe
+    // memang perlu memeriksa panel AI dalam keadaan terisi, bukan kosong.
+    await page.getByRole("button", { name: /Minta diagnosis AI/ }).click();
     await expect(page.getByTestId("banner-ai-diagnosis")).toBeVisible();
   } else if (url === "/pasang") {
     await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");

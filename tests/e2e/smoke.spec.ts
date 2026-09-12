@@ -46,14 +46,18 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await harapkanLabelSumber(page.getByTestId("label-sumber"));
   if (ADA_PGLITE) await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
   await expect(page.getByTestId("sel-SRIL")).toBeVisible();
-  // Panel AI: tanpa kunci ia menyatakan dirinya nonaktif; dengan kunci (URL
-  // produksi, E2E_AI=aktif) ia menawarkan diagnosis. Tombol diagnosisnya TIDAK
-  // diklik di smoke — satu panggilan model memakan puluhan detik dan token.
+  // Panel AI. Tanpa kunci: banner nonaktif setelah 503. Dengan kunci: tombol
+  // "Minta diagnosis AI" siap ditekan — dan itu sekaligus bukti kuncinya
+  // terpasang. Tombolnya sengaja TIDAK diklik di smoke: satu panggilan model
+  // memakan 50-240 detik dan token tiap kali gerbang ini dijalankan.
   await expect(page.getByTestId("panel-ai")).toBeVisible();
   if (AI_AKTIF) {
-    await expect(page.getByTestId("panel-ai")).toContainText("Minta diagnosis AI");
+    await expect(page.getByRole("button", { name: /Minta diagnosis AI/ })).toBeVisible();
     await expect(page.getByTestId("banner-ai-diagnosis")).toHaveCount(0);
   } else {
+    // Tanpa kunci, bannernya baru muncul sesudah tombolnya ditekan dan 503
+    // tiba — sejak diagnosis tidak lagi jalan otomatis di akhir uji.
+    await page.getByRole("button", { name: /Minta diagnosis AI/ }).click();
     await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
   }
 
@@ -90,7 +94,9 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
 
   // Merek di header mengantar ke beranda; beranda mengarah ke 3 langkah + disclaimer
   await page.getByRole("link", { name: "Alarm Saham — beranda" }).click();
-  await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/$/);
+  // Dicocokkan sebagai PATH, bukan URL penuh: spec ini juga dijalankan
+  // terhadap URL hidup (E2E_BASE_URL), yang domainnya bukan 127.0.0.1.
+  await expect.poll(() => new URL(page.url()).pathname).toBe("/");
   await expect(page.getByRole("link", { name: /Mulai dari langkah 1/ })).toBeVisible();
   await expect(page.getByTestId("disclaimer")).toContainText("bukan saran investasi");
 
