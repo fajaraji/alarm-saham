@@ -5,6 +5,7 @@
 // DATABASE_URL dan tanpa ./.pglite, isinya fixture contoh — angka keuangan,
 // rasio rights issue, dan filing di sana ilustratif. Sebelumnya halaman ini
 // menyebut semuanya "fakta dari data resmi" tanpa satu pun penanda.
+import { daftarBisaDicari } from "@/lib/putar-ulang/daftar-cari";
 import { getEventSource } from "@/lib/engine/sumber";
 import { muatEmitenDariSumber, normalKode } from "@/lib/putar-ulang/muat";
 import { Istilah } from "@/components/panduan/Istilah";
@@ -24,6 +25,8 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
   const sumber = await getEventSource();
   const universe = await sumber.universe();
   const contoh = sumber.jenis === "fixture";
+  // Saran ketik: seluruh emiten yang benar-benar bisa dicari di server ini.
+  const opsiCari = await daftarBisaDicari(sumber.db, universe);
   // Cakupan dihitung dari sumber yang benar-benar dipakai, bukan angka tetap:
   // pada jalur fixture universe hanya 8 emiten, bukan 107.
   const jumlah = {
@@ -52,7 +55,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
             <Istilah id="delisting">dihapus dari bursa</Istilah>, {jumlah.watchlist}{" "}
             <Istilah id="pemantauan_khusus">pemantauan khusus</Istilah>, {jumlah.control}{" "}
             <Istilah id="kontrol_sehat">kontrol sehat</Istilah>){contoh ? "" : " ditambah feed suspensi seluruh bursa 2018–2026"}.{" "}
-            {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis — setiap penarikan memakai{" "}
+            {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis. Setiap penarikan memakai{" "}
             <Istilah id="kredit_sectors">kredit</Istilah> dan diputuskan manusia.
           </p>
           <MintaTarik symbol={kode} />
@@ -71,37 +74,31 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
       <h2 className="pu-h2">
         Lihat rekamannya: tanda resmi sudah ada sebelum sahamnya <Istilah id="suspensi">berhenti diperdagangkan</Istilah>.
       </h2>
-      <p className="pu-lede">
-        {contoh ? (
-          <>
-            Server ini <b>belum terhubung ke database Sectors</b>, jadi yang tampil adalah data contoh ({jumlah.total} emiten)
-            untuk mendemokan cara kerja layar ini. Bentuk datanya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif —
-            jangan dibaca sebagai fakta tentang emiten yang bersangkutan.
-          </>
-        ) : (
-          <>
-            Semua yang tampil di sini adalah fakta dari data resmi (feed BEI lewat Sectors), lengkap dengan sumbernya. Tidak
-            ada penilaian, tidak ada saran.
-          </>
-        )}
-      </p>
+      {/* Lede jalur data NYATA dibuang: kalimatnya ("fakta resmi dari feed
+          Sectors, tidak ada penilaian") hampir kata per kata sama dengan footer
+          disclaimer yang tampil di SETIAP halaman. Lede jalur data contoh
+          dipertahankan karena ia peringatan khas layar ini dan menyebut
+          jumlahnya, yang tidak ada di footer. */}
+      {contoh ? (
+        <p className="pu-lede">
+          Server ini <b>belum terhubung ke database Sectors</b>, jadi yang tampil adalah data contoh ({jumlah.total} emiten)
+          untuk mendemokan cara kerja layar ini. Bentuk datanya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif.
+          Jangan dibaca sebagai fakta tentang emiten yang bersangkutan.
+        </p>
+      ) : null}
       <PetunjukLayar
         langkah={[
-          <>Ketik kode saham (4 huruf) atau klik contoh kasus nyata.</>,
-          <>Geser slider waktu ke kiri untuk mundur ke masa lalu.</>,
-          <>
-            Lihat lampu dan daftar tanda: mana yang sudah kelihatan pada tanggal itu — mis.{" "}
-            <Istilah id="laporan_hilang">laporan hilang</Istilah> atau{" "}
-            <Istilah id="ekuitas_negatif">utang lebih besar dari harta</Istilah>.
-          </>,
+          <>Ketik kode saham, lalu pilih dari saran yang muncul.</>,
+          <>Geser slider waktu untuk mundur ke masa lalu.</>,
+          <>Lihat lampu dan tanda yang sudah ada pada tanggal itu.</>,
         ]}
       />
-      <Pencarian kode={kode} cakupan={{ jumlah: jumlah.total, contoh }} />
-      {isi ?? (
-        <p className="pu-sub" data-testid="belum-cari">
-          Pilih salah satu kasus nyata di atas, atau ketik kode saham lalu tekan Lihat.
-        </p>
-      )}
+      <Pencarian kode={kode} cakupan={{ jumlah: jumlah.total, contoh }} opsi={opsiCari} />
+      {/* Keadaan "belum mencari" tidak lagi memasang kalimat sendiri: kalimat
+          lamanya duduk persis di bawah tombol dan chip yang dimaksudnya, dan
+          mengulang petunjuk pertama. Kotak cari yang kosong sudah menjelaskan
+          dirinya lewat placeholder dan daftar saran. */}
+      {isi}
     </>
   );
 }

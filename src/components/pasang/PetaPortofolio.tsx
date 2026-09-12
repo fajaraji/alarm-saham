@@ -74,7 +74,7 @@ export function PetaPortofolio({ symbols, hasil, adaData, onHapus, sedangCek }: 
               </span>
             ) : null}
             {adaData[s] === false ? (
-              <span className="mt-auto w-fit rounded-full bg-black/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-2" data-testid={`tanpa-data-${s}`}>
+              <span className="mt-auto w-fit rounded-full bg-black/10 px-2 py-0.5 text-[10.5px] font-semibold text-ink-2" data-testid={`tanpa-data-${s}`}>
                 {TEKS.tidakAdaData}
               </span>
             ) : null}

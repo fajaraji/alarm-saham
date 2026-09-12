@@ -25,17 +25,24 @@ export function FooterDisclaimer({ sumberNyata }: PropsFooterDisclaimer) {
     >
       <p className="mx-auto max-w-[1200px] px-6 py-4 text-center text-xs text-ink-3">
         <strong className="text-ink-2">{DISCLAIMER}</strong>{" "}
+        {/* Footer ini tampil di SETIAP halaman, jadi setiap kata di sini dibayar
+            enam kali. Kalimat cakupan tanggal ("data laporan sejak kuartal 1
+            2020, filing sejak 2024") dibuang dari sini: ia rincian yang sudah
+            ditulis lengkap di /cara-kami-menghitung, yang tautannya justru ada
+            di baris ini. Kalimat DISCLAIMER wajib dan klausa "tidak ada
+            penilaian" tetap, karena itu syarat aturan lomba, bukan hiasan.
+            Jalur data contoh dulu menutup dengan dua kalimat yang sama-sama
+            berakhir "emiten mana pun"; keduanya digabung. */}
         {sumberNyata ? (
           <>
             Semua kejadian yang tampil adalah fakta resmi dari feed Sectors (data BEI) dengan nama endpoint dan tautan
-            dokumen bila tersedia; tidak ada penilaian tentang emiten mana pun. Data laporan dan keuangan tersedia sejak
-            kuartal 1 2020, filing orang dalam sejak 2024.
+            dokumen bila tersedia; tidak ada penilaian tentang emiten mana pun.
           </>
         ) : (
           <>
             Server ini belum terhubung ke database Sectors, jadi yang tampil adalah <b>data contoh</b> (bukan data Sectors
-            nyata): bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif — jangan dibaca sebagai fakta
-            tentang emiten mana pun. Tidak ada penilaian tentang emiten mana pun.
+            nyata): bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif dan tidak boleh dibaca sebagai
+            fakta atau penilaian tentang emiten mana pun.
           </>
         )}{" "}
         <Link href="/cara-kami-menghitung" className="underline">

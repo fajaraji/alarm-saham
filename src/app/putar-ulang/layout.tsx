@@ -11,7 +11,7 @@ const body = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], 
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Putar ulang — Alarm Saham",
+  title: "Putar ulang · Alarm Saham",
   description:
     "Lihat rekaman tanda resmi (suspensi, laporan hilang, ekuitas negatif) sebelum sebuah saham dihapus atau masuk pemantauan khusus.",
 };

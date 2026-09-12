@@ -47,7 +47,7 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   await expect(pesan).toContainText("bukan saran investasi");
   await expect(pesan).toContainText("Saham mau pailit");
   // Atribusi sumber di pesan penjelasan harus ikut jujur pada jalur fixture.
-  await expect(pesan).toContainText(ADA_PGLITE ? "Sectors /v2/suspensions/" : "data contoh — fixture");
+  await expect(pesan).toContainText(ADA_PGLITE ? "Sectors /v2/suspensions/" : "data contoh: fixture");
   if (!ADA_PGLITE) await expect(pesan).not.toContainText("Sectors /v2/");
   const teks = (await pesan.textContent()) ?? "";
   expect(teks.replace(/filing jual/g, "")).not.toMatch(/\b(beli|jual|rekomendasi)\b/i);

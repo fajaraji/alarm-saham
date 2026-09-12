@@ -29,7 +29,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   // Atribusi sumber per kejadian harus jujur: hanya jalur DB yang boleh menulis
   // "Sumber: Sectors /v2/…"; jalur fixture menyebut dirinya data contoh.
   for (const teks of await page.getByTestId("kejadian").allTextContents()) {
-    expect(teks).toMatch(ADA_PGLITE ? /Sumber: Sectors \// : /Sumber: data contoh — fixture/);
+    expect(teks).toMatch(ADA_PGLITE ? /Sumber: Sectors \// : /Sumber: data contoh: fixture/);
   }
   await expect(page.getByTestId("lampu")).toHaveAttribute("data-warna", "merah");
 
@@ -93,7 +93,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await expect(page.getByTestId("kamus-suspensi")).toBeVisible();
 
   // Merek di header mengantar ke beranda; beranda mengarah ke 3 langkah + disclaimer
-  await page.getByRole("link", { name: "Alarm Saham — beranda" }).click();
+  await page.getByRole("link", { name: "Alarm Saham, beranda" }).click();
   // Dicocokkan sebagai PATH, bukan URL penuh: spec ini juga dijalankan
   // terhadap URL hidup (E2E_BASE_URL), yang domainnya bukan 127.0.0.1.
   await expect.poll(() => new URL(page.url()).pathname).toBe("/");

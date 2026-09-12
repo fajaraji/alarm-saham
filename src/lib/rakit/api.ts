@@ -43,7 +43,7 @@ export const KODE_AI_NONAKTIF = "AI_TIDAK_TERSEDIA";
 export const KODE_DB_NONAKTIF = "DB_TIDAK_TERSEDIA";
 
 /** Teks banner sopan saat kunci AI belum diisi (503). */
-export const PESAN_AI_NONAKTIF = "Fitur AI belum aktif — kunci belum diisi. Kamu tetap bisa merakit sendiri.";
+export const PESAN_AI_NONAKTIF = "Fitur AI belum aktif: kunci belum diisi. Kamu tetap bisa merakit sendiri.";
 
 export function aiNonaktif(galat: GalatApi): boolean {
   return galat.status === 503 && galat.kode === KODE_AI_NONAKTIF;

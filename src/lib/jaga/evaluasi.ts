@@ -48,7 +48,7 @@ export const SUMBER_BLOK_A: Record<BlockKind, string> = {
  */
 export function sumberBlokA(kind: BlockKind, contoh = false): string {
   return contoh
-    ? `data contoh — fixture universe-kecil.json (bentuknya meniru ${SUMBER_BLOK_A[kind].replace(/^Sectors /, "").replace(/ \(.*\)$/, "")})`
+    ? `data contoh: fixture universe-kecil.json (bentuknya meniru ${SUMBER_BLOK_A[kind].replace(/^Sectors /, "").replace(/ \(.*\)$/, "")})`
     : SUMBER_BLOK_A[kind];
 }
 

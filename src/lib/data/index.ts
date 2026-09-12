@@ -37,7 +37,7 @@ export {
 } from "./fixture-provider";
 
 export const PESAN_TANPA_KUNCI =
-  "[alarm-saham] SECTORS_API_KEY tidak ditemukan — memakai FixtureProvider (data contoh, bukan data pasar).";
+  "[alarm-saham] SECTORS_API_KEY tidak ditemukan: memakai FixtureProvider (data contoh, bukan data pasar).";
 
 let terpilih: DataProvider | undefined;
 let sudahDiperingatkan = false;

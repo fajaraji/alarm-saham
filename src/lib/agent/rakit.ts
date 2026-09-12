@@ -28,7 +28,7 @@ export const RakitOutputSchema = z.object({
     .string()
     .nullable()
     .describe(
-      "Satu kalimat awam kenapa blok itu dipilih — tentang blok dan datanya, bukan tentang apa yang sebaiknya pengguna lakukan atas sahamnya; null bila ditolak",
+      "Satu kalimat awam kenapa blok itu dipilih: tentang blok dan datanya, bukan tentang apa yang sebaiknya pengguna lakukan atas sahamnya; null bila ditolak",
     ),
 });
 export type RakitOutput = z.infer<typeof RakitOutputSchema>;

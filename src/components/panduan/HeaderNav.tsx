@@ -18,10 +18,18 @@ export function HeaderNav() {
   const aktif = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-surface text-ink" data-testid="header">
-      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-4 gap-y-2 px-6 py-3">
+      {/* Di ponsel header ini pernah memakan ~460px dari 812px sebelum konten
+          mulai: merek + tagline + empat chip navigasi yang membungkus jadi dua
+          baris + tautan metodologi di baris sendiri + tombol Panduan. Lebih
+          dari separuh layar pertama adalah navigasi, sehingga alatnya terdorong
+          ke bawah lipatan justru di perangkat yang paling sering dipakai.
+          Perbaikannya: tagline disembunyikan di bawah `sm`, navigasi digeser
+          mendatar dalam satu baris alih-alih membungkus, dan paddingnya
+          dirapatkan. Gulir mendatar ada DI DALAM nav, bukan di halaman. */}
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6 sm:py-3">
         {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya) — sebelumnya ke
             /putar-ulang, sehingga beranda tidak tertaut dari halaman mana pun. */}
-        <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham — beranda">
+        <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham, beranda">
           <span
             aria-hidden="true"
             className="grid h-8 w-8 place-items-center rounded-lg bg-accent font-display font-extrabold text-accent-ink"
@@ -30,10 +38,13 @@ export function HeaderNav() {
           </span>
           <span>
             <span className="block font-display text-lg font-bold leading-tight text-ink">Alarm Saham</span>
-            <small className="block text-[11px] uppercase tracking-wider text-ink-3">alarm saham yang bisa kamu rakit sendiri</small>
+            <small className="hidden text-[11.5px] text-ink-3 sm:block">alarm saham yang bisa kamu rakit sendiri</small>
           </span>
         </Link>
-        <nav aria-label="Langkah" className="flex flex-wrap gap-1 text-[13px]">
+        <nav
+          aria-label="Langkah"
+          className="-mx-1 flex flex-nowrap gap-1 overflow-x-auto px-1 text-[13px] sm:mx-0 sm:flex-wrap sm:overflow-x-visible sm:px-0"
+        >
           {LANGKAH.map((l) => {
             const kini = aktif(l.href);
             return (
@@ -41,7 +52,7 @@ export function HeaderNav() {
                 key={l.href}
                 href={l.href}
                 aria-current={kini ? "page" : undefined}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 no-underline ${
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 no-underline ${
                   kini ? "bg-accent-soft font-semibold text-ink" : "text-ink-2 hover:bg-surface-2"
                 }`}
               >
@@ -59,7 +70,7 @@ export function HeaderNav() {
           <Link
             href="/cara-kami-menghitung"
             aria-current={aktif("/cara-kami-menghitung") ? "page" : undefined}
-            className={`flex items-center rounded-lg px-3 py-2 no-underline ${
+            className={`flex shrink-0 items-center whitespace-nowrap rounded-lg px-3 py-2 no-underline ${
               aktif("/cara-kami-menghitung") ? "bg-accent-soft font-semibold text-ink" : "text-ink-2 hover:bg-surface-2"
             }`}
           >

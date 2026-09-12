@@ -50,7 +50,7 @@ test.describe("/putar-ulang", () => {
     await harapkanKlaimSumberJujur(page, "/putar-ulang?kode=SRIL (fixture)");
     await expect(page.getByTestId("catatan")).toContainText("data CONTOH");
     for (const teks of await page.getByTestId("kejadian").allTextContents()) {
-      expect(teks).toMatch(/Sumber: data contoh — fixture/);
+      expect(teks).toMatch(/Sumber: data contoh: fixture/);
       expect(teks).not.toMatch(/Sumber: Sectors/);
     }
     await expect(page.locator('[data-testid="kejadian"] a')).toHaveCount(0);

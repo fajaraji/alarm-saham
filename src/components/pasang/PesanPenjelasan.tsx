@@ -35,7 +35,7 @@ export function PesanPenjelasan({ saham, penjelasan, today }: Props) {
               </span>
             </div>
             <p className="m-0 text-[13.5px] leading-relaxed">
-              <b>{h.symbol}</b> — {p?.teks ?? ""}
+              <b>{h.symbol}</b>: {p?.teks ?? ""}
             </p>
             {h.alasan.length ? (
               <details className="mt-2 text-[12px] text-ink-2">
@@ -61,7 +61,7 @@ export function PesanPenjelasan({ saham, penjelasan, today }: Props) {
                 {h.kelasB.blok.length ? (
                   <>
                     {" "}
-                    —{" "}
+                    ·{" "}
                     {h.kelasB.blok.map((b) => `${b.kind}: ${b.terpenuhi ? "terpenuhi" : "tidak"} (${b.detail})`).join("; ")}
                   </>
                 ) : null}

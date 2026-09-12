@@ -14,7 +14,7 @@ function langkah(nyata: boolean) {
       n: "1",
       href: "/putar-ulang",
       judul: "Putar ulang",
-      isi: "Lihat rekaman tanda resmi bursa untuk satu saham — suspensi, laporan yang berhenti, ekuitas negatif, rights issue — dengan slider waktu.",
+      isi: "Lihat rekaman tanda resmi bursa untuk satu saham (suspensi, laporan yang berhenti, ekuitas negatif, rights issue) dengan slider waktu.",
     },
     {
       n: "2",
@@ -30,7 +30,7 @@ function langkah(nyata: boolean) {
       judul: "Pasang",
       isi: nyata
         ? "Pasang alarm ke saham yang kamu pegang. Setiap pagi dicek ke data resmi; hasilnya masuk kotak masuk (dan Telegram bila dihubungkan)."
-        : "Pasang alarm ke saham yang kamu pegang. Setiap pagi dicek ke data yang ada di server ini — saat ini data contoh; hasilnya masuk kotak masuk (dan Telegram bila dihubungkan).",
+        : "Pasang alarm ke saham yang kamu pegang. Setiap pagi dicek ke data yang ada di server ini (saat ini data contoh); hasilnya masuk kotak masuk (dan Telegram bila dihubungkan).",
     },
   ] as const;
 }
@@ -46,8 +46,11 @@ export default async function Beranda() {
   const LANGKAH = langkah(nyata);
   return (
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-10">
-      <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">Alarm saham yang bisa kamu rakit sendiri</p>
-      <h1 className="mb-3 mt-1 max-w-[22ch] font-display text-[34px] font-extrabold leading-tight tracking-tight text-balance">
+      {/* Tanpa eyebrow di sini: kalimat "alarm saham yang bisa kamu rakit
+          sendiri" sudah terpampang di header pada setiap halaman, dan di beranda
+          keduanya tampil berbarengan berjarak sekitar 40px. Judul di bawah
+          bekerja lebih baik tanpa pengulangan itu di atasnya. */}
+      <h1 className="mb-3 max-w-[22ch] font-display text-[34px] font-extrabold leading-tight tracking-tight text-balance">
         Tanda bahayanya sudah diterbitkan bursa. Alarm Saham membuatnya terbaca.
       </h1>
       <p className="mb-8 max-w-[68ch] text-[15px] text-ink-2">
@@ -64,23 +67,40 @@ export default async function Beranda() {
         )}
       </p>
 
-      <ol className="mb-8 grid gap-4 md:grid-cols-3" aria-label="Tiga langkah">
-        {LANGKAH.map((l) => (
-          <li key={l.n} className="rounded-[14px] border border-line bg-surface p-5 shadow-panel">
-            <span
-              aria-hidden="true"
-              className="mb-3 grid h-9 w-9 place-items-center rounded-full bg-accent font-display text-lg font-extrabold text-accent-ink"
+      {/* Langkah 1 sengaja lebih berat daripada 2 dan 3: pembaca pertama kali
+          butuh SATU titik masuk, bukan tiga pintu setara. Tiga kartu identik
+          (ukuran, padding, lingkaran terisi yang sama) membuat ketiganya tampak
+          sederajat padahal semua orang mulai dari langkah 1. Hierarkinya dibawa
+          oleh lebar kolom, bidang panel, dan lingkaran terisi vs bergaris. */}
+      <ol className="mb-8 grid gap-4 md:grid-cols-[1.35fr_1fr_1fr]" aria-label="Tiga langkah">
+        {LANGKAH.map((l, i) => {
+          const utama = i === 0;
+          return (
+            <li
+              key={l.n}
+              className={
+                utama
+                  ? "rounded-[14px] border border-line bg-surface p-5 shadow-panel"
+                  : "rounded-[12px] border border-line p-5"
+              }
             >
-              {l.n}
-            </span>
-            <h2 className="mb-1 font-display text-[18px] font-bold">
-              <Link href={l.href} className="text-ink no-underline hover:underline">
-                {l.judul}
-              </Link>
-            </h2>
-            <p className="text-[13.5px] text-ink-2">{l.isi}</p>
-          </li>
-        ))}
+              <span
+                aria-hidden="true"
+                className={`mb-3 grid h-9 w-9 place-items-center rounded-full font-display text-lg font-extrabold ${
+                  utama ? "bg-accent text-accent-ink" : "border border-line-strong text-ink-3"
+                }`}
+              >
+                {l.n}
+              </span>
+              <h2 className={`mb-1 font-display font-bold ${utama ? "text-[20px]" : "text-[17px]"}`}>
+                <Link href={l.href} className={`no-underline hover:underline ${utama ? "text-ink" : "text-ink-2"}`}>
+                  {l.judul}
+                </Link>
+              </h2>
+              <p className={utama ? "text-[14px] text-ink-2" : "text-[13px] text-ink-3"}>{l.isi}</p>
+            </li>
+          );
+        })}
       </ol>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -102,7 +122,7 @@ export default async function Beranda() {
           halaman tidak memasangnya sendiri agar tidak tampil dua kali di satu layar. */}
       <p className="mt-8 max-w-[68ch] rounded-lg bg-warn-soft px-4 py-3 text-[12.5px] text-ink-2">
         <strong className="text-ink">Batasnya jelas.</strong> Tidak ada eksekusi transaksi, tidak ada anjuran, dan tidak ada
-        penilaian tentang emiten mana pun —{" "}
+        penilaian tentang emiten mana pun:{" "}
         {nyata ? <>hanya fakta resmi dengan sumbernya.</> : <>hanya data contoh berlabel, lengkap dengan sumbernya.</>}
       </p>
     </main>

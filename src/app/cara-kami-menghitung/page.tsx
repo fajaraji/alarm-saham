@@ -39,6 +39,22 @@ import {
   totalKredit,
 } from "@/lib/metodologi/skor";
 
+/**
+ * Daftar isi halaman metodologi. Label-nya sengaja lebih pendek daripada
+ * judul bagiannya: daftar isi harus bisa dipindai sekilas, sementara judulnya
+ * boleh menjelaskan. `id` WAJIB sama dengan id <h2> yang dituju.
+ */
+const DAFTAR_ISI = [
+  { id: "skor", label: "Skor nyata" },
+  { id: "apa", label: "Apa yang dihitung" },
+  { id: "blok", label: "Definisi blok" },
+  { id: "universe", label: "Universe uji" },
+  { id: "lookahead", label: "Anti-lookahead" },
+  { id: "batas", label: "Keterbatasan" },
+  { id: "penjaga", label: "Penjaga keluaran AI" },
+  { id: "kredit", label: "Kredit terpakai" },
+] as const;
+
 export const metadata: Metadata = {
   title: "Cara kami menghitung · Alarm Saham",
   description:
@@ -48,21 +64,21 @@ export const metadata: Metadata = {
 /** Definisi terukur tiap blok, longgar vs ketat — kalimat mengikuti evaluate.ts. */
 const DEFINISI_BLOK: Record<BlockKind, { awam: string; longgar: string; ketat: string; sumber: string; kedalaman: string }> = {
   suspensi: {
-    awam: "Bursa menghentikan perdagangan saham itu untuk sementara — seperti toko yang disegel petugas.",
+    awam: "Bursa menghentikan perdagangan saham itu untuk sementara, seperti toko yang disegel petugas.",
     longgar: "ada kejadian suspensi dalam 12 bulan sebelum tanggal t (inklusif t)",
     ketat: "ada suspensi yang sudah berumur ≥ 6 bulan pada t dan belum ada kuartal laporan baru setelahnya (feed tidak memuat tanggal pencabutan, jadi ini asumsi yang kami dokumentasikan)",
     sumber: "/v2/suspensions/ (feed seluruh bursa)",
     kedalaman: "Des 2018 (jarang), padat sejak 2020",
   },
   laporan_hilang: {
-    awam: "Perusahaan berhenti menyampaikan laporan kuartalan — seperti murid yang berhenti mengumpulkan rapor.",
+    awam: "Perusahaan berhenti menyampaikan laporan kuartalan, seperti murid yang berhenti mengumpulkan rapor.",
     longgar: `kuartal Q dinyatakan hilang bila akhir periode Q + ${TENGGAT_LAPORAN_HARI.longgar} hari ≤ t dan Q tidak ada di daftar kuartal yang tersedia`,
     ketat: `sama, dengan tenggat ${TENGGAT_LAPORAN_HARI.ketat} hari`,
     sumber: "/v2/company/get_quarterly_financial_dates/{symbol}/",
     kedalaman: "2020 kuartal 1",
   },
   aksi_dilutif: {
-    awam: "Perusahaan menerbitkan saham baru (rights issue) sehingga porsi pemegang lama mengecil — seperti kue yang dipotong lebih banyak.",
+    awam: "Perusahaan menerbitkan saham baru (rights issue) sehingga porsi pemegang lama mengecil, seperti kue yang dipotong lebih banyak.",
     longgar: "ada rights issue dengan ex-date ≤ t",
     ketat: `rasio saham baru terhadap lama (new_ratio / old_ratio) ≥ ${RASIO_DILUSI_KETAT}; rights issue tanpa rasio tidak dihitung`,
     sumber: "/v2/company/corporate-actions/{symbol}/",
@@ -80,7 +96,7 @@ const DEFINISI_BLOK: Record<BlockKind, { awam: string; longgar: string; ketat: s
     longgar: `ada filing jual oleh insider/institusi dalam ${JENDELA_INSIDER_HARI} hari sebelum t`,
     ketat: `total penurunan kepemilikan dalam jendela itu ≥ ${INSIDER_POIN_KETAT} poin persen`,
     sumber: "/v2/filings/?symbol=",
-    kedalaman: "2024 (tidak ada satu pun filing ≤ 2023 di feed) — kelas A terbatas",
+    kedalaman: "2024 (tidak ada satu pun filing ≤ 2023 di feed), kelas A terbatas",
   },
 };
 
@@ -97,7 +113,7 @@ function angka(x: number | null | undefined): string {
 function Stat({ label, nilai, sub, testid }: { label: React.ReactNode; nilai: string; sub?: string; testid?: string }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-4 shadow-panel" data-testid={testid}>
-      <p className="m-0 text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">{label}</p>
+      <p className="m-0 text-[12px] font-semibold text-ink-3">{label}</p>
       <p className="m-0 mt-1 font-display text-3xl font-extrabold leading-none text-ink">{nilai}</p>
       {sub ? <p className="m-0 mt-1.5 text-xs text-ink-2">{sub}</p> : null}
     </div>
@@ -126,12 +142,12 @@ function TabelKelompok({ group }: { group: Group }) {
   return (
     <details className="rounded-xl border border-line bg-surface" data-testid={`tabel-${group}`}>
       <summary className="cursor-pointer px-4 py-3 font-semibold">
-        {NAMA_KELOMPOK[group]} — {kena ? `${jumlah}/${baris.length} tertangkap` : `${jumlah}/${baris.length} alarm palsu`}
+        {NAMA_KELOMPOK[group]}: {kena ? `${jumlah}/${baris.length} tertangkap` : `${jumlah}/${baris.length} alarm palsu`}
       </summary>
       <div className="overflow-x-auto border-t border-line">
         <table className="w-full min-w-[720px] border-collapse text-[13px]">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
+            <tr className="text-left text-[11.5px] font-semibold text-ink-3">
               <th className="px-3 py-2">Emiten</th>
               <th className="px-3 py-2">{kena ? "Kejadian target" : "Dipindai sampai"}</th>
               <th className="px-3 py-2">Bunyi pertama</th>
@@ -173,7 +189,7 @@ export default function HalamanCaraKamiMenghitung() {
 
   return (
     <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="metodologi">
-      <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">Metodologi</p>
+      <p className="text-[12px] font-semibold text-ink-3">Metodologi</p>
       <h1 className="mb-2 mt-1 font-display text-[30px] font-extrabold leading-tight tracking-tight text-balance">
         Cara kami menghitung
       </h1>
@@ -182,13 +198,32 @@ export default function HalamanCaraKamiMenghitung() {
         ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>snapshot yang di-commit</b>{" "}
         (<code className="font-mono">docs/skor-nyata.json</code>, <code className="font-mono">docs/kredit-ledger.json</code>, dan{" "}
         <code className="font-mono">docs/penjaga-frasa.json</code>),
-        hasil menjalankan mesin uji di atas database berisi data Sectors — bukan hasil hitung ulang dari sumber data yang
+        hasil menjalankan mesin uji di atas database berisi data Sectors, bukan hasil hitung ulang dari sumber data yang
         sedang dipakai server ini. Tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di halaman
         ini sama dengan keluaran mesin uji.
       </p>
 
+      {/* Daftar isi menempel. Halaman ini 2.128 kata dan 5.493px tinggi, dan
+          tanpa daftar isi pembaca harus menggulir seluruhnya hanya untuk tahu
+          isinya apa. Isinya sengaja TIDAK dipangkas: keterbatasan yang diakui,
+          buku kredit, dan angka penjaga yang terukur adalah justru bagian yang
+          paling bernilai di halaman metodologi. Tabel per-kelompok yang paling
+          berat (107 baris) memang sudah terlipat sejak awal lewat <details> di
+          TabelKelompok, jadi yang kurang tinggal navigasinya. */}
+      <nav aria-label="Daftar isi" data-testid="daftar-isi" className="sticky top-[57px] z-[5] -mx-6 mt-6 border-y border-line bg-bg/95 px-6 py-2.5 backdrop-blur">
+        <ol className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1.5 p-0 text-[12.5px]">
+          {DAFTAR_ISI.map((b) => (
+            <li key={b.id}>
+              <a href={`#${b.id}`} className="text-ink-2 no-underline hover:text-accent hover:underline">
+                {b.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
       {/* ------------------------------------------------------------ */}
-      <section className="mt-8" aria-labelledby="skor">
+      <section className="mt-8 scroll-mt-28" aria-labelledby="skor">
         <h2 id="skor" className="font-display text-xl font-bold">
           Skor nyata aturan bawaan (snapshot {SKOR_NYATA.today})
         </h2>
@@ -220,7 +255,7 @@ export default function HalamanCaraKamiMenghitung() {
             testid="stat-dilewati"
             label="Dilewati"
             nilai={String(s.skipped.length)}
-            sub={`${s.skipped.join(", ")} — tanpa tanggal kejadian target`}
+            sub={`${s.skipped.join(", ")}: tanpa tanggal kejadian target`}
           />
         </div>
         <p className="mt-3 text-sm text-ink-2" data-testid="blok-pertama">
@@ -244,7 +279,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="apa">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="apa">
         <h2 id="apa" className="font-display text-xl font-bold">
           Apa yang sebenarnya dihitung
         </h2>
@@ -284,7 +319,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="blok">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="blok">
         <h2 id="blok" className="font-display text-xl font-bold">
           Definisi tiap blok dan ambangnya
         </h2>
@@ -323,7 +358,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="universe">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="universe">
         <h2 id="universe" className="font-display text-xl font-bold">
           Universe uji: 18 + 59 + 30 emiten
         </h2>
@@ -337,12 +372,12 @@ export default function HalamanCaraKamiMenghitung() {
           <li>
             <strong>59 emiten <Istilah id="pemantauan_khusus">Papan Pemantauan Khusus</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026). Kejadian
             target = suspensi terakhir ≤ 30 Juni 2026 di feed. Tiga emiten (MENN, TGRA, WSKT) tidak punya kejadian di
-            feed dan dilewati — bukan dihitung sebagai tertangkap.
+            feed dan dilewati, bukan dihitung sebagai tertangkap.
           </li>
           <li>
             <strong>30 <Istilah id="kontrol_sehat">kontrol sehat</Istilah></strong>: anggota LQ45 menurut screener Sectors yang tidak pernah muncul di feed
             suspensi 2019–2026 dan bukan anggota dua kelompok di atas. Dari 44 yang lolos, kami mengambil{" "}
-            <strong>30 pertama menurut urutan API (alfabetis)</strong> — bukan peringkat kapitalisasi pasar, karena
+            <strong>30 pertama menurut urutan API (alfabetis)</strong>, bukan peringkat kapitalisasi pasar, karena
             screener tidak mengembalikan market cap dan menolak <code className="font-mono">order_by</code> (HTTP 400).
             Memilih ulang berarti menarik ulang data ±90 kredit, jadi himpunan ini dikunci dan diumumkan apa adanya.
           </li>
@@ -350,7 +385,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="lookahead">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="lookahead">
         <h2 id="lookahead" className="font-display text-xl font-bold">
           Anti-lookahead: tidak mengintip masa depan
         </h2>
@@ -364,7 +399,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="batas">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="batas">
         <h2 id="batas" className="font-display text-xl font-bold">
           Keterbatasan yang jujur
         </h2>
@@ -374,11 +409,11 @@ export default function HalamanCaraKamiMenghitung() {
             dari {s.delisting.total} emiten delisting terlewat: kejadian target mereka 2018–2021 (GOLL Jan 2019, PLAS Des
             2018, LCGP/TRIL Mei 2019, SUGI Jul 2019, MABA/SKYB Feb 2020, COWL Jul 2020, ENVY Des 2020), sehingga rentang
             pindai sebelum target nyaris kosong. Untuk SRIL, TDPM, dan TOYS suspensi jatuh tepat pada tanggal target dan
-            laporan masih lengkap sebelumnya — tanda-tandanya justru banyak <em>setelah</em> target.
+            laporan masih lengkap sebelumnya. Tanda-tandanya justru banyak <em>setelah</em> target.
           </li>
           <li>
             <strong>8 emiten mengembalikan 404</strong> pada endpoint tanggal laporan (COWL, SUGI, MABA, SKYB, KBRI, NUSA,
-            RIMO, SIMA — &ldquo;Invalid stock symbol&rdquo;). Untuk mereka hanya feed suspensi yang ada; blok laporan hilang,
+            RIMO, SIMA: &ldquo;Invalid stock symbol&rdquo;). Untuk mereka hanya feed suspensi yang ada; blok laporan hilang,
             dilutif, dan ekuitas negatif tidak bisa dihitung.
           </li>
           <li>
@@ -392,7 +427,7 @@ export default function HalamanCaraKamiMenghitung() {
           </li>
           <li>
             <strong><Istilah id="free_float">Free float</Istilah> tanpa sejarah</strong>: hanya snapshot hari ini (TTL cache 24 jam), jadi tidak bisa diuji ke masa
-            lalu — dipakai untuk nama emiten dan mode pasang saja.
+            lalu, dipakai untuk nama emiten dan mode pasang saja.
           </li>
           <li>
             <strong>Alarm palsu AADI</strong> adalah keterbatasan definisi kami, bukan tanda apa pun tentang emitennya: AADI
@@ -402,7 +437,7 @@ export default function HalamanCaraKamiMenghitung() {
           <li>
             <strong>Survivorship dan pemilihan universe.</strong> Kelompok kena dipilih dari daftar resmi yang sudah diketahui
             hasilnya (delisting, pemantauan khusus); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
-            tanda resmi sudah ada sebelum kejadian&rdquo; — bukan &ldquo;berapa peluang emiten acak akan kena&rdquo;.
+            tanda resmi sudah ada sebelum kejadian&rdquo;, bukan &ldquo;berapa peluang emiten acak akan kena&rdquo;.
           </li>
           <li>
             <strong>Granularitas bulanan.</strong> Kejadian yang terjadi di bulan yang sama dengan bunyi pertama tidak
@@ -412,13 +447,13 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="penjaga">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="penjaga">
         <h2 id="penjaga" className="font-display text-xl font-bold">
           Bagaimana kami menjaga keluaran AI bukan saran investasi
         </h2>
         <p className="mt-1 max-w-[70ch] text-ink-2">
           Alarm Saham adalah alat informasi dan analisis. Kami <strong>tidak</strong> mengklaim punya penyensor yang
-          memblokir semua kalimat beranjuran — klaim itu pernah ada di dokumen kami dan tidak benar. Dua pemeriksa
+          memblokir semua kalimat beranjuran; klaim itu pernah ada di dokumen kami dan tidak benar. Dua pemeriksa
           adversarial mengukurnya: dari 65 anjuran investasi yang mereka karang, 60 lolos utuh tanpa satu pun penanda,
           sementara penyaring yang sama memakan 41 dari 83 kalimat sah, termasuk kedua alasan usulan blok pada satu
           jawaban diagnosis. Pola kata tidak bisa memutuskan apakah subjek sebuah kalimat Bahasa Indonesia adalah
@@ -426,26 +461,26 @@ export default function HalamanCaraKamiMenghitung() {
         </p>
         <ol className="mt-3 grid gap-2 pl-5 text-sm text-ink-2" data-testid="lapis-penjaga">
           <li>
-            <strong>Instruksi sistem — kontrol utama.</strong> Model dilarang menyinggung seluruh pokok bahasannya:
+            <strong>Instruksi sistem: kontrol utama.</strong> Model dilarang menyinggung seluruh pokok bahasannya:
             posisi, porsi, lot, dana, waktu bertransaksi, dan penilaian harga. Yang justru menjadi tugasnya disebut
             terpisah (menjelaskan fakta data, mengusulkan blok/ambang, langkah pemeriksaan), ditambah empat contoh
             negatif berpasangan.
           </li>
           <li>
-            <strong>Keluaran terstruktur — kontrol struktural.</strong> Usulan blok tiba sebagai data: jenis blok dan
+            <strong>Keluaran terstruktur: kontrol struktural.</strong> Usulan blok tiba sebagai data: jenis blok dan
             ambang adalah pilihan tertutup, bukti berupa tanggal. Model tidak punya tempat menulis instruksi transaksi
             tanpa terlihat.
           </li>
           <li>
-            <strong>Penjaga frasa — cadangan terakhir.</strong> {JUMLAH_FRASA_BACKSTOP} frasa yang tidak mungkin
+            <strong>Penjaga frasa: cadangan terakhir.</strong> {JUMLAH_FRASA_BACKSTOP} frasa yang tidak mungkin
             bermakna lain, misalnya {CONTOH_LABEL_BACKSTOP.map((l) => `“${l}”`).join(", ")}. Frasa yang cocok
-            disamarkan; sisa kalimatnya — termasuk angka dan tanggalnya — dibiarkan utuh. Alasan usulan blok tidak
+            disamarkan; sisa kalimatnya (termasuk angka dan tanggalnya) dibiarkan utuh. Alasan usulan blok tidak
             pernah digunting: kalau penjaga menyala di sana, teksnya tetap tampil dengan tanda peringatan, karena
             usulan tanpa alasan justru menghapus inti fiturnya.
           </li>
         </ol>
         <p className="mt-3 max-w-[70ch] text-ink-2">
-          Angkanya diukur, bukan diklaim. Tolok ukurnya <code className="font-mono">{KORPUS_PENJAGA}</code> —{" "}
+          Angkanya diukur, bukan diklaim. Tolok ukurnya <code className="font-mono">{KORPUS_PENJAGA}</code>:{" "}
           {PENJAGA_FRASA.sesudah.harusUtuhTotal} kalimat sah yang wajib utuh dan {PENJAGA_FRASA.sesudah.harusDitandaiTotal}{" "}
           anjuran, isinya kalimat verbatim dari kedua pemeriksa. Diukur {PENJAGA_FRASA.tanggal} dengan{" "}
           <code className="font-mono">{PERINTAH_UKUR_PENJAGA}</code>, dan dicetak ulang setiap kali{" "}
@@ -454,7 +489,7 @@ export default function HalamanCaraKamiMenghitung() {
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[560px] border-collapse text-[13px]" data-testid="tabel-penjaga">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
+              <tr className="text-left text-[11.5px] font-semibold text-ink-3">
                 <th className="px-3 py-2">Ukuran</th>
                 <th className="px-3 py-2 text-right">Sebelum ({PENJAGA_FRASA.sebelum.commit})</th>
                 <th className="px-3 py-2 text-right">Sekarang</th>
@@ -462,7 +497,7 @@ export default function HalamanCaraKamiMenghitung() {
             </thead>
             <tbody>
               <tr className="border-t border-line">
-                <td className="px-3 py-2">Presisi — kalimat sah yang tidak berubah isinya</td>
+                <td className="px-3 py-2">Presisi: kalimat sah yang tidak berubah isinya</td>
                 <td className="px-3 py-2 text-right font-mono">
                   {PENJAGA_FRASA.sebelum.harusUtuhTotal - PENJAGA_FRASA.sebelum.harusUtuhBerubah}/
                   {PENJAGA_FRASA.sebelum.harusUtuhTotal} = {PENJAGA_FRASA.sebelum.presisiPersen}%
@@ -473,7 +508,7 @@ export default function HalamanCaraKamiMenghitung() {
                 </td>
               </tr>
               <tr className="border-t border-line">
-                <td className="px-3 py-2">Recall — anjuran yang ditandai</td>
+                <td className="px-3 py-2">Recall: anjuran yang ditandai</td>
                 <td className="px-3 py-2 text-right font-mono">
                   {PENJAGA_FRASA.sebelum.harusDitandaiKena}/{PENJAGA_FRASA.sebelum.harusDitandaiTotal} ={" "}
                   {PENJAGA_FRASA.sebelum.recallPersen}%
@@ -493,7 +528,7 @@ export default function HalamanCaraKamiMenghitung() {
         </div>
         <p className="mt-3 max-w-[70ch] text-ink-2">
           Kami memilih <strong>presisi</strong>: gerbang uji merah bila satu kalimat sah berubah, tetapi tidak pernah
-          merah karena recall rendah. Artinya penjaga frasa <strong>tidak menjamin</strong> semua anjuran tertangkap —
+          merah karena recall rendah. Artinya penjaga frasa <strong>tidak menjamin</strong> semua anjuran tertangkap:
           recall terukurnya {PENJAGA_FRASA.sesudah.recallPersen}%, dan {PENJAGA_FRASA.sesudah.harusDitandaiTotal -
             PENJAGA_FRASA.sesudah.harusDitandaiKena}{" "}
           baris tolok ukur lewat tanpa penanda. Yang ditinggalkan bersama pilihan itu, terang-terangan:
@@ -510,7 +545,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="kredit">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="kredit">
         <h2 id="kredit" className="font-display text-xl font-bold">
           Kredit Sectors yang terpakai
         </h2>
@@ -524,7 +559,7 @@ export default function HalamanCaraKamiMenghitung() {
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[640px] border-collapse text-[13px]">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
+              <tr className="text-left text-[11.5px] font-semibold text-ink-3">
                 <th className="px-3 py-2">Langkah</th>
                 <th className="px-3 py-2 text-right">Kredit</th>
                 <th className="px-3 py-2">Catatan</th>
@@ -533,7 +568,7 @@ export default function HalamanCaraKamiMenghitung() {
             <tbody>
               <tr className="border-t border-line bg-surface-2">
                 <td className="px-3 py-1.5 font-semibold" colSpan={3}>
-                  Pembuktian data (tiket 03–04) — {kreditPembuktian} kredit
+                  Pembuktian data (tiket 03–04): {kreditPembuktian} kredit
                 </td>
               </tr>
               {KREDIT_PEMBUKTIAN.map((b) => (
@@ -545,7 +580,7 @@ export default function HalamanCaraKamiMenghitung() {
               ))}
               <tr className="border-t border-line bg-surface-2">
                 <td className="px-3 py-1.5 font-semibold" colSpan={3}>
-                  Penarikan universe 107 emiten (tiket 07) — {kreditUniverse} kredit
+                  Penarikan universe 107 emiten (tiket 07): {kreditUniverse} kredit
                 </td>
               </tr>
               {KREDIT_UNIVERSE.map((b) => (
@@ -557,7 +592,7 @@ export default function HalamanCaraKamiMenghitung() {
               ))}
               <tr className="border-t border-line bg-surface-2">
                 <td className="px-3 py-1.5 font-semibold" colSpan={3}>
-                  Uji kelas B nyata (tiket 11) — {kreditKelasB} kredit
+                  Uji kelas B nyata (tiket 11): {kreditKelasB} kredit
                 </td>
               </tr>
               {KREDIT_KELAS_B.map((b) => (

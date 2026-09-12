@@ -48,7 +48,7 @@ export class AiKeyMissingError extends Error {
   constructor(pesan?: string) {
     super(
       pesan ??
-        "Kunci AI belum diset. Isi LLM_API_KEY (kunci gateway OpenAI-compatible, mis. Command Code — sekalian set LLM_BASE_URL dan LLM_MODEL), atau DEEPSEEK_API_KEY, atau ANTHROPIC_API_KEY di .env.local (lihat .env.example) agar fitur AI (perakit blok & diagnosis) bisa dipakai. Provider bisa dipaksa lewat LLM_PROVIDER=deepseek|anthropic.",
+        "Kunci AI belum diset. Isi LLM_API_KEY (kunci gateway OpenAI-compatible, mis. Command Code, sekalian set LLM_BASE_URL dan LLM_MODEL), atau DEEPSEEK_API_KEY, atau ANTHROPIC_API_KEY di .env.local (lihat .env.example) agar fitur AI (perakit blok & diagnosis) bisa dipakai. Provider bisa dipaksa lewat LLM_PROVIDER=deepseek|anthropic.",
     );
     this.name = "AiKeyMissingError";
   }

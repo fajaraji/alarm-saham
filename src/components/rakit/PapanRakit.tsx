@@ -224,7 +224,7 @@ export function PapanRakit() {
     await masukkanBertahap(r.data.rule);
     if (!hidup.current) return;
     setSedangRakit(false);
-    setCatatanRakit({ jenis: "info", teks: `${r.data.alasan} Blok sudah jadi — sekarang klik “${TEKS.tombolUji}”.` });
+    setCatatanRakit({ jenis: "info", teks: `${r.data.alasan} Blok sudah jadi. Sekarang klik “${TEKS.tombolUji}”.` });
   }
 
   /** Kosongkan papan lalu masukkan blok satu per satu (animasi masuk). */

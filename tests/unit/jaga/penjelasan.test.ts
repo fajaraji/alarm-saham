@@ -75,7 +75,7 @@ const TERLARANG = /\b(beli|jual|rekomendasi|buy|sell|hold)\b/i;
 describe("templatePenjelasan", () => {
   it("merah: menyebut jumlah syarat, tiap blok + tanggal + sumber, alarm yang berbunyi, suspensi, dan disclaimer", () => {
     const t = templatePenjelasan(MERAH, "2026-09-07");
-    expect(t).toMatch(/^SRIL — alarm berbunyi: 3 syarat terpenuhi pada 7 Sep 2026/);
+    expect(t).toMatch(/^SRIL \(alarm berbunyi\): 3 syarat terpenuhi pada 7 Sep 2026/);
     expect(t).toContain("(1) Laporan keuangan hilang/berhenti");
     expect(t).toContain("[tanggal 2024-12-31]");
     expect(t).toContain("[sumber: Sectors /v2/company/get_quarterly_financial_dates/ (di DB kami)]");
@@ -88,7 +88,7 @@ describe("templatePenjelasan", () => {
 
   it("hijau: tidak ada syarat, keterangan kelas B dilewati, disclaimer", () => {
     const t = templatePenjelasan(HIJAU, "2026-09-07");
-    expect(t).toContain("BBCA — aman menurut alarmmu: tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
+    expect(t).toContain("BBCA (aman menurut alarmmu): tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
     expect(t).toContain("Data terkini dilewati: cadangan kredit.");
     expect(t.endsWith(DISCLAIMER)).toBe(true);
   });

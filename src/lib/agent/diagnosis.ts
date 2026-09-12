@@ -50,7 +50,7 @@ export const DiagnosisOutputSchema = z.object({
   ringkasan: z
     .string()
     .describe(
-      "2–4 kalimat awam (±600 karakter): kenapa alarm bolong dan apa usulannya. Subjek setiap kalimat WAJIB data atau aturan alarm — jangan menyinggung posisi, porsi, lot, dana, atau waktu transaksi pengguna.",
+      "2–4 kalimat awam (±600 karakter): kenapa alarm bolong dan apa usulannya. Subjek setiap kalimat WAJIB data atau aturan alarm. Jangan menyinggung posisi, porsi, lot, dana, atau waktu transaksi pengguna.",
     ),
   emitenDibahas: z.array(
     z.object({
@@ -71,7 +71,7 @@ export const DiagnosisOutputSchema = z.object({
         alasan: z
           .string()
           .describe(
-            "Satu kalimat (±300 karakter) kenapa blok ini menolong menurut data — mis. tanggal bukti atau perubahan jumlah temuan. Tentang blok dan datanya, bukan tentang apa yang sebaiknya pengguna lakukan atas sahamnya.",
+            "Satu kalimat (±300 karakter) kenapa blok ini menolong menurut data, mis. tanggal bukti atau perubahan jumlah temuan. Tentang blok dan datanya, bukan tentang apa yang sebaiknya pengguna lakukan atas sahamnya.",
           ),
       }),
     )
@@ -477,8 +477,8 @@ function susunPrompt(input: DiagnosisInput): string {
   }
   baris.push(
     `Blok yang tersedia: ${BLOCK_KINDS.map((k) => `${k} (${LABEL_BLOK[k]})`).join(", ")}.`,
-    `Kamu punya paling banyak ${input.maxSteps ?? MAKS_LANGKAH_DEFAULT} langkah. Panggil banyak tool SEKALIGUS dalam satu langkah — itu satu-satunya cara menarik data beberapa emiten tanpa kehabisan langkah.`,
-    `Bahas paling banyak ${MAKS_EMITEN_DIBAHAS} emiten — pilih yang paling mewakili, jangan semuanya. Jelaskan kenapa alarm bolong di sana dan usulkan maksimal ${MAKS_USULAN} blok tambahan/pengetatan, semua berbasis data tool.`,
+    `Kamu punya paling banyak ${input.maxSteps ?? MAKS_LANGKAH_DEFAULT} langkah. Panggil banyak tool SEKALIGUS dalam satu langkah. Itu satu-satunya cara menarik data beberapa emiten tanpa kehabisan langkah.`,
+    `Bahas paling banyak ${MAKS_EMITEN_DIBAHAS} emiten: pilih yang paling mewakili, jangan semuanya. Jelaskan kenapa alarm bolong di sana dan usulkan maksimal ${MAKS_USULAN} blok tambahan/pengetatan, semua berbasis data tool.`,
   );
   return baris.join("\n");
 }

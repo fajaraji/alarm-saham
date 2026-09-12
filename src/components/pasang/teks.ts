@@ -20,7 +20,7 @@ export const TEKS = {
   alarmJudul: "Alarm aktif",
   alarmSub: "Bawaan + buatanmu dari layar Rakit.",
   kelasBLabel: "Sertakan data terkini (memakai kredit Sectors)",
-  kelasBSub: "Broker 14 hari, harga 90 hari — 1 kredit per saham per endpoint, di-cache 24 jam. Saham tersuspensi dilewati otomatis.",
+  kelasBSub: "Broker 14 hari, harga 90 hari: 1 kredit per saham per endpoint, di-cache 24 jam. Saham tersuspensi dilewati otomatis.",
   freeFloatLabel: "termasuk free float (snapshot seluruh bursa, 10 kredit per 24 jam)",
   pesanJudul: "Pesan penjelasan",
   pesanSub: "Untuk setiap saham: syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",

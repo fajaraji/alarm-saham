@@ -115,7 +115,7 @@ export const KREDIT_UNIVERSE: BarisKredit[] = [
 /** Tiket 11: satu uji kelas B nyata di layar Pasang (angka nyata dari api_ledger). */
 export const KREDIT_KELAS_B: BarisKredit[] = [
   {
-    langkah: "Uji kelas B nyata di layar Pasang (BBCA, ASII) — tiket 11",
+    langkah: "Uji kelas B nyata di layar Pasang (BBCA, ASII), tiket 11",
     kredit: 4,
     catatan: "broker-summary + daily untuk 2 emiten; ledger 463 → 467",
   },
