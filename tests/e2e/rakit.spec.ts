@@ -3,7 +3,7 @@
 // dan screenshot mode terang & gelap (folder ter-gitignore).
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { ADA_PGLITE, buka, harapkanLabelSumber } from "./util";
+import { ADA_PGLITE, AI_AKTIF, buka, harapkanLabelSumber } from "./util";
 
 const FOLDER_SCREENSHOT = "tests/e2e/screenshots";
 
@@ -94,8 +94,9 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   await expect(page.getByTestId("kelompok-control")).toBeVisible();
   await expect(page.getByTestId("sel-SRIL")).toBeVisible();
 
-  // Panel AI: kunci belum diisi → banner sopan (503)
-  await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
+  // Panel AI: kunci belum diisi → banner sopan (503). Dilewati bila server
+  // yang diuji justru punya kunci (E2E_AI=aktif, mis. URL produksi).
+  if (!AI_AKTIF) await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
 
   // Screenshot dua mode (hanya dilaporkan bahwa keduanya dirender)
   await page.emulateMedia({ colorScheme: "light" });
@@ -198,7 +199,7 @@ test("Minta AI rakit tanpa kunci → banner sopan, papan tetap bisa dirakit send
   await buka(page, "/rakit");
   await page.getByRole("textbox", { name: /Ceritakan alarm/ }).fill("aku mau alarm buat saham yang mau pailit");
   await page.getByRole("button", { name: "Minta AI rakit" }).click();
-  await expect(page.getByTestId("catatan-rakit")).toContainText("Fitur AI belum aktif");
+  if (!AI_AKTIF) await expect(page.getByTestId("catatan-rakit")).toContainText("Fitur AI belum aktif");
   await page.getByTestId("palet-insider_jual").click();
   await expect(page.getByTestId("blok-insider_jual")).toBeVisible();
 });

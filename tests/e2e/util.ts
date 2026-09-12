@@ -21,8 +21,31 @@ export const DIR_PGLITE_E2E = process.env.E2E_PGLITE_DIR?.trim() || ".pglite";
  * (`npm run e2e:seed -- --dir=.pglite-e2e`). Jangan mengubah ini menjadi selalu
  * false "supaya hijau": jalur DB adalah bentuk yang dideploy.
  */
-export const ADA_PGLITE =
-  !process.env.E2E_TANPA_PGLITE && existsSync(path.resolve(process.cwd(), DIR_PGLITE_E2E));
+const SUMBER_DIPAKSA = process.env.E2E_SUMBER?.trim().toLowerCase();
+if (SUMBER_DIPAKSA && SUMBER_DIPAKSA !== "db" && SUMBER_DIPAKSA !== "contoh") {
+  throw new Error(`E2E_SUMBER="${SUMBER_DIPAKSA}" tidak dikenal; pilih "db" atau "contoh".`);
+}
+
+/**
+ * Sumber data server yang sedang diuji.
+ *
+ * Bawaannya dideteksi dari folder PGlite LOKAL — benar untuk server e2e yang
+ * dijalankan playwright.config.ts sendiri, tetapi tidak berarti apa-apa saat
+ * yang diuji adalah URL hidup (E2E_BASE_URL): folder di laptop tidak
+ * mengatakan apa pun tentang database server di seberang. Karena itu
+ * E2E_SUMBER=db (produksi dengan Neon) atau E2E_SUMBER=contoh memaksanya.
+ */
+export const ADA_PGLITE = SUMBER_DIPAKSA
+  ? SUMBER_DIPAKSA === "db"
+  : !process.env.E2E_TANPA_PGLITE && existsSync(path.resolve(process.cwd(), DIR_PGLITE_E2E));
+
+/**
+ * Apakah server yang diuji punya kunci AI. Bawaan MATI: server e2e lokal dan
+ * CI sengaja dijalankan tanpa kunci supaya panel AI teruji di jalur 503-nya.
+ * Produksi punya kunci, jadi smoke terhadap URL hidup dijalankan dengan
+ * E2E_AI=aktif.
+ */
+export const AI_AKTIF = process.env.E2E_AI?.trim().toLowerCase() === "aktif";
 
 export const PESAN_SKIP_PGLITE = `butuh data nyata ${DIR_PGLITE_E2E} (server berjalan pada jalur fixture)`;
 

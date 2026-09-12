@@ -10,7 +10,7 @@
 // diperiksa lewat atribut mesin `data-sumber` (lihat harapkanLabelSumber).
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, buka, harapkanLabelSumber, kumpulkanConsoleError } from "./util";
+import { ADA_PGLITE, AI_AKTIF, buka, harapkanLabelSumber, kumpulkanConsoleError } from "./util";
 
 test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   test.setTimeout(120_000);
@@ -46,7 +46,16 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await harapkanLabelSumber(page.getByTestId("label-sumber"));
   if (ADA_PGLITE) await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
   await expect(page.getByTestId("sel-SRIL")).toBeVisible();
-  await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
+  // Panel AI: tanpa kunci ia menyatakan dirinya nonaktif; dengan kunci (URL
+  // produksi, E2E_AI=aktif) ia menawarkan diagnosis. Tombol diagnosisnya TIDAK
+  // diklik di smoke — satu panggilan model memakan puluhan detik dan token.
+  await expect(page.getByTestId("panel-ai")).toBeVisible();
+  if (AI_AKTIF) {
+    await expect(page.getByTestId("panel-ai")).toContainText("Minta diagnosis AI");
+    await expect(page.getByTestId("banner-ai-diagnosis")).toHaveCount(0);
+  } else {
+    await expect(page.getByTestId("banner-ai-diagnosis")).toContainText("Fitur AI belum aktif");
+  }
 
   // Langkah 3: pasang BBCA & SRIL, cek sekarang (kelas A saja, nol kredit)
   await page.getByRole("navigation", { name: "Langkah" }).getByRole("link", { name: /Pasang/ }).click();

@@ -31,6 +31,22 @@ const PORT = Number(process.env.E2E_PORT ?? (TANPA_PGLITE ? 3101 : 3100));
 const DIR_PGLITE = process.env.E2E_PGLITE_DIR?.trim() ?? "";
 
 /**
+ * URL hidup yang diuji alih-alih server lokal — dipakai gerbang smoke tiket 16
+ * terhadap deploy production:
+ *
+ *   E2E_BASE_URL=https://<app>.vercel.app E2E_SUMBER=db E2E_AI=aktif \
+ *     npx playwright test tests/e2e/smoke.spec.ts
+ *
+ * Bila diisi, TIDAK ada `next build`/`next start` yang dijalankan (webServer
+ * dimatikan) dan tidak ada env server yang bisa kita setel — termasuk
+ * ALARM_HARI_INI. Jadi waktu di seberang berjalan normal; itu memang yang
+ * ingin diuji. Sumber data dan status kunci AI tidak bisa dideteksi dari sini,
+ * karena itu dinyatakan lewat E2E_SUMBER dan E2E_AI (tests/e2e/util.ts).
+ */
+const BASE_URL_HIDUP = process.env.E2E_BASE_URL?.trim().replace(/\/+$/, "") ?? "";
+const BASE_URL = BASE_URL_HIDUP || `http://127.0.0.1:${PORT}`;
+
+/**
  * Tanggal "hari ini" dipakukan di server e2e (src/lib/engine/dates.ts membaca
  * ALARM_HARI_INI). Tanpa ini, blok `laporan_hilang` mulai berbunyi 120 hari
  * setelah kuartal terakhir di fixture, sehingga emiten kontrol (BBCA/TLKM/ASII/
@@ -54,18 +70,19 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: `http://127.0.0.1:${PORT}`,
+    baseURL: BASE_URL,
     trace: "retain-on-failure",
     // Overlay panduan kunjungan pertama (tiket 13) dianggap sudah ditutup agar
     // spec layar lain tidak terhalang; tests/e2e/panduan.spec.ts mengosongkannya
     // sendiri untuk menguji kunjungan pertama.
     storageState: {
       cookies: [],
-      origins: [{ origin: `http://127.0.0.1:${PORT}`, localStorage: [{ name: "alarm-saham:panduan-selesai", value: "1" }] }],
+      origins: [{ origin: BASE_URL, localStorage: [{ name: "alarm-saham:panduan-selesai", value: "1" }] }],
     },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
+  // URL hidup: tidak ada server yang kita jalankan sendiri.
+  webServer: BASE_URL_HIDUP ? undefined : {
     command: process.env.E2E_SKIP_BUILD
       ? `npm run start -- -p ${PORT}`
       : `npm run build && npm run start -- -p ${PORT}`,
@@ -75,8 +92,19 @@ export default defineConfig({
     stdout: "ignore",
     stderr: "pipe",
     env: {
+      // SEMUA jalur kunci AI dikosongkan, bukan hanya dua yang lama. Sejak
+      // tiket 08c ada jalur gateway (LLM_*), dan `next start` memuat
+      // .env.local: begitu pengembang mengisi LLM_API_KEY, server e2e
+      // ikut punya kunci, panel AI tidak lagi menampilkan banner 503, dan
+      // spec menguji jalur yang BERBEDA dari yang ia klaim. CI tidak
+      // menangkapnya karena di CI tidak ada .env.local sama sekali.
       ANTHROPIC_API_KEY: "",
       DEEPSEEK_API_KEY: "",
+      LLM_API_KEY: "",
+      LLM_BASE_URL: "",
+      LLM_MODEL: "",
+      LLM_MODEL_RINGAN: "",
+      LLM_PROVIDER: "",
       DATABASE_URL: "",
       ALARM_HARI_INI: HARI_INI,
       ALARM_IZINKAN_BEKU_WAKTU: "1",
