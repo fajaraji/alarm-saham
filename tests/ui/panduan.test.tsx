@@ -226,10 +226,18 @@ describe("Header, petunjuk, dan footer", () => {
     expect(screen.getByTestId("tombol-panduan")).toHaveTextContent("Panduan");
   });
 
-  it("PetunjukLayar menomori tiga langkah", () => {
+  it("PetunjukLayar menyampaikan urutan lewat <ol>, TANPA angka yang bersaing dengan nomor header", () => {
+    // Header menomori tiga HALAMAN (1 Putar ulang, 2 Rakit alarm, 3 Pasang).
+    // Petunjuk ini menomori TINDAKAN di dalam satu halaman. Dulu keduanya
+    // memakai angka 1/2/3 dan tampil berbarengan di satu layar, sehingga
+    // pembaca di "langkah 2 dari 3" melihat deret 1/2/3 kedua yang artinya
+    // berbeda. Urutan tetap disampaikan ke pembaca layar oleh <ol>.
     render(<PetunjukLayar langkah={["a", "b", "c"]} />);
     const daftar = screen.getByRole("list", { name: "Cara pakai layar ini" });
-    expect(within(daftar).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["1a", "2b", "3c"]);
+    expect(daftar.tagName).toBe("OL");
+    const isi = within(daftar).getAllByRole("listitem").map((li) => li.textContent);
+    expect(isi).toEqual(["a", "b", "c"]);
+    expect(isi.join("")).not.toMatch(/\d/);
   });
 
   it("footer disclaimer memuat kalimat PLAN §2 dan tautan kamus/metodologi", () => {

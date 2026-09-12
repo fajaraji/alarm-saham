@@ -43,8 +43,8 @@ export function langkahPanduan(sumberNyata: boolean) {
     {
       judul: "Rakit alarm.",
       teks: sumberNyata
-        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke seluruh universe uji: 18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat."
-        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu” — alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke universe uji yang kami tarik dari Sectors.",
+        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh universe uji: 18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat."
+        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke universe uji yang kami tarik dari Sectors.",
     },
     {
       judul: "Pasang.",
@@ -134,7 +134,7 @@ export function OverlayPanduan({ sumberNyata }: PropsOverlayPanduan) {
         className="w-full max-w-[560px] rounded-2xl bg-surface p-7 text-ink shadow-panel outline-none"
       >
         <h2 id="judul-panduan" className="m-0 mb-1.5 font-display text-2xl font-extrabold tracking-tight">
-          Alarm Saham — cara pakainya dalam 3 langkah
+          Alarm Saham: cara pakainya dalam 3 langkah
         </h2>
         <p className="m-0 mb-3.5 text-ink-2">
           {sumberNyata ? (
@@ -142,7 +142,7 @@ export function OverlayPanduan({ sumberNyata }: PropsOverlayPanduan) {
           ) : (
             <>
               Server ini belum terhubung ke database Sectors, jadi yang tampil adalah <b>data contoh</b> (bukan data
-              Sectors nyata) — bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif.
+              Sectors nyata). Bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif.
             </>
           )}{" "}
           Alarm Saham adalah alat informasi, bukan saran investasi.

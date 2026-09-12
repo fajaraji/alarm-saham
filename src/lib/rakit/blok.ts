@@ -53,7 +53,7 @@ export const INFO_BLOK: Record<BlockKind, InfoBlok> = {
   ekuitas_negatif: {
     kind: "ekuitas_negatif",
     label: LABEL_BLOK.ekuitas_negatif,
-    tooltip: "Kalau semua harta dijual pun utangnya tidak lunas (ekuitas negatif) — angka ekuitas di laporan keuangan di bawah nol.",
+    tooltip: "Kalau semua harta dijual pun utangnya tidak lunas (ekuitas negatif): angka ekuitas di laporan keuangan di bawah nol.",
     ambang: {
       longgar: "ekuitas negatif",
       ketat: `ekuitas turun >= ${Math.round(PENURUNAN_EKUITAS_KETAT * 100)}% setahun`,

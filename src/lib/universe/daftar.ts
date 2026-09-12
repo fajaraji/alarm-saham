@@ -23,7 +23,7 @@ export const EMITEN_DELISTING: readonly EmitenDelisting[] = [
   { symbol: "LCGP", suspensiCatatan: "2019-05-02", alasan: "suspensi>50bln" },
   { symbol: "SUGI", suspensiCatatan: "2019-07-01", alasan: "suspensi>50bln" },
   { symbol: "MABA", suspensiCatatan: "2020-02-17", alasan: "suspensi>50bln" },
-  { symbol: "LMAS", suspensiCatatan: "2023-12-20", alasan: "suspensi>50bln", catatan: "tanggal catatan janggal (<50 bulan) — verifikasi dengan feed" },
+  { symbol: "LMAS", suspensiCatatan: "2023-12-20", alasan: "suspensi>50bln", catatan: "tanggal catatan janggal (<50 bulan), verifikasi dengan feed" },
   { symbol: "SKYB", suspensiCatatan: "2020-02-17", alasan: "suspensi>50bln" },
   { symbol: "ENVY", suspensiCatatan: "2020-12-01", alasan: "suspensi>50bln" },
   { symbol: "GOLL", suspensiCatatan: "2019-01-30", alasan: "suspensi>50bln" },

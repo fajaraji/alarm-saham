@@ -81,7 +81,7 @@ const IKON: Record<StatusSaham, string> = { hijau: "🟢", kuning: "🟡", merah
  * ditutup disclaimer (syarat PLAN §2: disclaimer di setiap pesan keluar).
  */
 export function susunPesanTelegram(k: KirimanHarian): string[] {
-  const kepala = `Alarm Saham — pengecekan pagi ${fmtTanggal(k.today)}\n${k.bendera.length} bendera baru di portofoliomu:\n`;
+  const kepala = `Alarm Saham: pengecekan pagi ${fmtTanggal(k.today)}\n${k.bendera.length} bendera baru di portofoliomu:\n`;
   const butir = k.bendera.map((b) => {
     const badan = b.teks.replace(DISCLAIMER, "").replace(/\s+$/, "");
     return `\n${IKON[b.status]} ${b.judul}\n${badan}\n`;

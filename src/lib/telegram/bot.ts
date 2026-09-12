@@ -23,14 +23,14 @@ export interface OpsiBot {
 export const TEKS_BOT = {
   bantuan:
     "Halo! Ini bot Alarm Saham.\n\n" +
-    "• /mulai <kode-portofolio> — kirim bendera baru portofoliomu ke chat ini setiap pagi (±06:30 WIB).\n" +
-    "• /berhenti — hentikan pengiriman.\n\n" +
+    "• /mulai <kode-portofolio>: kirim bendera baru portofoliomu ke chat ini setiap pagi (±06:30 WIB).\n" +
+    "• /berhenti: hentikan pengiriman.\n\n" +
     "Kode portofolio ada di bagian “Kotak masuk” halaman /pasang.",
   tanpaDb: "Maaf, server belum punya database, jadi tautan Telegram belum bisa disimpan.",
   kodeKosong: "Tulis kodenya, mis. /mulai 3f1c2a8e-7b4d-4c9a-9e1f-0a2b3c4d5e6f (lihat kotak masuk di halaman /pasang).",
   kodeSalah: "Kode portofolio tidak dikenal. Salin kode persis dari bagian “Kotak masuk” halaman /pasang.",
   tertaut: (n: number) =>
-    `Siap. Chat ini tertaut ke portofolio dengan ${n} saham. Setiap pagi (±06:30 WIB) kami kirim hanya bendera BARU — bukan pengulangan tiap hari. Ketik /berhenti untuk berhenti.\n\n${DISCLAIMER}`,
+    `Siap. Chat ini tertaut ke portofolio dengan ${n} saham. Setiap pagi (±06:30 WIB) kami kirim hanya bendera BARU, bukan pengulangan tiap hari. Ketik /berhenti untuk berhenti.\n\n${DISCLAIMER}`,
   dilepas: "Tautan dilepas. Chat ini tidak lagi menerima pesan pagi. Ketik /mulai <kode> untuk menautkan lagi.",
   belumTertaut: "Chat ini belum tertaut ke portofolio mana pun.",
 } as const;

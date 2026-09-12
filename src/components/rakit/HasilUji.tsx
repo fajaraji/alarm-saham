@@ -103,14 +103,14 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
           >
             {sumber}
           </span>
-          , akhir bulan {h.scanStart} – {h.today}.
+          , akhir bulan {h.scanStart} sampai {h.today}.
           {hasil?.dilewati?.length ? (
             <span data-testid="dilewati">
               {" "}
               {hasil.dilewati.length} saham dilewati ({hasil.dilewati.join(", ")}) karena tidak punya tanggal kejadian target.
             </span>
           ) : null}
-          {basi ? " Papan sudah berubah — klik “Uji ke masa lalu” lagi." : ""}
+          {basi ? " Papan sudah berubah. Klik “Uji ke masa lalu” lagi." : ""}
         </p>
       ) : (
         <p className="mb-2.5 text-xs text-ink-3">Diuji ke saham yang pernah dihapus dari bursa, yang dipantau khusus, dan yang sehat.</p>
@@ -124,23 +124,23 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
       <div className={basi ? "opacity-40 transition-opacity" : "transition-opacity"}>
         <div className="my-2.5 grid grid-cols-3 gap-2">
           <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3">Tertangkap</div>
+            <div className="text-[11.5px] font-semibold text-ink-3">Tertangkap</div>
             <div className="font-display text-2xl font-extrabold tabular-nums text-ok" data-testid="skor-tertangkap">
-              {h ? `${h.perGroup.delisting.hits}/${h.perGroup.delisting.total}` : "–"}
+              {h ? `${h.perGroup.delisting.hits}/${h.perGroup.delisting.total}` : <span className="font-sans text-[13px] font-semibold text-ink-3">belum diuji</span>}
             </div>
             <div className="text-[11px] text-ink-2">dari yang dihapus dari bursa</div>
           </div>
           <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3"><Istilah id="lebih_awal">Lebih awal</Istilah></div>
+            <div className="text-[11.5px] font-semibold text-ink-3"><Istilah id="lebih_awal">Lebih awal</Istilah></div>
             <div className="font-display text-2xl font-extrabold tabular-nums text-warn" data-testid="skor-lead">
-              {h ? angkaId(h.leadMonthsAvg, " bln") : "–"}
+              {h ? angkaId(h.leadMonthsAvg, " bln") : <span className="font-sans text-[13px] font-semibold text-ink-3">belum diuji</span>}
             </div>
             <div className="text-[11px] text-ink-2">rata-rata sebelum kejadian</div>
           </div>
           <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3"><Istilah id="alarm_palsu">Alarm palsu</Istilah></div>
+            <div className="text-[11.5px] font-semibold text-ink-3"><Istilah id="alarm_palsu">Alarm palsu</Istilah></div>
             <div className="font-display text-2xl font-extrabold tabular-nums text-crit" data-testid="skor-palsu">
-              {h ? `${h.falseAlarms}/${h.controls}` : "–"}
+              {h ? `${h.falseAlarms}/${h.controls}` : <span className="font-sans text-[13px] font-semibold text-ink-3">belum diuji</span>}
             </div>
             <div className="text-[11px] text-ink-2">dari <Istilah id="kontrol_sehat">saham sehat</Istilah></div>
           </div>

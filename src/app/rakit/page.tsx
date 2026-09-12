@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function HalamanRakit() {
   return (
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
-      <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">{TEKS.eyebrow}</p>
+      <p className="text-[12px] font-semibold text-ink-3">{TEKS.eyebrow}</p>
       <h1 className="mb-1.5 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">
         {TEKS.judul}
       </h1>

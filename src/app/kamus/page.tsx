@@ -14,12 +14,12 @@ export const metadata: Metadata = {
 export default function HalamanKamus() {
   return (
     <main className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="kamus">
-      <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">Kamus</p>
+      <p className="text-[12px] font-semibold text-ink-3">Kamus</p>
       <h1 className="mb-2 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">
         Istilah yang dipakai, dijelaskan seperti ke teman.
       </h1>
       <p className="m-0 mb-5 max-w-[70ch] text-ink-2">
-        Setiap istilah di layar lain bergaris putus-putus — arahkan kursor atau ketuk untuk membaca artinya. Halaman ini
+        Setiap istilah di layar lain bergaris putus-putus, arahkan kursor atau ketuk untuk membaca artinya. Halaman ini
         memuat semuanya sekaligus, dengan perumpamaan dan keterbatasan datanya yang jujur.
       </p>
 

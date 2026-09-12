@@ -49,7 +49,7 @@ export function templatePenjelasan(h: HasilSaham, today: string): string {
   const alarm = h.alarmBerbunyi.map((a) => `“${a.name}”`).join(", ");
   if (h.alasan.length === 0) {
     kalimat.push(
-      `${h.symbol} — ${LABEL_STATUS[h.status]}: tidak ada satu pun syarat yang terpenuhi pada ${fmtTanggal(today)}.`,
+      `${h.symbol} (${LABEL_STATUS[h.status]}): tidak ada satu pun syarat yang terpenuhi pada ${fmtTanggal(today)}.`,
     );
   } else {
     const daftar = h.alasan
@@ -59,7 +59,7 @@ export function templatePenjelasan(h: HasilSaham, today: string): string {
       )
       .join("; ");
     kalimat.push(
-      `${h.symbol} — ${LABEL_STATUS[h.status]}: ${h.alasan.length} syarat terpenuhi pada ${fmtTanggal(today)}: ${daftar}.`,
+      `${h.symbol} (${LABEL_STATUS[h.status]}): ${h.alasan.length} syarat terpenuhi pada ${fmtTanggal(today)}: ${daftar}.`,
     );
     if (alarm) kalimat.push(`Alarm yang berbunyi: ${alarm}.`);
   }

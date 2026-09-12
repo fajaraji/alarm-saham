@@ -84,7 +84,7 @@ export function Grafik({
                     cy={y}
                     r={k.tingkat === "info" ? 3 : 5}
                   >
-                    <title>{`${k.date} — ${k.judul}`}</title>
+                    <title>{`${k.date}: ${k.judul}`}</title>
                   </circle>
                 ))}
             </g>

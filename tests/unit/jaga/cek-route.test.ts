@@ -40,7 +40,7 @@ describe("POST /api/portofolio/cek (fixture, tanpa DB/kunci)", () => {
     expect(sril.kelasB.status).toBe("nonaktif");
     expect(bbca.status).toBe("hijau");
     const teks = json.penjelasan.find((p: { symbol: string }) => p.symbol === "SRIL").teks;
-    expect(teks).toMatch(/SRIL — alarm berbunyi/);
+    expect(teks).toMatch(/SRIL \(alarm berbunyi\)/);
     expect(teks).toMatch(/bukan saran investasi\.$/);
   });
 

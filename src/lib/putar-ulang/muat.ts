@@ -113,7 +113,7 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
   }
   if (contoh && status !== "tidak_ada") {
     catatan.push(
-      "Server ini belum terhubung ke database Sectors, jadi yang tampil adalah data CONTOH (fixture universe-kecil.json): tanggal suspensi dan daftar kuartal meniru data nyata, tetapi angka keuangan, rasio rights issue, dan filing bersifat ilustratif — bukan angka resmi.",
+      "Server ini belum terhubung ke database Sectors, jadi yang tampil adalah data CONTOH (fixture universe-kecil.json): tanggal suspensi dan daftar kuartal meniru data nyata, tetapi angka keuangan, rasio rights issue, dan filing bersifat ilustratif, bukan angka resmi.",
     );
   }
   if (status !== "tidak_ada" && events.filings.length === 0) {
@@ -121,7 +121,7 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
   }
   if (status === "lengkap" && events.financials.length === 0) {
     catatan.push(
-      "Angka keuangan kuartalan (ekuitas) tidak ditarik untuk emiten ini — hemat kredit; blok ekuitas negatif tidak bisa dinilai.",
+      "Angka keuangan kuartalan (ekuitas) tidak ditarik untuk emiten ini: hemat kredit; blok ekuitas negatif tidak bisa dinilai.",
     );
   }
 

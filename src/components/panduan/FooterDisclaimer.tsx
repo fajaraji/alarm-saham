@@ -34,7 +34,7 @@ export function FooterDisclaimer({ sumberNyata }: PropsFooterDisclaimer) {
         ) : (
           <>
             Server ini belum terhubung ke database Sectors, jadi yang tampil adalah <b>data contoh</b> (bukan data Sectors
-            nyata): bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif — jangan dibaca sebagai fakta
+            nyata): bentuknya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif. Jangan dibaca sebagai fakta
             tentang emiten mana pun. Tidak ada penilaian tentang emiten mana pun.
           </>
         )}{" "}

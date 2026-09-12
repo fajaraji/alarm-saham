@@ -46,7 +46,7 @@ export function PanelAi(p: Props) {
       data-testid="panel-ai"
       className="mt-3 rounded-r-[10px] border-l-[3px] border-accent bg-surface-2 px-3.5 py-2.5 text-[13px]"
     >
-      <h3 id="judul-ai" className="mb-1 text-[11px] font-bold uppercase tracking-wider text-accent">
+      <h3 id="judul-ai" className="mb-1 text-[12px] font-bold text-accent">
         {TEKS.aiJudul}
       </h3>
 
@@ -75,7 +75,7 @@ export function PanelAi(p: Props) {
             <ul className="list-none p-0" aria-label="Emiten yang dibahas">
               {d.emitenDibahas.map((e) => (
                 <li key={e.symbol} className="mt-1">
-                  <b className="font-mono font-medium">{e.symbol}</b> — {e.sebab}
+                  <b className="font-mono font-medium">{e.symbol}</b>: {e.sebab}
                   {e.buktiTanggal.length > 0 ? (
                     <span className="font-mono text-[11.5px] text-ink-3"> ({e.buktiTanggal.join(", ")})</span>
                   ) : null}
@@ -102,7 +102,7 @@ export function PanelAi(p: Props) {
                       className="block text-[11.5px] font-semibold text-warn"
                       data-testid={`tinjau-usulan-${u.kind}`}
                     >
-                      ⚠ Alasan ini perlu kamu nilai sendiri — ada frasa yang menyerupai saran investasi.
+                      ⚠ Alasan ini perlu kamu nilai sendiri: ada frasa yang menyerupai saran investasi.
                     </span>
                   ) : null}
                   <span className="block text-[11.5px] font-normal text-ink-2">{u.alasan}</span>
@@ -122,7 +122,7 @@ export function PanelAi(p: Props) {
                     {t.input && typeof t.input === "object" && Object.keys(t.input as object).length > 0 ? (
                       <span className="font-mono text-ink-3"> {JSON.stringify(t.input)}</span>
                     ) : null}
-                    {" — "}
+                    {": "}
                     {t.ringkasanHasil}
                   </li>
                 ))}

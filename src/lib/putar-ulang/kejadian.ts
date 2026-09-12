@@ -71,7 +71,7 @@ export function sumberSectors(endpoint: string, url: string | null = null): Sumb
 
 /** Sumber untuk data fixture: tidak pernah mengaku berasal dari feed Sectors. */
 export function sumberContoh(endpoint: string): SumberKejadian {
-  return { nama: `data contoh — fixture universe-kecil.json (bentuknya meniru ${endpoint})`, url: null };
+  return { nama: `data contoh: fixture universe-kecil.json (bentuknya meniru ${endpoint})`, url: null };
 }
 
 export interface LaporanHilang {

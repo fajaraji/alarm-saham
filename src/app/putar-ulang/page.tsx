@@ -52,7 +52,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
             <Istilah id="delisting">dihapus dari bursa</Istilah>, {jumlah.watchlist}{" "}
             <Istilah id="pemantauan_khusus">pemantauan khusus</Istilah>, {jumlah.control}{" "}
             <Istilah id="kontrol_sehat">kontrol sehat</Istilah>){contoh ? "" : " ditambah feed suspensi seluruh bursa 2018–2026"}.{" "}
-            {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis — setiap penarikan memakai{" "}
+            {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis. Setiap penarikan memakai{" "}
             <Istilah id="kredit_sectors">kredit</Istilah> dan diputuskan manusia.
           </p>
           <MintaTarik symbol={kode} />
@@ -75,7 +75,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
         {contoh ? (
           <>
             Server ini <b>belum terhubung ke database Sectors</b>, jadi yang tampil adalah data contoh ({jumlah.total} emiten)
-            untuk mendemokan cara kerja layar ini. Bentuk datanya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif —
+            untuk mendemokan cara kerja layar ini. Bentuk datanya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif.
             jangan dibaca sebagai fakta tentang emiten yang bersangkutan.
           </>
         ) : (
@@ -90,7 +90,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           <>Ketik kode saham (4 huruf) atau klik contoh kasus nyata.</>,
           <>Geser slider waktu ke kiri untuk mundur ke masa lalu.</>,
           <>
-            Lihat lampu dan daftar tanda: mana yang sudah kelihatan pada tanggal itu — mis.{" "}
+            Lihat lampu dan daftar tanda: mana yang sudah kelihatan pada tanggal itu, mis.{" "}
             <Istilah id="laporan_hilang">laporan hilang</Istilah> atau{" "}
             <Istilah id="ekuitas_negatif">utang lebih besar dari harta</Istilah>.
           </>,

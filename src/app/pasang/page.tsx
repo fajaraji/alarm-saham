@@ -19,7 +19,7 @@ export default async function HalamanPasang() {
   const { nyata } = await sumberSitus();
   return (
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
-      <p className="text-[11px] font-semibold uppercase tracking-[.08em] text-ink-3">{TEKS.eyebrow}</p>
+      <p className="text-[12px] font-semibold text-ink-3">{TEKS.eyebrow}</p>
       <h1 className="mb-1.5 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">{TEKS.judul}</h1>
       <p className="mb-4 max-w-[70ch] text-[13.5px] text-ink-2">
         Tambahkan saham yang kamu pegang, pilih alarm yang aktif, lalu klik Cek sekarang.{" "}
@@ -40,7 +40,7 @@ export default async function HalamanPasang() {
             Klik <strong>Cek sekarang</strong>. Hijau = aman menurut alarmmu, kuning = satu tanda, merah = alarm berbunyi
             (mis. <Istilah id="suspensi">disuspensi</Istilah> atau <Istilah id="ritel_dominan">ritel dominan</Istilah>).
           </>,
-          <>Baca pesan penjelasan: syarat mana yang terpenuhi, tanggalnya, dan sumbernya — bukan cuma angka.</>,
+          <>Baca pesan penjelasan: syarat mana yang terpenuhi, tanggalnya, dan sumbernya, bukan cuma angka.</>,
         ]}
       />
 
