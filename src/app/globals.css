@@ -154,21 +154,13 @@ html:not([data-siap]) .butuh-hidrasi {
   }
 }
 
-/* Baris linimasa bukti di beranda masuk berurutan tanggal.
-   MOTION_INTENSITY 4 (transisi CSS saja, tanpa library animasi). Alasannya bisa
-   ditulis satu kalimat, seperti yang dituntut taste-skill: klaim produk ini
-   adalah bahwa tanda bahayanya datang BERURUTAN sebelum kejadian, jadi urutan
-   itulah yang dianimasikan. Hanya transform + opacity (Section 6.A), dan seluruh
-   gerakan dibatalkan saat pengguna meminta gerakan dikurangi (Section 6.B). */
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes beranda-masuk {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-  }
-  .beranda-masuk {
-    animation: beranda-masuk 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-    animation-delay: calc(var(--i, 0) * 70ms);
-  }
-}
+/* Linimasa bukti di beranda TIDAK dianimasikan.
+   Versi pertama memberi tiap baris animasi masuk berurutan (opacity 0 -> 1 plus
+   geser 6px) dengan alasan yang sah: klaim produk ini adalah bahwa tandanya
+   datang berurutan. Gerbang aksesibilitas CI menolaknya di KEDUA tema, karena
+   axe mengukur kontras warna saat barisnya masih tembus pandang di tengah
+   animasi, dan melaporkannya sebagai pelanggaran serius. Aturan taste-skill
+   untuk keadaan ini tidak ambigu: kalau gerak tidak bisa dikirim tanpa rusak,
+   turunkan dialnya, jangan kirim gerak setengah jadi. MOTION_INTENSITY beranda
+   karena itu 3: hover dan :active saja. Urutan tanggalnya tetap terbaca, karena
+   yang menyampaikannya memang datanya, bukan animasinya. */

@@ -49,17 +49,13 @@ export function LinimasaBukti({ symbol, namaEmiten, tanda, tanggalKejadian, bula
           {contoh ? "data contoh" : "data resmi lewat Sectors"}
         </span>
       </figcaption>
-
-      {/* Baris data dipisah garis 1px, tanpa kotak kartu per baris: VISUAL_DENSITY 6.
-          Gerak masuk berurutan tanggal punya alasan yang bisa ditulis satu kalimat:
-          klaim produk ini adalah bahwa tandanya datang BERURUTAN sebelum kejadian,
-          jadi urutan itu yang dianimasikan. Dimatikan pada prefers-reduced-motion. */}
+      {/* Baris data dipisah garis 1px, tanpa kotak kartu per baris:
+          VISUAL_DENSITY 6. Tanpa animasi masuk, lihat catatan di globals.css. */}
       <ol className="m-0 list-none p-0">
-        {tanda.map((k, i) => (
+        {tanda.map((k) => (
           <li
             key={k.id}
-            className="beranda-masuk flex items-baseline gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
-            style={{ "--i": i } as React.CSSProperties}
+            className="flex items-baseline gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
           >
             <time className="w-[88px] shrink-0 font-mono text-[12.5px] text-ink-3" dateTime={k.date}>
               {k.date}
