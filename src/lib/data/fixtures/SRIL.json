@@ -1,0 +1,153 @@
+{
+  "_catatan": "SRIL (Sri Rejeki Isman): contoh emiten bermasalah. Bentuk mengikuti respons nyata Sectors v2 (tiket 04): kuartal tersedia 2020 q1-2024 q3 (sesuai API), sesudahnya tidak ada laporan. Angka keuangan ilustratif (perkiraan, bukan angka resmi). Nama pemegang saham disamarkan. Persentase saham dalam PERSEN.",
+  "quarterly_financial_dates": {
+    "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+    "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+    "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+    "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+    "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"]]
+  },
+  "filings": [
+    {
+      "symbol": "SRIL",
+      "title": "Perubahan kepemilikan Direktur A (disamarkan) di Sri Rejeki Isman",
+      "body": "Direktur A (disamarkan) menjual 30.000.000 saham.",
+      "holder_name": "Direktur A (disamarkan)",
+      "holder_type": "insider",
+      "transaction_type": "sell",
+      "holding_before": 152000000,
+      "holding_after": 122000000,
+      "amount_transaction": 30000000,
+      "price": 176,
+      "transaction_value": 5280000000,
+      "share_percentage_before": 0.74,
+      "share_percentage_after": 0.59,
+      "share_percentage_transaction": 0.15,
+      "tags": ["insider-trading"],
+      "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-sril-2021-01.pdf",
+      "timestamp": "2021-01-14T00:00:00"
+    },
+    {
+      "symbol": "SRIL",
+      "title": "Perubahan kepemilikan Komisaris B (disamarkan) di Sri Rejeki Isman",
+      "body": "Komisaris B (disamarkan) menjual 38.000.000 saham.",
+      "holder_name": "Komisaris B (disamarkan)",
+      "holder_type": "insider",
+      "transaction_type": "sell",
+      "holding_before": 98000000,
+      "holding_after": 60000000,
+      "amount_transaction": 38000000,
+      "price": 158,
+      "transaction_value": 6004000000,
+      "share_percentage_before": 0.48,
+      "share_percentage_after": 0.29,
+      "share_percentage_transaction": 0.19,
+      "tags": ["insider-trading"],
+      "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-sril-2021-03.pdf",
+      "timestamp": "2021-03-22T00:00:00"
+    }
+  ],
+  "corporate_actions": {
+    "symbol": "SRIL",
+    "dividend": [],
+    "upcoming_dividend": [],
+    "stock_split": [],
+    "right_issue": [],
+    "warrant": [],
+    "bonus": [],
+    "agm": []
+  },
+  "quarterly_financials": [
+    {
+      "symbol": "SRIL",
+      "date": "2020-12-31",
+      "report_date": "2020-12-31",
+      "revenue": 1284000000,
+      "earnings": 85000000,
+      "total_assets": 1650000000,
+      "total_equity": 720000000,
+      "total_liabilities": 930000000,
+      "total_debt": 780000000,
+      "operating_cash_flow": 42000000,
+      "investing_cash_flow": -35000000,
+      "financing_cash_flow": -12000000,
+      "ebit": 160000000,
+      "ebitda": 215000000
+    },
+    {
+      "symbol": "SRIL",
+      "date": "2021-03-31",
+      "report_date": "2021-03-31",
+      "revenue": 290000000,
+      "earnings": 14000000,
+      "total_assets": 1660000000,
+      "total_equity": 730000000,
+      "total_liabilities": 930000000,
+      "total_debt": 785000000,
+      "operating_cash_flow": 8000000,
+      "investing_cash_flow": -6000000,
+      "financing_cash_flow": -3000000,
+      "ebit": 35000000,
+      "ebitda": 48000000
+    },
+    {
+      "symbol": "SRIL",
+      "date": "2021-06-30",
+      "report_date": "2021-06-30",
+      "revenue": 410000000,
+      "earnings": -1080000000,
+      "total_assets": 560000000,
+      "total_equity": -350000000,
+      "total_liabilities": 910000000,
+      "total_debt": 790000000,
+      "operating_cash_flow": -20000000,
+      "investing_cash_flow": -2000000,
+      "financing_cash_flow": -1000000,
+      "ebit": -1050000000,
+      "ebitda": -1020000000
+    },
+    {
+      "symbol": "SRIL",
+      "date": "2021-09-30",
+      "report_date": "2021-09-30",
+      "revenue": 520000000,
+      "earnings": -1120000000,
+      "total_assets": 540000000,
+      "total_equity": -390000000,
+      "total_liabilities": 930000000,
+      "total_debt": 800000000,
+      "operating_cash_flow": -25000000,
+      "investing_cash_flow": -1000000,
+      "financing_cash_flow": 0,
+      "ebit": -1090000000,
+      "ebitda": -1055000000
+    }
+  ],
+  "broker_summary": {
+    "symbol": "SRIL",
+    "start": "2021-05-10",
+    "end": "2021-05-20",
+    "data": [
+      {
+        "date": "2021-05-17",
+        "summary": [
+          { "broker_code": "YP", "bfreq": 1210, "blot": 45200, "bval": 7960000000, "bavg_per_share": 176.1, "sfreq": 980, "slot": 38100, "sval": 6710000000, "savg_per_share": 176.1, "nlot": 7100, "nval": 1250000000, "navg_per_share": 176.1 },
+          { "broker_code": "PD", "bfreq": 640, "blot": 21500, "bval": 3790000000, "bavg_per_share": 176.3, "sfreq": 1130, "slot": 40200, "sval": 7080000000, "savg_per_share": 176.1, "nlot": -18700, "nval": -3290000000, "navg_per_share": 176.1 },
+          { "broker_code": "CC", "bfreq": 210, "blot": 8800, "bval": 1550000000, "bavg_per_share": 176.1, "sfreq": 340, "slot": 15600, "sval": 2750000000, "savg_per_share": 176.3, "nlot": -6800, "nval": -1200000000, "navg_per_share": 176.3 }
+        ]
+      }
+    ]
+  },
+  "listing_performance": {
+    "symbol": "SRIL",
+    "chg_7d": -0.0417,
+    "chg_30d": -0.0833,
+    "chg_90d": -0.125,
+    "chg_365d": -0.2083
+  },
+  "daily": [
+    { "symbol": "SRIL", "date": "2021-05-12", "close": 148, "open": 150, "high": 152, "low": 146, "volume": 285400000, "market_cap": 3030000000000 },
+    { "symbol": "SRIL", "date": "2021-05-17", "close": 146, "open": 148, "high": 150, "low": 144, "volume": 312800000, "market_cap": 2990000000000 },
+    { "symbol": "SRIL", "date": "2021-05-18", "close": 146, "open": null, "high": 0, "low": 0, "volume": 0, "market_cap": 2990000000000 }
+  ]
+}

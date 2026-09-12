@@ -1,0 +1,9 @@
+{
+  "_catatan": "Respons nyata broker-summary/WIKA: saham tersuspensi, data kosong.",
+  "body": {
+    "symbol": "WIKA.JK",
+    "start": "2026-08-24",
+    "end": "2026-09-06",
+    "data": []
+  }
+}

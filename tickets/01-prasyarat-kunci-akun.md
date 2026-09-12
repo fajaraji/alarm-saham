@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately) — dikerjakan pemilik proyek.
 
-**Status:** manual
+**Status:** manual — sebagian. Dicek 2026-09-07 pagi (keberadaan nilai saja, tanpa membaca isinya):
 
-- [ ] Kedua anggota tim selesai onboarding sectors.app; tim terdaftar; 1.000 kredit tim diklaim
-- [ ] `SECTORS_API_KEY` terisi (wajib sebelum tiket 04)
-- [ ] `ANTHROPIC_API_KEY` terisi + batas belanja bulanan dipasang di console (sebelum tiket 08)
-- [ ] `DATABASE_URL` Neon Postgres terisi (sebelum tiket 05)
-- [ ] `TELEGRAM_BOT_TOKEN` dari @BotFather terisi (opsional; sebelum tiket 12 — jika kosong, fallback in-app)
-- [ ] `gh auth status` menunjukkan login (sudah: akun fajaraji)
-- [ ] `vercel login` selesai (sebelum tiket 16)
+- [x] Kedua anggota tim selesai onboarding sectors.app; tim terdaftar; 1.000 kredit tim diklaim (konfirmasi pemilik)
+- [x] `SECTORS_API_KEY` terisi
+- [ ] `ANTHROPIC_API_KEY` **KOSONG** → uji nyata tiket 08 dan fitur AI di UI menunggu ini
+- [ ] `DATABASE_URL` **KOSONG** → tiket 07 memakai PGlite lokal; **blocker deploy production (tiket 16)**; setelah diisi jalankan `npm run db:migrate` lalu `npm run db:sync -- --from=pglite --to=neon`
+- [ ] `TELEGRAM_BOT_TOKEN` **KOSONG** → tiket 12 memakai fallback notifikasi in-app (aturan cadangan §7.5)
+- [x] `gh auth status` menunjukkan login (akun fajaraji)
+- [ ] `vercel login` belum diverifikasi (sebelum tiket 16)

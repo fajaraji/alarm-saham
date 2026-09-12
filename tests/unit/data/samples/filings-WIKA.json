@@ -1,0 +1,83 @@
+{
+  "_catatan": "Respons nyata /v2/filings/?symbol=WIKA; nama pemegang, title, body DISAMARKAN.",
+  "body": {
+    "results": [
+      {
+        "title": "Perubahan posisi Pemegang 1 (disamarkan) di WIKA",
+        "body": "Pemegang 1 (disamarkan) melakukan transaksi 362917026 saham.",
+        "source": "https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_KSEI/LK-09012026-9522-00.pdf-0.pdf",
+        "timestamp": "2026-01-09T10:22:00",
+        "sector": "infrastructures",
+        "sub_sector": "heavy-constructions-civil-engineering",
+        "tags": [
+          "share-transfer"
+        ],
+        "symbol": "WIKA.JK",
+        "transaction_type": "others",
+        "holder_type": "insider",
+        "holder_name": "Pemegang 1 (disamarkan)",
+        "holding_before": 0,
+        "holding_after": 362917027,
+        "amount_transaction": 362917026,
+        "price": 100,
+        "transaction_value": 36291702700,
+        "price_transaction": [
+          {
+            "date": "2026-01-06",
+            "type": "others",
+            "price": 100,
+            "amount_transacted": 362917027
+          }
+        ],
+        "share_percentage_before": 0,
+        "share_percentage_after": 0.91,
+        "share_percentage_transaction": 0.91,
+        "idx_investor_slug": null,
+        "idx_conglomerates_group_slug": null
+      },
+      {
+        "title": "Perubahan posisi Pemegang 2 (disamarkan) di WIKA",
+        "body": "Pemegang 2 (disamarkan) melakukan transaksi 362917027 saham.",
+        "source": "https://www.idx.co.id/StaticData/NewsAndAnnouncement/ANNOUNCEMENTSTOCK/From_KSEI/LK-09012026-6180-00.pdf-0.pdf",
+        "timestamp": "2026-01-09T10:08:29",
+        "sector": "infrastructures",
+        "sub_sector": "heavy-constructions-civil-engineering",
+        "tags": [
+          "share-transfer"
+        ],
+        "symbol": "WIKA.JK",
+        "transaction_type": "others",
+        "holder_type": "insider",
+        "holder_name": "Pemegang 2 (disamarkan)",
+        "holding_before": 36291702780,
+        "holding_after": 35928785753,
+        "amount_transaction": 362917027,
+        "price": 100,
+        "transaction_value": 36291702700,
+        "price_transaction": [
+          {
+            "date": "2026-01-06",
+            "type": "others",
+            "price": 100,
+            "amount_transacted": 362917027
+          }
+        ],
+        "share_percentage_before": 91.018,
+        "share_percentage_after": 90.11,
+        "share_percentage_transaction": 0.908,
+        "idx_investor_slug": null,
+        "idx_conglomerates_group_slug": null
+      }
+    ],
+    "pagination": {
+      "total_count": 2,
+      "showing": 2,
+      "limit": 20,
+      "offset": 0,
+      "has_next": false,
+      "has_previous": false,
+      "next_offset": null,
+      "previous_offset": null
+    }
+  }
+}

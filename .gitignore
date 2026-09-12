@@ -36,3 +36,21 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+# worktree agen
+.worktrees/
+
+
+# PGlite lokal (drizzle-kit migrate tanpa DATABASE_URL), salinan lama yang
+# disisihkan, dan database yang dibangun `npm run e2e:seed` untuk gerbang e2e
+# jalur DB (.pglite-e2e / .pglite-benih-uji). Isi PGlite adalah data biner
+# puluhan MB — yang di-commit hanya benihnya (tests/e2e/seed/universe-uji.json).
+.pglite/
+.pglite-*/
+
+# cache respons & buku kredit Sectors (lokal, tidak pernah masuk git)
+.cache/
+
+# artefak Playwright (laporan, trace, screenshot mode terang/gelap)
+playwright-report/
+test-results/
+tests/e2e/screenshots/

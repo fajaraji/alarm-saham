@@ -6,10 +6,10 @@ Endpoint minimum yang didukung: suspensions (universe & per simbol), quarterly f
 
 **Blocked by:** 02 (Bootstrap repo & CI)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 02:16 WIB di worktree t03 (lint/typecheck/test/build exit 0; 52 tes lulus; CLI tanpa kunci exit 1 dengan pesan jelas). Catatan: bentuk respons `quarterly_financial_dates` dan pembungkus broker-summary masih asumsi dari dokumentasi — dicek terhadap data nyata di tiket 04.
 
-- [ ] Tes unit (mock HTTP): ledger bertambah sesuai biaya per endpoint; penolakan saat sisa < cadangan; cache hit tidak menambah ledger; 404 dicatat 1 kredit; 400/429/5xx tidak dicatat
-- [ ] `FixtureProvider` memenuhi antarmuka yang sama dan dipakai oleh tes
-- [ ] CLI `npm run sectors -- <endpoint> <symbol>` berjalan; tanpa `SECTORS_API_KEY` berhenti dengan pesan jelas (exit ≠ 0), bukan crash
-- [ ] Kunci tidak pernah dicetak ke log/output
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Tes unit (mock HTTP): ledger bertambah sesuai biaya per endpoint; penolakan saat sisa < cadangan; cache hit tidak menambah ledger; 404 dicatat 1 kredit; 400/429/5xx tidak dicatat
+- [x] `FixtureProvider` memenuhi antarmuka yang sama dan dipakai oleh tes
+- [x] CLI `npm run sectors -- <endpoint> <symbol>` berjalan; tanpa `SECTORS_API_KEY` berhenti dengan pesan jelas (exit ≠ 0), bukan crash
+- [x] Kunci tidak pernah dicetak ke log/output
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

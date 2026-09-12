@@ -4,9 +4,9 @@
 
 **Blocked by:** 07 (Penarikan universe)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 di checkout utama (lint/typecheck/test/build exit 0; 217 tes; 6 e2e Playwright dengan data PGlite nyata). Termasuk integrasi `getEventSource()` (Neon → PGlite → fixture) dan **skor nyata aturan default**: 26/74 tertangkap (delisting 6/18, pemantauan 20/56), lead rata-rata 9 bln, alarm palsu 1/30 — dicatat di docs/data-proof.md.
 
-- [ ] Uji komponen: slider mengubah set kejadian "sudah terjadi" secara benar (batas tanggal inklusif)
-- [ ] Uji end-to-end: cari SRIL → garis waktu dari DB; cari kode tak dikenal → pesan jujur
-- [ ] Setiap kejadian menampilkan sumber (endpoint/BEI) dan tautan bila ada
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Uji komponen: slider mengubah set kejadian "sudah terjadi" secara benar (batas tanggal inklusif)
+- [x] Uji end-to-end: cari SRIL → garis waktu dari DB; cari kode tak dikenal → pesan jujur; COWL → hanya suspensi + catatan 404
+- [x] Setiap kejadian menampilkan sumber (endpoint/BEI) dan tautan bila ada
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

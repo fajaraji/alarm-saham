@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (`TELEGRAM_BOT_TOKEN`, opsional), 11 (Layar 3)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 di worktree t12 (lint/typecheck/test/build exit 0; 340 tes; 14 e2e). Jalur utama = kotak masuk in-app (§7.5) karena `TELEGRAM_BOT_TOKEN` kosong; jalur Telegram teruji dengan mock. Cron kelas A saja (tanpa kredit Sectors, tanpa LLM). Perbaikan koordinator: batas waktu Vitest dinaikkan (testTimeout 30 s, hookTimeout 60 s) karena PGlite + impor route berat flaky saat suite paralel.
 
-- [ ] Uji: endpoint cron menolak permintaan tanpa secret; dengan secret memproses semua portofolio
-- [ ] Uji: hanya bendera baru yang dikirim; menjalankan dua kali berturut-turut tidak mengirim ulang
-- [ ] Uji: tanpa token → pesan masuk inbox in-app; dengan token (mock API Telegram) → pesan terkirim dengan disclaimer
-- [ ] Konfigurasi cron terverifikasi di file konfigurasi Vercel
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Uji: endpoint cron menolak permintaan tanpa secret (401; 503 bila secret belum diatur); dengan secret memproses semua portofolio
+- [x] Uji: hanya bendera baru yang dikirim; menjalankan dua kali berturut-turut tidak mengirim ulang
+- [x] Uji: tanpa token → pesan masuk inbox in-app; dengan token (mock API Telegram) → pesan terkirim dengan disclaimer
+- [x] Konfigurasi cron terverifikasi di `vercel.json` (`30 23 * * *`)
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

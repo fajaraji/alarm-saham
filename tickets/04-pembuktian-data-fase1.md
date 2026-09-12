@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (kunci `SECTORS_API_KEY`), 03 (Klien Sectors)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 02:50 WIB (lint/typecheck/test/build exit 0; 80 tes; ledger: run pertama 53 kredit, kumulatif 68 karena 6×404 terbayar dua kali sebelum cache-404 diperbaiki — dicatat jujur di docs/data-proof.md; dry-run 0 kredit, 44/44 cache).
 
-- [ ] Skrip berjalan sekali dengan total kredit ≤ 60 (bukti: buku kredit)
-- [ ] `docs/data-proof.md` memuat tabel per endpoint × emiten: tersedia/tidak, rentang tanggal terawal–terakhir, jumlah baris, kredit
-- [ ] Keputusan tertulis: blok kelas A final, universe uji utama, dan apakah aturan cadangan §7.1/§7.2 terpicu
-- [ ] Semua respons tersimpan di cache sehingga tiket 07 tidak menarik ulang enam emiten ini
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Skrip berjalan sekali dengan total kredit ≤ 60 (run pertama 53; kumulatif 68 — lihat catatan)
+- [x] `docs/data-proof.md` memuat tabel per endpoint × emiten: tersedia/tidak, rentang tanggal terawal–terakhir, jumlah baris, kredit
+- [x] Keputusan tertulis: blok kelas A final, universe uji utama, dan apakah aturan cadangan §7.1/§7.2 terpicu (7.1 tidak; 7.2 hanya untuk blok insider)
+- [x] Semua respons tersimpan di cache sehingga tiket 07 tidak menarik ulang enam emiten ini
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

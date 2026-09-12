@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Folder lokal proyek ini (bukan sumber): worktree agen, cache Sectors, PGlite, coverage
+    ".worktrees/**",
+    ".cache/**",
+    ".pglite/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 

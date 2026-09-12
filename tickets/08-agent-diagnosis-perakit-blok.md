@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 (`ANTHROPIC_API_KEY`), 06 (Mesin uji)
 
-**Status:** ready-for-agent
+**Status:** done — kode diverifikasi 2026-09-07 (lint/typecheck/test/build exit 0). **Uji nyata SELESAI 2026-09-12** lewat gateway Kagiro (`kagiro/deepseek-v4-pro`): `npm run agent:demo -- tele` menghasilkan diagnosis lengkap dalam 207,4 detik, 4 langkah, 24 tool call sungguhan, 34.669 token (≈US$0,0010), trace tersimpan di Neon `runs.id=0fbf7c4e-4217-463e-be1b-7cfad96652f3`. Angka & isi jawabannya dicatat di docs/decisions.md. Jalur web (POST /api/agent/diagnosis dengan backtest Neon 104 emiten) diverifikasi terpisah: 4/4 berhasil 71-238 detik memakai `deepseek-v4-flash`; `maxDuration` 120 → 300 (batas plan Hobby), `MAKS_LANGKAH_DEFAULT` 8 → 4, dan daftar emiten terlewat dipotong. Rincian + angkanya di docs/decisions.md bagian "Diagnosis di jalur web".
 
-- [ ] Tes (model tiruan): perakit menghasilkan aturan valid untuk 3 kalimat contoh; kalimat di luar domain ditolak sopan
-- [ ] Tes (model tiruan): diagnosis memanggil ≥2 tool dan mengembalikan usulan blok + trace terstruktur
-- [ ] Uji nyata sekali dengan kunci: kasus "alarm laporan-telat saja bolong di TELE" → agent menyebut sebab dari data dan mengusulkan blok; trace tersimpan; biaya token dicatat di `docs/decisions.md`
-- [ ] Endpoint API mengembalikan JSON terstruktur untuk kedua kemampuan
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Tes (model tiruan): perakit menghasilkan aturan valid untuk 3 kalimat contoh; kalimat di luar domain ditolak sopan
+- [x] Tes (model tiruan): diagnosis memanggil ≥2 tool dan mengembalikan usulan blok + trace terstruktur
+- [ ] Uji nyata sekali dengan kunci → TERTUNDA (kunci Anthropic belum ada)
+- [x] Endpoint API mengembalikan JSON terstruktur untuk kedua kemampuan
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

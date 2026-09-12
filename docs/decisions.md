@@ -1,0 +1,248 @@
+# Log keputusan (bertanggal)
+
+Catatan keputusan teknis dan produk Alarm Saham beserta aturan cadangan (PLAN.md §7) yang terpicu. Sumber tiap butir disebut dalam kurung; angka kredit selalu dari buku kredit (`api_ledger` / `.cache/sectors/ledger.jsonl`), bukan perkiraan.
+
+## Sebelum kode ditulis — PLAN.md (Ronde 1 & 2)
+
+| Keputusan | Pilihan | Alasan |
+|---|---|---|
+| Inti produk | Langkah 2: rakit alarm + uji ke masa lalu | satu-satunya bagian yang tidak dimiliki BEI/Stockbit/Ajaib (PLAN §1 Q2) |
+| Angka hasil uji | hanya angka nyata dari data Sectors | kriteria juri "not faked for the demo" (Q4) |
+| Penyebutan emiten nyata | hanya fakta resmi + tautan sumber; tanpa kata "pailit akan", "gorengan", "berbahaya" | bukan saran investasi + risiko hukum (Q5) |
+| Kredit API | endpoint universe + cache permanen di DB; per-simbol hanya untuk emiten kunci | 1.000 kredit total (Q6) |
+| Otak AI | agent diagnosis (loop tool-use "kenapa alarm bolong di emiten X") sebagai inti; perakit blok sebagai pelengkap | syarat track: custom agent logic (Q7) |
+| Drag-and-drop | dnd-kit, bukan Blockly/React Flow | aturan datar (daftar syarat + ATAU/DAN) (Q8) |
+| Login | tanpa akun; portofolio per tautan rahasia (UUID) + localStorage | cukup untuk demo, hemat 1–2 hari (§2) |
+| Notifikasi | Telegram bot; fallback in-app/email bila token tidak ada | §2, §7.5 |
+| Komunitas/bagikan | dipotong menjadi "salin tautan alarm" (tiket 17, backlog) | scope 2 orang (§2) |
+| Disclaimer | di footer setiap layar dan setiap pesan keluar | §2 |
+
+## 2026-09-07 — Bootstrap (tiket 02)
+
+- Next.js 16 App Router + TypeScript + Tailwind v4, Vitest, Playwright, husky pre-commit `scripts/check-secrets.mjs`, CI GitHub Actions (lint → typecheck → test → build). Repo publik `fajaraji/alarm-saham` dibuat dalam periode build.
+
+## 2026-09-07 — Klien Sectors, buku kredit, cache (tiket 03)
+
+- Satu antarmuka `DataProvider` dengan dua implementasi: `SectorsProvider` (API + ledger + cache + penolakan bila sisa < cadangan 250, `ALLOW_RESERVE=1` untuk melewati) dan `FixtureProvider`.
+- Aturan biaya diikuti dari dokumentasi Sectors: 2xx ditagih (termasuk hasil kosong), 404 ditagih 1, 400/401/403/429/5xx gratis, financials 1/kuartal, free-float 1/100 emiten, feed 1/halaman.
+
+## 2026-09-06 → 07 — Pembuktian data Fase 1 (tiket 04, `docs/data-proof.md`)
+
+- **Kedalaman data**: suspensions universe sejak 2018-12-28 (padat 2020+); quarterly dates & financials sejak 2020 q1; corporate-actions sampai 2016 (WIKA); **filings tidak ada satu pun ≤ 2023** (feed insider mulai 2024); listing-performance 404 untuk 5 dari 6 emiten.
+- **Emiten delisting masih mengembalikan data per simbol** → §7.1 **tidak terpicu**. Namun suspensi per simbol hanya 1 baris → sejarah suspensi wajib dari feed universe.
+- **§7.2 TERPICU untuk blok "orang dalam menjual"** (kedalaman < 3 tahun): klaim hanya untuk jendela 2024+ dan dalam bulan. Blok lain boleh klaim "sejak 2020".
+- **Definisi blok direvisi**: "laporan telat" → "laporan hilang/berhenti" (endpoint tidak memuat tanggal penyampaian); "aksi dilutif" hanya rights issue (reverse split tidak pernah terlihat); "baru IPO & jatuh" → "jatuh dari puncak 90 hari" (listing-performance dihapus).
+- **Universe skor utama = 59 pemantauan khusus + 30 kontrol; 18 delisting = studi kasus** (kejadian target 2018–2021, sebelum data laporan tersedia).
+- **Kredit**: 68 total (run pertama 53 ≤ batas 60; 12 terbuang karena enam 404 dibayar dua kali sebelum cache-404 diperbaiki). Perbaikan: 404 di-cache 30 hari (`TTL_404_MS`), mode `--dry` wajib sebelum penarikan.
+- §7.3 (5xx berulang) tidak pernah terpicu.
+
+## 2026-09-07 — Skema database (tiket 05)
+
+- Drizzle + Postgres; `drizzle.config.ts` jatuh ke **PGlite `./.pglite`** bila `DATABASE_URL` kosong agar `npm run db:migrate` selalu bisa dibuktikan. Tes integrasi memakai PGlite in-memory (Docker bila ada).
+
+## 2026-09-07 — Mesin uji (tiket 06, `docs/mesin-uji.md`)
+
+- Fungsi `fires(rule, events, t)` murni; sumber kejadian tidak memfilter tanggal, pemotongan `≤ t` di satu tempat (anti-lookahead).
+- Pindai akhir bulan; rentang emiten kena `max(2020-01-31, target − 6 th)` s.d. `< target`; target `< 2021-01-01` ikut total tetapi tidak ikut rata-rata lead.
+- Asumsi "suspensi belum dicabut" (ketat) = tidak ada kuartal laporan baru setelah suspensi — karena feed tidak memuat tanggal pencabutan.
+
+## 2026-09-06 → 07 — Penarikan universe (tiket 07, `docs/universe-pull.md`)
+
+- **`DATABASE_URL` kosong** (tidak ada Neon; agen tidak boleh membuat akun) → semua data, ledger, dan cache di **PGlite berkas `./.pglite`** (tidak di-track git). Jalur ke Neon tanpa kredit: `npm run db:migrate` → `npm run db:sync -- --from=pglite --to=neon`. **Blocker tiket 16.**
+- **Kontrol = 30 pertama alfabetis dari 44 anggota LQ45 tanpa suspensi 2019–2026**, bukan peringkat market cap: screener tidak mengembalikan `market_cap` dan menolak `order_by` (HTTP 400). Memilih ulang berarti tarik ulang ±90 kredit — himpunan dikunci.
+- **8 emiten 404 di `dates`** (COWL, SUGI, MABA, SKYB, KBRI, NUSA, RIMO, SIMA) dicantumkan eksplisit di `DIKETAHUI_404` agar tidak pernah dipanggil lagi (404 ditagih; cache 404 hanya 30 hari).
+- 3 emiten pemantauan tanpa kejadian target (MENN, TGRA, WSKT) diperlakukan "tanpa kejadian" — dilewati mesin, tidak dihitung tertangkap.
+- 5 emiten delisting memakai tanggal catatan publik (ENVY, LMAS, MTRA, SBAT, TELE) karena feed tidak memuat suspensinya.
+- Rate limit 429 (gratis) ditangani dengan tunggu 20 s + jeda 450 ms antar panggilan berbayar.
+- **Kredit tiket 07: 395** (ledger 68 → 463) dari anggaran revisi 433; run ulang 0 kredit (idempoten, dibuktikan). Sisa 537; cadangan juri 250 utuh → **§7.4 (sisa < 300) tidak terpicu**.
+
+## 2026-09-07 — Agent diagnosis & perakit (tiket 08) dan provider LLM (tiket 08b)
+
+- Vercel AI SDK v7: perakit = `generateText` + `Output.object(RuleSchema)` → `parseRule` ulang + sensor kata terlarang; diagnosis = loop tool-use `stopWhen: isStepCount(8)` dengan tools `listMissed`, `getSuspensions`, `getReportDates`, `getFilings`, `getCorporateActions`, `getFinancials`, `runAlarmOn`; `trace` disusun dari `result.steps` (tool call sungguhan), maksimal 2 usulan blok.
+- **Pemilik tidak punya langganan Anthropic → DeepSeek jadi provider default** (`LLM_PROVIDER`, otomatis dari kunci yang ada). Alias `deepseek-chat`/`deepseek-reasoner` dipensiunkan DeepSeek 2026-07-24 → `deepseek-v4-flash` (default), `DEEPSEEK_REASONER=1` → `deepseek-v4-pro`. Opsi khusus Anthropic (adaptive thinking, cache prompt) hanya dipasang saat provider Anthropic.
+- **Uji nyata dengan kunci belum pernah dijalankan**: `DEEPSEEK_API_KEY` dan `ANTHROPIC_API_KEY` kosong per 2026-09-07. Semua tes memakai model tiruan. Tanpa kunci, `/api/agent/*` menjawab 503 dan UI menampilkan banner.
+
+## 2026-09-07 — Layar 2 & 1 (tiket 09, 10)
+
+- Papan alarm dnd-kit dengan fallback klik/keyboard; `/api/backtest` memakai DB bila `DATABASE_URL` ada, selain itu fixture (belum PGlite).
+- `getEventSource()` (Neon → PGlite → fixture) dipakai CLI backtest dan `/putar-ulang`.
+- **Skor nyata pertama aturan default (PGlite, `--today=2026-09-07`)**: 26/74 tertangkap (delisting 6/18, pemantauan 20/56), lead rata-rata 9 bln / median 7, alarm palsu 1/30 (AADI), 3 dilewati. Sebab 12/18 delisting terlewat: data laporan mulai 2020 q1 dan 8 emiten 404.
+
+## 2026-09-07 — Halaman metodologi & README juri (tiket 14)
+
+- Snapshot skor di-commit sebagai `docs/skor-nyata.json` (keluaran persis `npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07 --json`; tanpa nama pemegang saham). Tes `tests/unit/docs/skor-nyata.test.ts` menghitung ulang dari `./.pglite` dan menuntut kesamaan ringkasan **dan** rincian per emiten; di-skip dengan pesan bila folder PGlite tidak ada.
+- Halaman `/cara-kami-menghitung` membaca ambang dari konstanta mesin (`evaluate.ts`, `score.ts`) — tidak ada angka ambang yang ditulis tangan.
+- Koreksi kecil: `docs/data-proof.md` menulis blok pertama `laporan_hilang` 17; snapshot menghitung **16** (16 + 9 + 1 = 26). Halaman memakai angka hasil hitung dari snapshot.
+- Angka "jumlah investor" per emiten sengaja **tidak** ditulis di README karena tidak ada di PLAN/docs repo ini (semua fakta README harus bersumber dari repo).
+- **§7.5 TERPICU**: `TELEGRAM_BOT_TOKEN` kosong (tiket 01) → tiket 12 memakai notifikasi in-app sebagai jalur utama; Telegram opsional.
+- §7.6 (build Vercel gagal karena dependensi) belum relevan — deploy belum dilakukan.
+
+## 2026-09-07 — Cron harian & notifikasi (tiket 12)
+
+- Vercel Cron `30 23 * * *` (UTC = 06:30 WIB) → `GET /api/cron/jaga` dengan `Authorization: Bearer <CRON_SECRET>`; tanpa `CRON_SECRET` endpoint menjawab 503 (tidak pernah terbuka), header salah 401.
+- **Cron hanya kelas A** (nol kredit Sectors) dan **penjelasan template** (tanpa LLM): batas fungsi Vercel Hobby 300 detik dan kredit/biaya tidak boleh terpakai tanpa sepengetahuan pengguna. Tes membuktikan `api_ledger` tidak bertambah selama cron.
+- Bendera baru = perbandingan dengan `runs` terakhir pemilik (status memburuk atau alarm baru berbunyi); run baru selalu disimpan sehingga pemanggilan ganda Vercel (best-effort delivery) menghasilkan 0 pesan — idempoten tanpa tabel `sent_at`.
+- **§7.5 dijalankan**: tabel baru `inbox` (kotak masuk in-app per `owner_token`, `read_at`) selalu ditulis; `GET/PATCH /api/inbox` dan halaman `/pasang` menggabungkannya dengan kotak masuk browser. Telegram (grammY 1.46, webhook `std/http`, tabel `telegram_links` chat_id → pemilik, perintah `/mulai <kode-portofolio>` & `/berhenti`) hanya aktif bila `TELEGRAM_BOT_TOKEN` **dan** `TELEGRAM_WEBHOOK_SECRET` terisi; tanpa itu webhook menjawab 503 sopan. Email (Resend) dari §7.5 tidak dibangun — in-app sudah memenuhi "tetap ada notifikasi" dan hemat satu dependensi/kunci.
+- Kode portofolio untuk `/mulai` = id baris `portfolios` (UUID) — tidak perlu kolom kode pendek baru; ditampilkan di bagian kotak masuk.
+- Pesan Telegram dikirim sebagai teks polos (tanpa parse_mode) agar tidak perlu escape; satu pesan per portofolio per pagi, dipecah < 4096 karakter, setiap potongan ditutup disclaimer. 403 (bot diblokir) → tautan dilepas otomatis.
+
+## 2026-09-07 — Panduan, kamus, disclaimer (tiket 13)
+
+- **Perbaikan temuan tiket 14**: `/api/backtest` (dan `/api/agent/diagnosis`) kini memilih sumber lewat `getEventSource()` (Neon → PGlite `./.pglite` → fixture), sama dengan CLI dan `/putar-ulang`; label UI "data Sectors nyata" hanya bila sumber DB/PGlite. Sebelumnya route hanya melihat `DATABASE_URL`, sehingga demo lokal selalu memakai fixture 8 emiten.
+- Lapisan awam: overlay 3 langkah kunjungan pertama (localStorage `alarm-saham:panduan-selesai`), tombol Panduan, petunjuk bernomor per layar, tooltip `<Istilah>` buatan sendiri (tanpa dependensi), halaman `/kamus`; header & footer disclaimer dipasang sekali di layout akar (footer per halaman dihapus). Audit kata terlarang jadi tes (`tests/unit/copy/kata-terlarang.test.ts`) dengan pengecualian eksplisit "filing/transaksi/tipe jual".
+
+## 2026-09-09 → 10 — Pengerasan sebelum deploy (tiket 15)
+
+Delapan audit terpisah dijalankan lebih dulu (rahasia di riwayat, env vs kode, akurasi dokumen, kepatuhan aturan lomba, aksesibilitas & mode gelap, kode mati/WIP, CI & gerbang, kesiapan deploy), lalu temuannya dikerjakan. Keputusan yang perlu dicatat:
+
+- **Jalur data contoh tidak boleh menyamar jadi data resmi.** Server tanpa `DATABASE_URL` dan tanpa `./.pglite` — persis kondisi deploy Vercel sekarang, karena `.pglite/` di-gitignore — jatuh ke fixture 8 emiten yang memuat **kode emiten nyata** dengan angka keuangan/filing ilustratif. `/putar-ulang` dulu menampilkannya di bawah kalimat "Semua yang tampil di sini adalah fakta dari data resmi" dan memberi tiap kejadian caption "Sumber: Sectors /v2/…". Sekarang penanda sumber dibawa dari `getEventSource()` sampai UI: pil `data contoh (bukan data Sectors nyata)` (`data-sumber="fixture"`), atribusi berubah menjadi "data contoh — fixture universe-kecil.json", tautan PDF dikosongkan, dan lede halaman mengaku server belum terhubung database. **Nama emiten di fixture sengaja TIDAK diganti** menjadi kode fiktif: tanggal suspensi dan daftar kuartal SRIL/TELE/GOLL mengikuti data nyata tiket 04, dan seluruh gerbang uji (e2e + integrasi `fromDb` vs `fromFixture`) bersandar pada simbol itu; bahaya sebenarnya ada pada atribusi, dan itulah yang ditutup.
+- **Penyensor saran investasi memenggal kalimat, bukan kata.** Mengganti kata terlarang saja menyisakan bingkai anjuran utuh ("Sebaiknya [dihapus] sekarang"). Sekarang kalimat yang memuat kata terlarang **dan** kata pembingkai anjuran dibuang seluruhnya; frasa yang dulu hanya dilarang di prompt ("cut loss", "take profit", "saatnya masuk", "layak dikoleksi") kini punya penyaring. (Versi pertama masih bocor: kalimat beranjuran **tanpa** kata terlarang lolos utuh — ditutup pada penutupan keberatan 5 di bawah.) Untuk pesan jaga (masuk kotak masuk & Telegram), keluaran model yang tergelincir **tidak dipakai sama sekali** — kembali ke template deterministik.
+  - **KEPUTUSAN INI DIBATALKAN pada putaran 5 (2026-09-10), lihat bagian paling bawah.** Pendekatan "penyensor memenggal kalimat" ditinggalkan seluruhnya setelah diukur: ia memakan 40 dari 106 kalimat sah pada tolok ukur sambil tetap meloloskan 24 dari 25 anjuran karangan penyerang. Yang tetap berlaku dari butir ini hanya bagian terakhir: di jalur jaga, rapian model yang tergelincir memang tidak dipakai sama sekali.
+- **Endpoint publik yang membelanjakan uang diberi pagar.** Cek kelas B wajib membawa tautan rahasia pemilik, maksimum 10 saham, `today` dari klien diabaikan di produksi (dulu bisa dipakai menggeser jendela tanggal demi melewati cache 24 jam dan membeli kredit baru tiap permintaan), dan **kelas B dilewati bila server tanpa database**: tanpa DB, buku kredit jatuh ke berkas, dan di serverless sistem berkasnya hanya-baca sehingga sisa kredit selalu terbaca penuh — pagar `SECTORS_CREDIT_RESERVE` tidak pernah menolak sementara pemakaian tidak tercatat. Pagar laju in-memory (`src/lib/api/pagar.ts`, tanpa dependensi baru) dipasang di route agent, cek portofolio, dan POST `/api/emiten`.
+- **Kontras WCAG AA di kedua tema.** Token `--b-text` tidak pernah diredefinisi untuk mode gelap padahal latar bloknya dicerahkan; `text-white` dipakai di atas `--ok`/`--crit` yang berbalik pastel. Token terang `--ink-3` dan `--warn` juga gagal 4,5:1. Dipilih **menggelapkan warna latar** (bukan sekadar mengganti warna teks) karena hanya opsi itu yang sekaligus memperbaiki kegagalan mode terang. Dijaga `tests/e2e/aksesibilitas.spec.ts`: axe-core pada 6 halaman × 2 mode, plus dialog panduan dan tooltip istilah yang sebelumnya tidak pernah terpindai.
+- **Gerbang harus bisa gagal.** Assertion e2e `toContainText("data Sectors nyata")` juga lulus pada jalur data contoh, karena teks `data contoh (bukan data Sectors nyata)` memuat substring itu — gerbang yang tidak bisa gagal. Sekarang label membawa atribut mesin `data-sumber="db"|"fixture"`. Tanggal e2e dipaku lewat `ALARM_HARI_INI=2026-09-07` supaya emiten kontrol di fixture tidak berubah hijau → kuning dengan sendirinya pada 2027-01-28.
+- **Pemindai rahasia sekarang menutup riwayat, bukan hanya commit berikutnya.** `scripts/pola-rahasia.mjs` menjadi satu sumber pola untuk hook pre-commit dan `npm run scan:history` (nol dependensi: hanya Node + git; membaca semua blob termasuk yang tidak terjangkau ref). Pola bertambah: kunci gaya OpenAI/DeepSeek, AWS `AKIA`, `CRON_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `DATABASE_URL` berisi nilai. `.env.example` **tidak lagi dikecualikan** (asumsi "nilainya kosong" sudah tidak benar); berkas contoh kini ditolak bila ada variabel berakhiran KEY/TOKEN/SECRET/PASSWORD/URL yang diberi nilai.
+  - Ambang pola Anthropic dinaikkan dari 4 menjadi 20 karakter setelah awalan. Alasannya: riwayat repo ini memuat placeholder `sk-ant-` + empat huruf x di komentar versi lama `scripts/check-secrets.mjs` (commit `9158433`) — sudah diperiksa, isinya huruf x, bukan kunci. Kunci Anthropic sungguhan berbentuk `sk-ant-api03-` + ~95 karakter, jadi ambang 20 masih jauh di bawah kunci terpendek yang mungkin. Catatan jujur: laporan audit menyebut riwayat "nol kecocokan" untuk pola ini — ternyata tidak, dan pemindai barulah yang menemukannya.
+  - Pola berbentuk NAMA=nilai kini menuntut nilai minimal 8 karakter dan tidak boleh didahului titik, supaya `process.env.X = y` di kode dan kalimat dokumentasi ("isi `CRON_SECRET=` di .env.local") tidak dianggap kebocoran.
+- **CI menjalankan gerbang yang sebelumnya hanya lokal**: job `e2e` (Playwright chromium, jalur data contoh, laporan diunggah bila gagal), job `e2e-db` (jalur database — lihat penutupan keberatan 1 di bawah), dan job `rahasia` (`scan:history` dengan `fetch-depth: 0`). `ALARM_TEST_DB=pglite` dipasang di job utama supaya tes integrasi skema tidak menarik image `postgres:16` dari Docker Hub setiap run. Tidak ada job yang butuh kunci, `DATABASE_URL`, atau salinan `./.pglite`.
+- **`.env.example` memuat semua variabel yang dibaca kode**, termasuk enam yang dulu tidak terdokumentasi (`SECTORS_CREDIT_BUDGET`, `ALLOW_RESERVE`, `SECTORS_CACHE_DIR`, `SECTORS_BASE_URL`, `APP_URL`, `TANPA_PGLITE`) dan yang baru dari tiket ini (`ALARM_HARI_INI`, `ALARM_TEST_DB`, `E2E_*`), dengan bagian terpisah "hanya untuk pengembangan/tes — jangan diset di produksi". `SECTORS_CREDIT_BUDGET` paling berdampak: pagar cadangan dihitung dari angka itu (bawaan 1000).
+- **README diselaraskan dengan keadaan kode, bukan dengan ingatan.** Audit dokumen menemukan README tertinggal dua tiket: ia menyangkal fitur yang sudah ada ("belum ada: mode pasang, notifikasi, cron") sambil memuat bab lengkap tentang cron di halaman yang sama, dan memuat tiga angka jumlah tes yang saling bertentangan (268 / 340 / "33 berkas, 267 tes"). Semua angka sekarang berasal dari satu run nyata yang dicatat tanggalnya (saat itu `npm test` 397 tes di 51 berkas; clone bersih 396 lulus + 1 di-skip; `npm run test:e2e` 44 tes — angka itu naik menjadi 456/57 dan 52 e2e setelah penutupan tujuh keberatan di bawah, dan README ikut diperbarui dari run nyata yang baru), dan klaim kredit dipisah dengan benar: 395 kredit untuk penarikan universe, 467 total buku kredit (395 + 68 pembuktian data + 4 uji kelas B) — sebelumnya 463 ditulis seolah semuanya untuk penarikan universe, bertabrakan dengan dua tempat lain di README yang sama.
+- **Fakta bursa di README sekarang punya tautan sumber.** Tiga angka yang melatarbelakangi produk (18 emiten dihapus efektif 10 November 2026 dengan jendela buyback 11 Mei – 9 November 2026; 59 emiten di Papan Pemantauan Khusus per 30 Juni 2026; 45.866 investor tercatat memegang SRIL saat dinyatakan akan dihapus, termasuk satu pemegang > 1 persen senilai Rp30,56 miliar) dulu ditulis tanpa satu tautan pun. Ditulis sebagai fakta bertanggal + tautan, tanpa kata menuduh dan tanpa penilaian atas emiten mana pun — sejalan dengan aturan (b). Ini menutup tugas yang tiket 14 sengaja gantung ("angka investor SRIL belum masuk README karena tidak ada di dokumen repo").
+- **Bab "Deploy ke Vercel" baru**: tabel variabel lingkungan beserta akibat bila kosong, urutan yang benar (isi env → `db:migrate` → `db:sync --from=pglite --to=neon` → `pull-universe --dry` sebagai verifikasi 0 kredit → deploy → daftarkan webhook Telegram), dan peringatan paling penting: `./.pglite` di-gitignore sehingga data **tidak pernah ikut ter-deploy**, jadi server tanpa `DATABASE_URL` berjalan di atas data contoh — kini berlabel jujur, tetapi tetap tidak boleh ditunjukkan ke juri.
+- **Risiko yang sengaja ditinggalkan** (dicatat agar tidak mengejutkan saat tiket 16): pagar laju hidup di memori tiap instance serverless, jadi ia meredam pengulangan cepat, bukan kuota global; `/api/agent/*` tetap publik (dibatasi laju, dan tetap 503 tanpa kunci) karena menambah gerbang rahasia akan mengubah perilaku demo juri; `?today=` masih bebas di jalur baca-saja yang nol kredit (dipakai demo dan e2e); dan fixture tetap memuat kode emiten nyata dengan sebagian angka ilustratif — ditutup di lapisan tampilan dan atribusi, bukan di berkas JSON-nya.
+
+### Penutupan tujuh keberatan pemeriksa (2026-09-10)
+
+Tiga pemeriksa adversarial menyatakan nol penghalang tetapi mengangkat tujuh keberatan serius. Semuanya ditutup dengan tes otomatis yang **dibuktikan gagal sebelum perbaikan** (cara membuktikannya: kembalikan berkas sumber ke commit `709d766`, jalankan berkas tesnya).
+
+1. **Gerbang e2e hanya menguji jalur yang tidak dideploy.** CI hanya menjalankan `E2E_TANPA_PGLITE=1`, jadi tiga spec penjaga klaim data nyata tidak pernah dieksekusi mesin. Sekarang ada job kedua `e2e-db` yang membangun database dari benih yang di-commit (`tests/e2e/seed/universe-uji.json`, 464 KB, baris nyata kelas A tiket 07) lewat `npm run e2e:seed`, bukan menyalin `./.pglite` 57 MB. `ALARM_PGLITE_DIR` menggeser folder PGlite yang dibaca server (hanya saat `DATABASE_URL` kosong → nol pengaruh di produksi) sehingga runner dan pengembang tidak menimpa `./.pglite` berisi hasil penarikan 395 kredit. Tes: `tests/unit/ci/gerbang-e2e.test.ts`, `tests/db/benih-e2e.integration.test.ts`, tiga tes `ALARM_PGLITE_DIR` di `tests/unit/engine/sumber-ringkas.test.ts`.
+2. **Pembeku waktu tanpa pagar produksi.** `ALARM_HARI_INI` berlaku di mana saja; nilai yang tanpa sengaja tersalin ke dasbor deploy akan membekukan seluruh aplikasi diam-diam. Sekarang diabaikan saat `NODE_ENV=production` kecuali kunci kedua `ALARM_IZINKAN_BEKU_WAKTU=1`, dan kedua keadaan mencetak peringatan. Tes: `tests/unit/engine/dates.test.ts`.
+3. **Klaim "fakta resmi Sectors" tanpa syarat** di footer layout akar, dialog panduan, beranda, dan `/pasang` — pada jalur data contoh aplikasi menyangkal labelnya sendiri. Kalimat sumber kini mengikuti `jenisSumberTerpilih()` dan membawa penanda mesin `data-sumber`. Tes: `tests/ui/panduan.test.tsx`, `tests/e2e/klaim-sumber.spec.ts` (memindai SELURUH halaman, bukan hanya `<main>`, dengan beberapa varian urutan kata).
+4. **Angka kredit bertabrakan** (463 di halaman metodologi vs 467 di README untuk tanggal yang sama). Satu sumber kebenaran: `docs/kredit-ledger.json` hasil `npm run kredit:snapshot -- --pglite` langsung dari tabel `api_ledger`. Tes: `tests/unit/docs/kredit-ledger.test.ts`.
+5. **Penyensor saran hanya menggigit bila ada kata terlarang.** Anjuran tanpa kata beli/jual lolos utuh ke kotak masuk & Telegram dengan `perluTinjau:false`. Saat itu `POLA_ANJURAN_MANDIRI` + `POLA_PENILAIAN` dibuat membuang kalimatnya tanpa syarat, dan pembuangan itu sendiri menandai `perluTinjau`. Tes: `tests/unit/agent/guard.test.ts`, `tests/unit/jaga/penjelasan.test.ts`. **Perbaikan ini terbukti salah arah dan dibatalkan pada putaran 5**: "tanpa syarat" itulah yang kemudian memakan 41 dari 83 kalimat sah, dan lubang aslinya tetap terbuka karena daftar katanya tertutup.
+6. **Dua klaim implementer yang tidak sepenuhnya terbukti** (footer atribusi Sectors di jalur fixture; `KATA_ANJURAN` yang tidak memuat bingkai "Saran:"/"Rekomendasi kami:"/"saya akan"/"Posisi terbaik:"). Keduanya diakui benar dan ditutup bersama keberatan 3 dan 5; kasus tes lama yang sempat diubah agar cocok dengan implementasi dikembalikan sebagai kasus yang menuntut perbaikan.
+7. **Pagar laju kelas B dikunci pada nilai pilihan klien.** `x-owner-token` dibuat sendiri peramban, jadi token baru tiap permintaan selalu mendapat ember kosong. Kunci ember kelas B kini murni identitas server (`kunciPemanggilServer()` → IP menurut proksi, hop terakhir) ditambah ember global. Tes: `tests/unit/api/cek-pagar.test.ts`, `tests/unit/api/pagar.test.ts`.
+
+### Putaran 3: satu keberatan lama + tiga baru (2026-09-10)
+
+Pemeriksaan putaran kedua menyatakan nol penghalang, tetapi menemukan satu keberatan yang belum benar-benar tertutup dan tiga baru — dua di antaranya **regresi dari perbaikan putaran 2**. Semua ditutup dengan tes yang dibuktikan gagal lebih dulu (kembalikan berkasnya ke commit `a5f6ffe`, jalankan tesnya).
+
+- **A. Klaim cakupan tanpa syarat yang tersisa.** Kotak cari `/putar-ulang` merender "…ada di data kami (107 emiten universe uji + feed suspensi seluruh bursa)" tanpa satu pun cabang sumber, tiga baris di bawah lede yang mengaku "data contoh (8 emiten)"; kembarannya ada di catatan per-saham mode jaga dan catatan "hanya suspensi". Gerbang `tests/e2e/klaim-sumber.spec.ts` diam karena daftarnya memuat "107 **saham**" tetapi tidak "107 **emiten**". Sekarang: setiap kalimat cakupan berasal dari satu tempat, `src/lib/cakupan.ts`, dengan jumlah yang datang dari universe yang benar-benar dimuat; daftar gerbang ditambah `KLAIM_CAKUPAN_NYATA` (`/\b107\b/`, `data kami (`, `feed suspensi seluruh bursa|BEI`). **Daftar-hitam kata akan selalu bocor**, jadi lapis kedua adalah pindaian repositori: tidak boleh ada lagi total universe nyata yang dipakukan di teks UI (`tests/unit/copy/cakupan.test.ts`). `/cara-kami-menghitung` dikecualikan dari pola cakupan — angkanya memang snapshot yang di-commit — dan pengecualian itu sendiri dijaga: tesnya menuntut kalimat pembatas "snapshot yang di-commit … bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini" benar-benar ada. Tes: `tests/unit/copy/cakupan.test.ts`, `tests/ui/pencarian.test.tsx`, `tests/ui/panduan.test.tsx`, `tests/e2e/klaim-sumber.spec.ts`.
+- **B. Ember pagar laju dipakai bersama antar-route.** Kunci `ip:<IP>` dipakai semua route, sehingga permintaan kelas A yang **nol kredit** menghabiskan jatah kelas B yang **berbayar**: sepuluh klik "Cek sekarang" membuat permintaan "Sertakan data terkini" yang pertama langsung ditolak 429 (tunggu 600 detik). Gagal-aman untuk kredit, tetapi mematikan fitur unggulan pada alur demo yang paling wajar. Sekarang `kunciEmber(ember, identitas)` memberi jatah terpisah per jenis operasi (`cek-kelas-a`, `cek-kelas-b`, `agent-rakit`, `agent-diagnosis`, `minta-tarik`); nama ember tetap konstanta di kode server, tidak pernah dari nilai pilihan klien. Tes: `tests/unit/api/cek-pagar.test.ts` (kelas A tidak menghabiskan kelas B, kelas B tetap dibatasi, kelas B habis tidak mematikan kelas A), `tests/unit/api/pagar.test.ts`.
+- **C & D. Penyensor saran salah di dua arah sekaligus** (regresi commit `634d4b0`). Frasa pelindung pengingkar berakhir `[^.!?;\n]*` — rakus sampai akhir klausa — sehingga pola "sangkal dulu lalu beri anjuran" ("Bukan rekomendasi ya, tapi sebaiknya jual TELE hari ini.") lolos **utuh** dengan `perluTinjau:false`, padahal kode sebelum perbaikan masih membuangnya. Ke arah sebaliknya, kata telanjang "seharusnya"/"disarankan"/"saran"/"rekomendasi" membuang kalimat tanpa melihat subjeknya, sehingga penyaring memakan keluaran inti fitur AI (`usulanBlok[].alasan` jadi "[kalimat saran dihapus]") dan fakta netral ("Laporan kuartal 2 seharusnya terbit 31 Juli 2024"). **Keputusan**: penyensor membedakan berdasarkan **subjek** anjuran, bukan kata kerjanya — subjek efek/posisi/uang dibuang (termasuk bila didahului pengingkar), subjek konfigurasi alarm/langkah pemeriksaan dipertahankan, kalimat campur dibuang tanpa menyeret tetangganya. Satu pengecualian sempit: klausa yang justru **menolak** meramal ("saya tidak bisa menebak saham yang akan naik" — penolakan sopan `/rakit`) selamat, kecuali ada kata sambung pertentangan. Tes: tabel 11 kalimat yang wajib dibuang + 10 usulan aturan yang wajib selamat utuh di `tests/unit/agent/guard.test.ts`.
+  - **Keputusan "membedakan berdasarkan subjek anjuran" ini juga DIBATALKAN pada putaran 5.** Ia bertahan satu putaran lagi (putaran 4 memindahkan syaratnya dari `bingkai && pasar` menjadi subjek saja) lalu diukur dua penyerang dan gagal di kedua arah sekaligus. Regex tidak bisa mengklasifikasi subjek kalimat Bahasa Indonesia; rinciannya di bagian paling bawah.
+
+Jumlah tes naik 456 → 492 (57 → 59 berkas); tidak ada tes yang dilonggarkan. Empat assertion lama diperketat karena perilakunya sekarang lebih aman: kata terlarang telanjang membuang klausanya, bukan hanya katanya.
+
+### Putaran 5: rancang-ulang penjaga aturan lomba (b) — regex berhenti dipakai untuk mengklasifikasi kalimat (2026-09-10)
+
+Empat putaran menambal penyensor saran investasi berakhir dengan pengukuran, bukan pendapat. Dua penyerang independen mengukur commit `72a33ca` dan melaporkan kegagalan di **kedua** arah sekaligus:
+
+- **Bocor**: 60 dari 65 anjuran investasi baru lolos **utuh** dengan `perluTinjau:false`. Mekanismenya daftar kata tertutup (`VERBA_PASAR`, `VERBA_NETRAL`, `VERBA_PERINTAH_PASAR`, `OBJEK_MILIK`), bukan penilaian subjek — sehingga setiap imbuhan (dibuang, dilepaskan, dicairkan, dipindahkan), salah ketik (jual2, juall, bli, cutlos), tanda hubung (cut-loss), dan slang bursa (lego, hajar kanan, boncos, nyangkut) melewatinya. Objek diagnosis palsu berisi "Kosongkan portofoliomu sekarang." keluar apa adanya dengan semua sinyal nol.
+- **Rakus**: 41 dari 83 kalimat sah dimakan, termasuk **kedua** `usulanBlok[].alasan` pada satu objek diagnosis realistis — panel memasang dua usulan blok tanpa satu pun alasan, yaitu justru nilai jual produk. Yang dimakan a.l. pembenaran berangka yang diminta `INSTRUKSI_DIAGNOSIS` ("jumlah temuan akan naik dari 26 menjadi 41"), kosakata diagnosis wajar ("blok insider_jual tidak cocok dipakai untuk kejadian sebelum 2024"), pesan blok `free_float_kecil` ("porsi saham yang dipegang masyarakat hanya 3,2%"), dan fakta aksi korporasi ("rights issue rasio 5:1 melepas saham baru…").
+
+**Keputusan**: berhenti menambal. Regex tidak bisa memutuskan apakah subjek sebuah kalimat Bahasa Indonesia adalah portofolio pengguna atau konfigurasi alarm, dan setiap putaran tambalan hanya memindahkan kegagalan dari satu arah ke arah lain. Tugasnya dibagi tiga lapis dengan peran yang jelas, dan batas tiap lapis ditulis terang-terangan:
+
+1. **Kontrol utama = instruksi sistem.** `INSTRUKSI_DASAR` butir 1 sekarang melarang seluruh **pokok bahasan** (posisi, porsi, lot, dana, modal, waktu transaksi, penilaian layak-tidaknya efek, penilaian/ramalan harga) untuk **semua bentuk kalimat**, dan menyatakan kepada model bahwa penyaring hilir hanya cadangan sempit — supaya kepatuhan tidak terasa opsional. Butir 1b menyebut apa yang justru tugasnya, dengan contoh keluaran yang BENAR. Butir 1c berisi `CONTOH_NEGATIF`: empat pasangan *JANGAN → TULIS* (few-shot), yang jauh lebih efektif daripada filter. `INSTRUKSI_DIAGNOSIS` mendapat butir 5 tentang batas pokok bahasan, `INSTRUKSI_PERAKIT` menegaskan pesan penolakannya sendiri juga terikat butir 1.
+2. **Kontrol struktural = bentuk keluaran.** `kind`/`threshold` tetap enum, `buktiTanggal` tetap tanggal, medan prosa dipersempit. Untuk `usulanBlok[].alasan` diambil keputusan eksplisit: **jangan pernah menggunting isinya diam-diam.** Bila penjaga menyala di sana, `usulanBlok[].perluTinjau` dinyalakan dan **teks aslinya dibiarkan**; panel memasang tanda peringatan di atas alasannya. Lebih baik pengguna melihat kalimat bermasalah yang ditandai daripada usulan blok tanpa alasan. Untuk jalur jaga pilihannya berbeda dan lebih ketat, karena di sana ada templat deterministik yang sudah memuat seluruh fakta: begitu penjaga menyala, rapian model dibuang seluruhnya.
+3. **Backstop = pendeteksi presisi-tinggi, bukan pengklasifikasi.** `FRASA_BACKSTOP` (26 baris) hanya memuat frasa yang tidak mungkin bermakna lain: "cut loss", "take profit", "target harga", "average down", "layak dibeli", "jangan dilepas", "tutup posisi", "porsimu", "uangmu", "kalau saya jadi kamu", dan sejenisnya. Masukan dinormalkan lebih dulu (huruf kecil, tanda hubung/en-dash/em-dash → spasi) **dengan panjang string dipertahankan**, sehingga "cut-loss" dan "cut  loss" tertangkap sementara indeks hasil cocok masih menunjuk teks aslinya. Saat menyala: **redaksi frasa yang cocok saja** menjadi `[dihapus]`, `perluTinjau=true`, frasanya dicatat di `kataDisensor`. Tidak ada lagi pengganti "[kalimat saran dihapus]" untuk seluruh kalimat, jadi angka dan tanggal di kalimat yang sama tidak pernah ikut hilang.
+
+**Prioritas mutlak presisi di atas recall**, dan itu dijadikan gerbang: `tests/fixtures/korpus-anjuran.json` menyimpan korpus penyerang di dalam repo sebagai tolok ukur permanen — 106 kalimat sah (`harusUtuh`, termasuk 52 kalimat verbatim dari pemburu-rakus dan 39 baris korpus putaran 4 yang naik status menjadi gerbang keras) dan 101 anjuran (`harusDitandai`). Tesnya **mencetak presisi & recall** dan **gagal bila presisi turun di bawah 100%** pada bagian `harusUtuh`; ia tidak pernah gagal karena recall rendah.
+
+Angka terukur (korpus yang sama, keduanya dijalankan pada commit `72a33ca` untuk versi lama dan pada kerja ini untuk versi baru; `node --import tsx scripts/ukur-penjaga.ts`):
+
+| Ukuran | Sebelum (`72a33ca`) | Sesudah |
+|---|---|---|
+| Presisi — kalimat sah yang tidak berubah isinya | 66/106 = 62,3% | **106/106 = 100%** |
+| Kalimat sah yang termakan | 40 (semuanya dari korpus pemburu-rakus, 40/52) | **0** |
+| Recall — anjuran yang ditandai | 77/101 = 76,2% | 59/101 = 58,4% |
+| Anjuran karangan pemburu-bocor yang tertangkap | 1/25 | 12/25 |
+
+Angka "sebelum" bisa diulang siapa pun tanpa kepercayaan: `git checkout 72a33ca -- src/lib/agent/guard.ts src/lib/agent/instructions.ts` lalu jalankan skrip pengukurnya, lalu `git checkout HEAD -- …` untuk mengembalikannya (resepnya juga tersimpan di `docs/penjaga-frasa.json` → `sebelum.caraReproduksi`). Recall pada korpus lama turun karena bagian besarnya dulu ditulis mengikuti daftar kata versi lama; itu **konsekuensi yang diterima**, bukan regresi yang disembunyikan. Frasa yang sengaja **tidak** didaftar beserta kalimat sah yang bentrok dengannya dicatat di `docs/penjaga-frasa.json` → `batasYangDiakui` (a.l. "beli"/"jual" telanjang vs "volume beli bersih ritel 81%"; "harga wajar" vs penolakan kami sendiri "harga wajarnya tidak pernah kami hitung"; "akan naik" vs angka backtest; "alokasi dana" vs alokasi dana rights issue; slang/salah ketik tidak dikejar; kode emiten tidak dinormalkan sehingga "Hindari SRIL" lewat; "buy"/"sell" bentrok dengan nilai `transactionType` di data filing).
+
+**Kejujuran dokumen** — bagian yang paling penting untuk juri. Setiap klaim lama yang menyatakan penyaring memblokir semua kalimat beranjuran dibatalkan di tempatnya (lihat catatan pada butir "Penyensor saran investasi memenggal kalimat", keberatan 5, dan keberatan C & D di atas) dan `INSTRUKSI_DASAR` tidak lagi menjanjikannya kepada model. `docs/penjaga-frasa.json` menjadi satu sumber kebenaran angka penjaga: halaman `/cara-kami-menghitung` (bab baru "Bagaimana kami menjaga keluaran AI bukan saran investasi") membacanya lewat `src/lib/metodologi/penjaga.ts`, README menyebut angka yang sama, dan `tests/unit/docs/penjaga-frasa.test.ts` **menghitung ulang** bagian `sesudah` dari korpus + penjaga sungguhan lalu menolak kalau salah satu permukaan menyimpang — plus memindai README agar tidak ada lagi klaim "penyaring menangkap semua anjuran" yang berdiri tanpa penyangkalan. Backstop **tidak menjamin semua anjuran tertangkap**, dan itu tertulis di README, di halaman metodologi, di komentar `guard.ts`, dan di instruksi sistem.
+
+**Tes yang diubah, dan kenapa itu bukan pelonggaran.** Assertion yang menuntut satu kalimat menjadi persis `[kalimat saran dihapus]` dihapus karena perilaku itu **ditinggalkan** — bukan karena gerbangnya dilemahkan. Buktinya arah perubahannya: sisi "wajib dipertahankan" tabel lama (39 baris) naik status dari satu berkas tes biasa menjadi bagian gerbang presisi 100% bersama 67 baris baru, dan tuntutan barunya lebih keras (`teks` harus **identik**, bukan sekadar "tidak memuat frasa"). Sisi "wajib dibuang" tabel lama tetap diukur setiap `npm test`, hanya tidak lagi menjadi gerbang — status yang jujur, karena angkanya memang 59/101. Tiga tes yang mengunci pemenggalan kalimat pada `usulanBlok[].alasan`, nama aturan perakit, dan `sebab` diagnosis diubah menjadi tes redaksi frasa + penandaan; dua tes baru **mengunci batas yang diakui** ("buy" telanjang dan "beli" telanjang tidak tertangkap) supaya batas itu tidak bisa hilang dari dokumen tanpa tes ikut merah. Jumlah tes 629 → 668 (60 → 61 berkas).
+
+## Kunci & akun (status 2026-09-12, cek keberadaan nilai saja)
+
+| Variabel | Status | Dampak |
+|---|---|---|
+| `SECTORS_API_KEY` | terisi | penarikan data selesai (buku kredit 467: 395 universe + 68 pembuktian data + 4 uji kelas B) |
+| `DATABASE_URL` (Neon) | terisi | 8 tabel sudah disalin dari PGlite, jumlah baris sama (lihat "Data pindah ke Neon"); bukan lagi blocker tiket 16 |
+| `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` (gateway Kagiro) | terisi | jalur AI dipakai; agent diagnosis lolos uji nyata 2026-09-12, 34.669 token |
+| `DEEPSEEK_API_KEY` / `ANTHROPIC_API_KEY` | kosong, dan memang tidak perlu | alternatif provider langsung; jalur gateway di atas yang dipakai |
+| `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET` | **kosong** | §7.5: notifikasi in-app; jalur Telegram teruji dengan mock |
+| `CRON_SECRET` | diisi saat deploy | tanpa itu `/api/cron/jaga` menjawab 503 |
+| `vercel login` | tidak dipakai | deploy lewat impor GitHub di dasbor Vercel (tiket 16), bukan CLI |
+
+## Agent diagnosis lewat gateway: dua panggilan, bukan satu (2026-09-12)
+
+**Gejalanya.** Dengan `LLM_BASE_URL=https://api.kagiro.net/v1` dan `LLM_MODEL=kagiro/deepseek-v4-pro`, panggilan sampai ke gateway dan model benar-benar memakai tool, tapi hasil akhirnya selalu `AI_NoObjectGeneratedError: No object generated: could not parse the response` — pada `kagiro/deepseek-v4-pro` maupun `kagiro/deepseek-v4-flash`. SDK memberi petunjuknya di peringatan yang sama: *"The feature 'responseFormat JSON schema' is used in a compatibility mode. JSON response schema is injected into the system message."*
+
+**Sebabnya, diukur bukan dikira.** Satu probe kecil (skema `{ringkasan: string, angka: number}`, tanpa tool) BERHASIL lewat gateway yang sama. Jadi yang rusak bukan gatewaynya dan bukan `Output.object`, melainkan kombinasinya: karena gateway tidak menegakkan skema secara native, ia menyuntikkan skema + perintah "jawab JSON saja" ke pesan sistem — dan perintah itu bertabrakan dengan loop tool. Di setiap langkah model dipaksa memilih antara memanggil tool dan menulis JSON; dengan `DiagnosisOutputSchema` (nested, tiga tingkat) yang keluar adalah JSON separuh jadi.
+
+**Perbaikannya.** `jalankanModel` di `src/lib/agent/diagnosis.ts` sekarang punya dua jalur, dipilih otomatis dari `pakaiGateway()` (bisa dipaksa lewat `DiagnosisInput.duaFase` untuk tes):
+
+- **Satu fase** (DeepSeek/Anthropic langsung): tetap seperti semula — satu `generateText` dengan `tools` + `stopWhen` + `output`. Provider menegakkan skema secara native, jadi tidak ada yang perlu dipisah.
+- **Dua fase** (gateway): fase 1 memakai tool **tanpa** `output` dan menutup dengan prosa; fase 2 satu panggilan **tanpa** tool dengan `output` untuk merapikannya menjadi objek. Fase 2 menerima prosa fase 1 **dan** daftar langkah data sungguhan (tool + ringkasan hasilnya), supaya tanggal dan angka tidak perlu diingat-ingat model.
+
+Yang TIDAK berubah: `trace` tetap dibangun dari `steps` fase 1, jadi bukti tool call tetap bukti tool call — dan fase 2 tidak bisa menambah langkah palsu karena di sana tool memang tidak terdaftar. Penjaga frasa (lapis 3) tetap dijalankan pada keluaran fase 2, dan instruksi sistem (lapis 1) terpasang di kedua fase. Empat tes baru di `tests/unit/agent/diagnosis.test.ts` mengunci pemisahan itu: fase 1 punya 7 tool dan `responseFormat` kosong, fase 2 `tools` kosong dan `responseFormat.type === "json"`, `LLM_BASE_URL` menyalakan jalurnya tanpa flag, jalur tanpa gateway tetap satu panggilan, dan backstop tetap menandai `alasan` bermasalah dari fase 2.
+
+**Uji nyata pertama agent diagnosis — menutup butir yang menggantung sejak tiket 08.** `npm run agent:demo -- tele`, 2026-09-12, `deepseek/kagiro/deepseek-v4-pro`, 0 kredit Sectors (data dari database):
+
+| Ukuran | Hasil |
+|---|---|
+| Waktu | 207,4 detik |
+| Langkah model | 4 (2 fase) |
+| Tool call sungguhan | 24 (`listMissed`, `getReportDates`, `getSuspensions`, `getFinancials`, `getCorporateActions`, `getFilings`, `runAlarmOn` ×6) |
+| Token | input 25.741, output 8.928, total **34.669** (cache read 0 — gateway tidak melaporkan cache hit) |
+| Biaya @ US$0,03/1 juta token (Kagiro) | ≈ **US$0,0010 per diagnosis** → 10 juta token (top up US$0,21) ≈ **288 diagnosis** |
+| Trace | tersimpan di Neon, `runs.id = 0fbf7c4e-4217-463e-be1b-7cfad96652f3` |
+
+Isi jawabannya diperiksa terhadap data, bukan cuma "tidak galat": ia menemukan ketiga emiten nyata rajin melapor (TELE sampai 2025-06-30, WIKA sampai 2026-03-31, SRIL sampai 2024-09-30) sehingga blok `laporan_hilang` memang tidak punya apa pun untuk dipegang, lalu **membuktikan** usulannya dengan `runAlarmOn`: `suspensi(longgar)` berbunyi untuk TELE pada 2025-01-31 (5 bulan sebelum delisting 2025-06-06) dan SRIL pada 2021-07-31, `aksi_dilutif(ketat)` berbunyi untuk WIKA pada 2024-05-31 (9 bulan sebelum watchlist 2025-02-18, rights issue rasio 5,22×). GOLL dinyatakan tidak bisa ditolong karena kejadiannya 2019-01-30 di luar jangkauan data — jawaban yang benar, dan yang penting: ia mengatakannya alih-alih mengarang.
+
+**Catatan biaya yang sebelumnya salah saya sebut.** Angka "US$2 cukup untuk ratusan diagnosis" di `.env.example` berasal dari harga DeepSeek langsung (≈US$0,017/diagnosis → US$2 ≈ 120 diagnosis), bukan dari harga gateway. Keduanya kini punya dasar ukur: DeepSeek dari daftar harga resminya, Kagiro dari US$0,03/1 juta token × 34.669 token terukur di atas.
+
+## Data pindah ke Neon (2026-09-12)
+
+`npm run db:sync -- --from=pglite --to=neon` selesai exit 0; jumlah baris **sama** di sumber dan tujuan untuk kedelapan tabel: `symbols` 107, `suspensions` 583, `report_dates` 1901, `corporate_actions` 963, `filings` 248, `financials_q` 91, `api_ledger` 923, `api_cache` 366. Nol kredit Sectors terpakai (salinan database ke database). Dengan ini `DATABASE_URL` bukan lagi blocker tiket 16, dan buku kredit (`api_ledger`) ikut pindah sehingga pagar cadangan 250 kredit tetap berlaku di produksi.
+
+## Diagnosis di jalur web: batas 300 detik Vercel, dan model yang dipilih (2026-09-12)
+
+Uji nyata pertama (bagian sebelumnya) memakai universe fixture 7 emiten. Begitu jalurnya diuji seperti yang akan dipakai juri — `next start` + POST `/api/agent/diagnosis` dengan hasil backtest Neon sungguhnya (104 emiten, 44,8 KB body, **59 emiten terlewat**) — muncul dua masalah yang tidak terlihat di fixture. Keduanya ditemukan sebelum deploy, bukan sesudah.
+
+**Masalah 1: melampaui batas waktu fungsi.** Permintaan pertama berjalan **366 detik** lalu gagal tanpa jawaban. Batas maksimum fungsi Vercel plan Hobby dengan fluid compute adalah **300 detik** (dokumen resmi "Configuring Maximum Duration", diperiksa 2026-09-12: Hobby default 300 / maksimum 300; Pro 800). `maxDuration` route masih 120 detik, jadi di produksi ia akan dipotong lebih awal lagi.
+
+**Masalah 2: yang mahal itu LANGKAH, bukan tool call.** Dugaan pertama saya salah: memotong daftar 59 emiten terlewat menjadi 8 kasus terpilih (`pilihTerlewat`) justru membuat panggilan LEBIH lambat — 418 detik — karena model memakai langkah yang tersisa untuk memeriksa kedelapan emiten itu sampai habis. Angkanya jelas begitu dibandingkan:
+
+| Langkah model | Tool call | Waktu |
+|---|---|---|
+| 4 | 10 | 169 s |
+| 7 | 44 | 418 s |
+
+Tool call membaca data lokal (mikrodetik). Yang memakan waktu adalah setiap putaran balik ke model. Karena itu `MAKS_LANGKAH_DEFAULT` diturunkan **8 → 4**. Itu baru aman SETELAH jalur dua fase ada: sebelumnya kehabisan langkah berarti `NoObjectGeneratedError` dan seluruh kerja hangus, sekarang fase 2 tetap menyusun jawaban dari trace yang sudah terkumpul.
+
+**Masalah 3, yang paling menentukan: model `deepseek-v4-pro` tidak layak dipakai di jalur permintaan web.** Kegagalan yang tadinya saya baca sebagai "skema kadang tidak terparse" ternyata sebagian besar adalah **kapasitas gateway**. Diukur langsung, 3 percobaan per kombinasi, `DiagnosisOutputSchema` sungguhan, prompt fase 2 yang realistis:
+
+| Model | Kanal keluaran | Berhasil | Rata-rata |
+|---|---|---|---|
+| `deepseek-v4-flash` | tool | **3/3** | 20 s |
+| `deepseek-v4-flash` | response_format | **3/3** | 6 s (dua di antaranya kena cache gateway) |
+| `deepseek-v4-pro` | tool | 0/3 | — galat "Layanan sedang penuh" / "Bad Gateway" |
+| `deepseek-v4-pro` | response_format | 0/3 | — galat kapasitas yang sama |
+
+Nol kegagalannya bergaya parse; semuanya HTTP dari gateway. Maka: kedua kanal keluaran sama-sama jalan (jadi `Output.object` dipertahankan, tidak perlu pindah ke kanal tool), dan **model ringanlah yang dipakai**. Fase 2 sekarang memakai peran `ringan` (`DiagnosisInput.modelRangkum`) karena tugasnya memang merapikan, bukan menalar; dan `.env.example` + `.env.local` diubah memakai `deepseek-v4-flash` untuk `LLM_MODEL` juga.
+
+Hasil diagnosis penuh pada universe Neon dengan flash — bukan cuma "tidak galat", isinya diperiksa:
+
+| Jalur | Hasil |
+|---|---|
+| Skrip, 2 kali | 2/2 berhasil, 52 s dan 63 s, ~52 ribu token |
+| `next start` + POST route, 4 kali | 4/4 berhasil, 71 s / 77 s / 196 s / 238 s, ~55 ribu token |
+
+Rentang 71-238 detik terhadap langit-langit 300 detik; sebaran lebarnya mengikuti kepadatan gateway, bukan besar datanya. Kalau log Vercel nanti menunjukkan pemotongan, tuas pertama yang ditarik adalah `MAKS_LANGKAH_DEFAULT` 4 → 3 (bukan `maxDuration`, yang sudah di maksimum plan).
+
+Isi jawabannya menemukan sebab yang benar dan tidak sepele: baris suspensi di data **bertanggal sama dengan tanggal kejadian target**, sehingga `suspensi(longgar)` secara struktural tidak bisa berbunyi lebih awal — lalu ia membuktikan alternatifnya dengan `runAlarmOn`: `laporan_hilang(longgar)` berbunyi untuk DUCK pada 2021-04-30 (≈4 bulan sebelum target) dan UNIT pada 2021-01-31, sementara kontrol BBCA/TLKM/ASII tetap diam (tidak menambah alarm palsu). Untuk TOYS dan SRIL ia menyatakan tidak ada blok yang berbunyi lebih awal dengan data yang ada — jawaban yang benar, dan ia mengatakannya alih-alih mengarang.
+
+**Satu cacat yang sempat lolos, dan asalnya dari kata-kata kami sendiri.** Ringkasan model menulis "Delapan dari 59 emiten terlewat" — padahal 59 yang terlewat dan 8 hanya contoh yang dikirim. Sumbernya bukan model: `ringkasHasilTool` merangkai kalimat `terlewat: A, B, ... (8 dari 59 terlewat)`, dan kalimat itu ikut dikirim ke fase 2 sebagai langkah data, lalu disalin. Diperbaiki di tiga tempat sekaligus — jumlah ditulis lebih dulu (`59 terlewat; 8 contoh: ...`), kunci tool diganti `terlewat` → `terlewatContoh` plus medan `catatan`, dan prompt menyebut eksplisit angka mana yang benar. Sesudahnya 2/2 permintaan menulis angkanya dengan benar ("Alarm melewatkan 59 emiten; 8 contoh ... diperiksa"). Satu tes regresi mengunci kalimat itu, karena ia bukan sekadar tampilan melainkan masukan model.

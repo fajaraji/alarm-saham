@@ -1,0 +1,104 @@
+{
+  "_catatan": "BBCA (Bank Central Asia): contoh emiten bersih/kontrol sehat. Bentuk mengikuti respons nyata Sectors v2 (tiket 04). Tidak ada suspensi, laporan lengkap sampai 2026 q2, tidak ada penjualan insider. Angka keuangan dalam IDR dan ilustratif (perkiraan). listing_performance tidak tersedia (404 di API). Persentase saham dalam PERSEN.",
+  "quarterly_financial_dates": {
+    "2020": [["2020-03-31", "q1"], ["2020-06-30", "q2"], ["2020-09-30", "q3"], ["2020-12-31", "q4"]],
+    "2021": [["2021-03-31", "q1"], ["2021-06-30", "q2"], ["2021-09-30", "q3"], ["2021-12-31", "q4"]],
+    "2022": [["2022-03-31", "q1"], ["2022-06-30", "q2"], ["2022-09-30", "q3"], ["2022-12-31", "q4"]],
+    "2023": [["2023-03-31", "q1"], ["2023-06-30", "q2"], ["2023-09-30", "q3"], ["2023-12-31", "q4"]],
+    "2024": [["2024-03-31", "q1"], ["2024-06-30", "q2"], ["2024-09-30", "q3"], ["2024-12-31", "q4"]],
+    "2025": [["2025-03-31", "q1"], ["2025-06-30", "q2"], ["2025-09-30", "q3"], ["2025-12-31", "q4"]],
+    "2026": [["2026-03-31", "q1"], ["2026-06-30", "q2"]]
+  },
+  "filings": [
+    {
+      "symbol": "BBCA",
+      "title": "Perubahan kepemilikan Institusi Dana Pensiun C (disamarkan) di Bank Central Asia",
+      "body": "Institusi Dana Pensiun C (disamarkan) membeli 60.000.000 saham.",
+      "holder_name": "Institusi Dana Pensiun C (disamarkan)",
+      "holder_type": "institution",
+      "transaction_type": "buy",
+      "holding_before": 1200000000,
+      "holding_after": 1260000000,
+      "amount_transaction": 60000000,
+      "price": 9650,
+      "transaction_value": 579000000000,
+      "share_percentage_before": 0.97,
+      "share_percentage_after": 1.02,
+      "share_percentage_transaction": 0.05,
+      "tags": ["share-transfer"],
+      "source": "https://www.idx.co.id/contoh/keterbukaan-informasi-bbca-2023-08.pdf",
+      "timestamp": "2023-08-15T00:00:00"
+    }
+  ],
+  "corporate_actions": {
+    "symbol": "BBCA",
+    "dividend": [
+      { "ex_date": "2024-03-28", "payment_date": "2024-04-17", "dividend_amount": 227.5, "dividend_yield": 0.0231 },
+      { "ex_date": "2023-12-11", "payment_date": "2023-12-20", "dividend_amount": 42.5, "dividend_yield": 0.0046 }
+    ],
+    "upcoming_dividend": [],
+    "stock_split": [
+      { "date": "2021-10-13", "ratio": "1:5", "split_type": "stock_split" }
+    ],
+    "right_issue": [],
+    "warrant": [],
+    "bonus": [],
+    "agm": [
+      { "agm_date": "2024-03-14", "agm_time": "10:00:00", "agm_place": "Jakarta", "agm_result": null }
+    ]
+  },
+  "quarterly_financials": [
+    {
+      "symbol": "BBCA",
+      "date": "2023-12-31",
+      "report_date": "2023-12-31",
+      "revenue": 99900000000000,
+      "earnings": 48600000000000,
+      "total_assets": 1408000000000000,
+      "total_equity": 242000000000000,
+      "total_liabilities": 1166000000000000,
+      "total_debt": 12000000000000,
+      "operating_cash_flow": 45000000000000,
+      "investing_cash_flow": -30000000000000,
+      "financing_cash_flow": -35000000000000,
+      "ebit": 60100000000000,
+      "ebitda": 62500000000000
+    },
+    {
+      "symbol": "BBCA",
+      "date": "2024-03-31",
+      "report_date": "2024-03-31",
+      "revenue": 25400000000000,
+      "earnings": 12900000000000,
+      "total_assets": 1444000000000000,
+      "total_equity": 250000000000000,
+      "total_liabilities": 1194000000000000,
+      "total_debt": 11500000000000,
+      "operating_cash_flow": 12000000000000,
+      "investing_cash_flow": -8000000000000,
+      "financing_cash_flow": -2000000000000,
+      "ebit": 16100000000000,
+      "ebitda": 16700000000000
+    }
+  ],
+  "broker_summary": {
+    "symbol": "BBCA",
+    "start": "2024-03-20",
+    "end": "2024-03-27",
+    "data": [
+      {
+        "date": "2024-03-27",
+        "summary": [
+          { "broker_code": "AK", "bfreq": 3120, "blot": 142000, "bval": 1394000000000, "bavg_per_share": 9816.9, "sfreq": 2890, "slot": 128000, "sval": 1256000000000, "savg_per_share": 9812.5, "nlot": 14000, "nval": 138000000000, "navg_per_share": 9816.9 },
+          { "broker_code": "BK", "bfreq": 2450, "blot": 98000, "bval": 962000000000, "bavg_per_share": 9816.3, "sfreq": 2610, "slot": 105000, "sval": 1030000000000, "savg_per_share": 9809.5, "nlot": -7000, "nval": -68000000000, "navg_per_share": 9809.5 }
+        ]
+      }
+    ]
+  },
+  "listing_performance": null,
+  "daily": [
+    { "symbol": "BBCA", "date": "2024-03-25", "close": 9850, "open": 9800, "high": 9900, "low": 9775, "volume": 68400000, "market_cap": 1214000000000000 },
+    { "symbol": "BBCA", "date": "2024-03-26", "close": 9900, "open": 9850, "high": 9925, "low": 9825, "volume": 71200000, "market_cap": 1220000000000000 },
+    { "symbol": "BBCA", "date": "2024-03-27", "close": 9825, "open": 9900, "high": 9925, "low": 9800, "volume": 92500000, "market_cap": 1211000000000000 }
+  ]
+}

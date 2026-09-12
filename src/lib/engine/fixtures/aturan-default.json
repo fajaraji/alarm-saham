@@ -1,0 +1,9 @@
+{
+  "name": "Saham mau pailit",
+  "combine": "any",
+  "blocks": [
+    { "kind": "suspensi", "threshold": "longgar" },
+    { "kind": "laporan_hilang", "threshold": "longgar" },
+    { "kind": "ekuitas_negatif", "threshold": "longgar" }
+  ]
+}

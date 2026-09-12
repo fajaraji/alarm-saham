@@ -1,0 +1,104 @@
+{
+  "_catatan": "Respons nyata broker-summary/BBCA 14 hari; dipotong 2 hari x 3 broker.",
+  "body": {
+    "symbol": "BBCA.JK",
+    "start": "2026-08-24",
+    "end": "2026-09-06",
+    "data": [
+      {
+        "date": "2026-08-24",
+        "summary": [
+          {
+            "broker_code": "AG",
+            "bfreq": 122,
+            "blot": 8577,
+            "bval": 5493547500,
+            "bavg_per_share": 6404.9755,
+            "sfreq": 108,
+            "slot": 1973,
+            "sval": 1260547500,
+            "savg_per_share": 6388.9888,
+            "nlot": 6604,
+            "nval": 4233000000,
+            "navg_per_share": 6404.9755
+          },
+          {
+            "broker_code": "AH",
+            "bfreq": 0,
+            "blot": 0,
+            "bval": 0,
+            "bavg_per_share": null,
+            "sfreq": 1,
+            "slot": 1,
+            "sval": 640000,
+            "savg_per_share": 6400,
+            "nlot": -1,
+            "nval": -640000,
+            "navg_per_share": 6400
+          },
+          {
+            "broker_code": "AI",
+            "bfreq": 30,
+            "blot": 6001,
+            "bval": 3831700000,
+            "bavg_per_share": 6385.1025,
+            "sfreq": 10,
+            "slot": 139,
+            "sval": 89112500,
+            "savg_per_share": 6410.9712,
+            "nlot": 5862,
+            "nval": 3742587500,
+            "navg_per_share": 6385.1025
+          }
+        ]
+      },
+      {
+        "date": "2026-08-26",
+        "summary": [
+          {
+            "broker_code": "AG",
+            "bfreq": 13,
+            "blot": 191,
+            "bval": 122232500,
+            "bavg_per_share": 6399.6073,
+            "sfreq": 11,
+            "slot": 7265,
+            "sval": 4615315000,
+            "savg_per_share": 6352.808,
+            "nlot": -7074,
+            "nval": -4493082500,
+            "navg_per_share": 6352.808
+          },
+          {
+            "broker_code": "AI",
+            "bfreq": 29,
+            "blot": 552,
+            "bval": 351927500,
+            "bavg_per_share": 6375.4982,
+            "sfreq": 46,
+            "slot": 2013,
+            "sval": 1288470000,
+            "savg_per_share": 6400.7452,
+            "nlot": -1461,
+            "nval": -936542500,
+            "navg_per_share": 6400.7452
+          },
+          {
+            "broker_code": "AK",
+            "bfreq": 2935,
+            "blot": 82299,
+            "bval": 52576760000,
+            "bavg_per_share": 6388.5053,
+            "sfreq": 2344,
+            "slot": 93925,
+            "sval": 59973692500,
+            "savg_per_share": 6385.2747,
+            "nlot": -11626,
+            "nval": -7396932500,
+            "navg_per_share": 6385.2747
+          }
+        ]
+      }
+    ]
+  }
+}

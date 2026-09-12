@@ -6,10 +6,10 @@ Blok kelas A mengikuti keputusan tiket 04 (default PLAN.md §3: laporan telat, s
 
 **Blocked by:** 04 (Pembuktian data — daftar blok final), 05 (Skema database)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 di worktree t06 (lint/typecheck/test/build exit 0; 120 tes; CLI fixture: 2/4 tertangkap, lead rata-rata 23 bln, 0 alarm palsu). Definisi blok mengikuti docs/data-proof.md §2 (laporan hilang/berhenti, insider terbatas 2024+). Asumsi dicatat di docs/mesin-uji.md.
 
-- [ ] Skema aturan divalidasi Zod; aturan tidak valid ditolak dengan pesan jelas
-- [ ] Tes: tiap blok terpicu/tidak sesuai fixture; ATAU vs DAN; ambang longgar vs ketat; anti-lookahead
-- [ ] Tes reproduktif: skor untuk aturan contoh pada fixture selalu identik (snapshot)
-- [ ] CLI `npm run backtest -- <file-aturan.json>` mencetak skor + rincian per emiten dari DB atau fixture
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Skema aturan divalidasi Zod; aturan tidak valid ditolak dengan pesan jelas
+- [x] Tes: tiap blok terpicu/tidak sesuai fixture; ATAU vs DAN; ambang longgar vs ketat; anti-lookahead
+- [x] Tes reproduktif: skor untuk aturan contoh pada fixture selalu identik (snapshot)
+- [x] CLI `npm run backtest -- <file-aturan.json>` mencetak skor + rincian per emiten dari DB atau fixture
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0

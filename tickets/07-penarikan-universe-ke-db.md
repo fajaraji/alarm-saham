@@ -4,10 +4,10 @@
 
 **Blocked by:** 03 (Klien Sectors), 04 (Pembuktian data), 05 (Skema database)
 
-**Status:** ready-for-agent
+**Status:** done — diverifikasi 2026-09-07 (lint/typecheck/test/build exit 0; 117 tes; ledger 68→463, tiket 07 = 395 dari anggaran 433; dry-run pasca 0 kredit). **Catatan:** data tersimpan di PGlite lokal karena `DATABASE_URL` kosong; `npm run db:sync -- --from=pglite --to=neon` siap (teruji PGlite→PGlite) — dijalankan saat Neon tersedia (blocker tiket 16). Skor nyata `npm run backtest` dipindah ke tiket 14 (butuh integrasi CLI backtest ↔ PGlite).
 
-- [ ] Penarikan selesai dengan total kredit ≤ anggaran yang direvisi tiket 04 (bukti: buku kredit sebelum/sesudah)
-- [ ] Menjalankan perintah kedua kali: 0 kredit baru (bukti)
-- [ ] Tabel `symbols` memuat 107 emiten dengan kelompok (delisting/pemantauan/kontrol) dan tanggal kejadian target
-- [ ] `npm run backtest` dengan aturan default menghasilkan skor nyata; angkanya dicatat di `docs/data-proof.md`
-- [ ] `npm run lint`, `npm test`, `npm run build` exit 0
+- [x] Penarikan selesai dengan total kredit ≤ anggaran yang direvisi tiket 04 (bukti: buku kredit sebelum/sesudah)
+- [x] Menjalankan perintah kedua kali: 0 kredit baru (bukti)
+- [x] Tabel `symbols` memuat 107 emiten dengan kelompok (delisting/pemantauan/kontrol) dan tanggal kejadian target (3 watchlist tanpa target: MENN, TGRA, WSKT)
+- [ ] `npm run backtest` skor nyata → dipindah ke tiket 14
+- [x] `npm run lint`, `npm test`, `npm run build` exit 0
