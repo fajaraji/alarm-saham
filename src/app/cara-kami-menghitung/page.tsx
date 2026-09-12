@@ -39,6 +39,22 @@ import {
   totalKredit,
 } from "@/lib/metodologi/skor";
 
+/**
+ * Daftar isi halaman metodologi. Label-nya sengaja lebih pendek daripada
+ * judul bagiannya: daftar isi harus bisa dipindai sekilas, sementara judulnya
+ * boleh menjelaskan. `id` WAJIB sama dengan id <h2> yang dituju.
+ */
+const DAFTAR_ISI = [
+  { id: "skor", label: "Skor nyata" },
+  { id: "apa", label: "Apa yang dihitung" },
+  { id: "blok", label: "Definisi blok" },
+  { id: "universe", label: "Universe uji" },
+  { id: "lookahead", label: "Anti-lookahead" },
+  { id: "batas", label: "Keterbatasan" },
+  { id: "penjaga", label: "Penjaga keluaran AI" },
+  { id: "kredit", label: "Kredit terpakai" },
+] as const;
+
 export const metadata: Metadata = {
   title: "Cara kami menghitung · Alarm Saham",
   description:
@@ -187,8 +203,27 @@ export default function HalamanCaraKamiMenghitung() {
         ini sama dengan keluaran mesin uji.
       </p>
 
+      {/* Daftar isi menempel. Halaman ini 2.128 kata dan 5.493px tinggi, dan
+          tanpa daftar isi pembaca harus menggulir seluruhnya hanya untuk tahu
+          isinya apa. Isinya sengaja TIDAK dipangkas: keterbatasan yang diakui,
+          buku kredit, dan angka penjaga yang terukur adalah justru bagian yang
+          paling bernilai di halaman metodologi. Tabel per-kelompok yang paling
+          berat (107 baris) memang sudah terlipat sejak awal lewat <details> di
+          TabelKelompok, jadi yang kurang tinggal navigasinya. */}
+      <nav aria-label="Daftar isi" data-testid="daftar-isi" className="sticky top-[57px] z-[5] -mx-6 mt-6 border-y border-line bg-bg/95 px-6 py-2.5 backdrop-blur">
+        <ol className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1.5 p-0 text-[12.5px]">
+          {DAFTAR_ISI.map((b) => (
+            <li key={b.id}>
+              <a href={`#${b.id}`} className="text-ink-2 no-underline hover:text-accent hover:underline">
+                {b.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
       {/* ------------------------------------------------------------ */}
-      <section className="mt-8" aria-labelledby="skor">
+      <section className="mt-8 scroll-mt-28" aria-labelledby="skor">
         <h2 id="skor" className="font-display text-xl font-bold">
           Skor nyata aturan bawaan (snapshot {SKOR_NYATA.today})
         </h2>
@@ -244,7 +279,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="apa">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="apa">
         <h2 id="apa" className="font-display text-xl font-bold">
           Apa yang sebenarnya dihitung
         </h2>
@@ -284,7 +319,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="blok">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="blok">
         <h2 id="blok" className="font-display text-xl font-bold">
           Definisi tiap blok dan ambangnya
         </h2>
@@ -323,7 +358,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="universe">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="universe">
         <h2 id="universe" className="font-display text-xl font-bold">
           Universe uji: 18 + 59 + 30 emiten
         </h2>
@@ -350,7 +385,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="lookahead">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="lookahead">
         <h2 id="lookahead" className="font-display text-xl font-bold">
           Anti-lookahead: tidak mengintip masa depan
         </h2>
@@ -364,7 +399,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="batas">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="batas">
         <h2 id="batas" className="font-display text-xl font-bold">
           Keterbatasan yang jujur
         </h2>
@@ -412,7 +447,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="penjaga">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="penjaga">
         <h2 id="penjaga" className="font-display text-xl font-bold">
           Bagaimana kami menjaga keluaran AI bukan saran investasi
         </h2>
@@ -510,7 +545,7 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      <section className="mt-10" aria-labelledby="kredit">
+      <section className="mt-10 scroll-mt-28" aria-labelledby="kredit">
         <h2 id="kredit" className="font-display text-xl font-bold">
           Kredit Sectors yang terpakai
         </h2>

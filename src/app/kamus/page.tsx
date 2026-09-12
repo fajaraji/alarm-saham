@@ -31,13 +31,20 @@ export default function HalamanKamus() {
         ))}
       </nav>
 
-      <dl className="m-0 grid gap-3">
+      {/* Dua kolom di layar lebar: 919 kata dalam satu kolom membuat halaman ini
+          3.586px tinggi, padahal isinya daftar yang tiap butirnya pendek.
+          Dipakai `columns` (multi-kolom CSS), bukan grid dua kolom: tinggi tiap
+          kartu berbeda-beda, dan multi-kolom mengalirkannya rapat tanpa
+          meninggalkan lubang seperti grid. `break-inside-avoid` menjaga satu
+          kartu tidak terpotong di antara dua kolom. Tidak ada satu kata pun
+          dibuang; ini murni tata letak. */}
+      <dl className="m-0 md:columns-2 md:gap-3">
         {KAMUS.map((e) => (
           <div
             key={e.id}
             id={e.id}
             data-testid={`kamus-${e.id}`}
-            className="scroll-mt-20 rounded-xl border border-line bg-surface p-4"
+            className="mb-3 break-inside-avoid scroll-mt-20 rounded-xl border border-line bg-surface p-4"
           >
             <dt className="font-display text-base font-bold">{e.istilah}</dt>
             <dd className="m-0 mt-1 max-w-[70ch] text-ink-2">{e.definisi}</dd>

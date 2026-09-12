@@ -21,8 +21,12 @@ export default async function HalamanPasang() {
     <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
       <p className="text-[12px] font-semibold text-ink-3">{TEKS.eyebrow}</p>
       <h1 className="mb-1.5 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">{TEKS.judul}</h1>
+      {/* Kalimat pembuka lama ("Tambahkan saham yang kamu pegang, pilih alarm
+          yang aktif, lalu klik Cek sekarang") dibuang: baris petunjuk di bawah
+          mengatakan persis hal yang sama di langkah 1 dan 2. Yang disisakan di
+          sini justru yang TIDAK ada di petunjuk, yaitu perilaku kredit dan
+          data. */}
       <p className="mb-4 max-w-[70ch] text-[13.5px] text-ink-2">
-        Tambahkan saham yang kamu pegang, pilih alarm yang aktif, lalu klik Cek sekarang.{" "}
         {nyata ? (
           <>Alarm mengecek data resmi di server kami tanpa memakai <Istilah id="kredit_sectors">kredit</Istilah>;</>
         ) : (
@@ -37,10 +41,9 @@ export default async function HalamanPasang() {
         langkah={[
           <>Tambahkan saham yang kamu pegang (kode 4 huruf).</>,
           <>
-            Klik <strong>Cek sekarang</strong>. Hijau = aman menurut alarmmu, kuning = satu tanda, merah = alarm berbunyi
-            (mis. <Istilah id="suspensi">disuspensi</Istilah> atau <Istilah id="ritel_dominan">ritel dominan</Istilah>).
+            Klik <strong>Cek sekarang</strong>: hijau aman, kuning satu tanda, merah alarm berbunyi.
           </>,
-          <>Baca pesan penjelasan: syarat mana yang terpenuhi, tanggalnya, dan sumbernya, bukan cuma angka.</>,
+          <>Baca pesan penjelasannya: syarat mana, tanggalnya, dan sumbernya.</>,
         ]}
       />
 

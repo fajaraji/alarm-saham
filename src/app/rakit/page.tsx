@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 
-import { Istilah } from "@/components/panduan/Istilah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { PapanRakit } from "@/components/rakit/PapanRakit";
 import { TEKS } from "@/components/rakit/teks";
-import { labelAmbang } from "@/lib/rakit/blok";
 
 export const metadata: Metadata = {
   title: "Rakit alarm · Alarm Saham",
@@ -22,17 +20,13 @@ export default function HalamanRakit() {
       <PetunjukLayar
         langkah={[
           <>
-            <strong>Seret</strong> blok syarat dari kotak kiri ke papan bergaris putus-putus. Atau ketik keinginanmu dan klik{" "}
-            <strong>Minta AI rakit</strong>.
+            <strong>Seret</strong> blok dari kotak kiri ke papan, atau klik <strong>Minta AI rakit</strong>.
           </>,
           <>
-            Klik tombol <strong>ATAU/DAN</strong> di antara blok untuk mengubah cara menggabung. Klik ambang (mis. “
-            <Istilah id="laporan_hilang">hilang</Istilah> · {labelAmbang("laporan_hilang", "ketat")}”) untuk memperketat.
+            Klik <strong>ATAU/DAN</strong> untuk mengubah cara menggabung, klik ambang untuk memperketat.
           </>,
           <>
-            Klik <strong>Uji ke masa lalu</strong>: berapa yang tertangkap, berapa bulan{" "}
-            <Istilah id="lebih_awal">lebih awal</Istilah>, dan berapa <Istilah id="alarm_palsu">alarm palsu</Istilah> pada{" "}
-            <Istilah id="kontrol_sehat">saham sehat</Istilah>. AI memberi tahu di mana alarmmu bolong.
+            Klik <strong>Uji ke masa lalu</strong> untuk melihat skornya.
           </>,
         ]}
       />
