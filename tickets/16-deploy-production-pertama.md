@@ -11,5 +11,5 @@
 - [x] Persetujuan pemilik tercatat ("gas", 2026-09-12); deploy dijalankan pemilik sendiri lewat dasbor, bukan `vercel --prod`
 - [x] URL production terbuka: https://alarm-saham.vercel.app (HTTP 200, `data-sumber="db"`)
 - [x] Smoke Playwright terhadap URL production: lulus (6,9 s, nol console.error)
-- [ ] Cron terdaftar di dashboard Vercel — menunggu tangkapan layar dari pemilik (terdaftar di vercel.json; Hobby: sekali sehari, presisi ±59 menit)
+- [x] Cron terdaftar di dashboard Vercel: `/api/cron/jaga` `30 23 * * *` ("At 11:30 PM" UTC = 06:30 WIB), Enabled — tangkapan layar dari pemilik 2026-09-12. Dasbor Vercel sendiri menyatakan "Cron jobs on Hobby have a flexible time window of 1-hour", jadi jalannya 06:30–07:29 WIB.
 - [x] Tidak ada rahasia di repo (husky check-secrets lolos tiap commit); 7 env di Vercel
