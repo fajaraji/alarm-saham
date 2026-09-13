@@ -153,3 +153,14 @@ html:not([data-siap]) .butuh-hidrasi {
     animation: none;
   }
 }
+
+/* Linimasa bukti di beranda TIDAK dianimasikan.
+   Versi pertama memberi tiap baris animasi masuk berurutan (opacity 0 -> 1 plus
+   geser 6px) dengan alasan yang sah: klaim produk ini adalah bahwa tandanya
+   datang berurutan. Gerbang aksesibilitas CI menolaknya di KEDUA tema, karena
+   axe mengukur kontras warna saat barisnya masih tembus pandang di tengah
+   animasi, dan melaporkannya sebagai pelanggaran serius. Aturan taste-skill
+   untuk keadaan ini tidak ambigu: kalau gerak tidak bisa dikirim tanpa rusak,
+   turunkan dialnya, jangan kirim gerak setengah jadi. MOTION_INTENSITY beranda
+   karena itu 3: hover dan :active saja. Urutan tanggalnya tetap terbaca, karena
+   yang menyampaikannya memang datanya, bukan animasinya. */
