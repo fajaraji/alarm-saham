@@ -38,11 +38,21 @@ if (!adaPglite) {
 
 const README = readFileSync(path.resolve(process.cwd(), "README.md"), "utf8");
 
-/** Semua angka yang README klaim sebagai total buku kredit. */
+/**
+ * Semua angka yang README klaim sebagai total buku kredit.
+ *
+ * Pola Indonesia DAN Inggris sama-sama dicari: README ditulis ulang dalam
+ * Bahasa Inggris pada 2026-09-14, dan pola yang hanya mengenal satu bahasa akan
+ * membuat tes ini lulus kosong (nol angka ditemukan, nol yang dibandingkan)
+ * begitu bahasanya berganti lagi. `expect(angka.length).toBeGreaterThan(0)` di
+ * bawah memastikan itu tidak terjadi diam-diam.
+ */
 function angkaKreditDiReadme(): number[] {
   const angka: number[] = [];
   const bersih = (s: string) => Number(s.replace(/[.,]/g, ""));
-  for (const m of README.matchAll(/\*\*([\d.,]+)\*\* dari 1\.000 kredit terpakai/g)) angka.push(bersih(m[1]));
+  for (const m of README.matchAll(/\*\*([\d.,]+)\*\* (?:dari 1\.000 kredit terpakai|of 1,000 credits used)/g)) {
+    angka.push(bersih(m[1]));
+  }
   for (const m of README.matchAll(/buku kredit total \*\*([\d.,]+)\*\*/g)) angka.push(bersih(m[1]));
   return angka;
 }
@@ -73,7 +83,9 @@ describe("docs/kredit-ledger.json: satu angka kredit untuk semua permukaan", () 
     expect(angka.length, "README harus menyebut total buku kredit").toBeGreaterThan(0);
     for (const n of angka) expect(n).toBe(KREDIT_LEDGER.total);
     // Sisa kredit yang diumumkan juga harus ikut angka yang benar.
-    const sisa = [...README.matchAll(/sisa \*\*([\d.,]+)\*\* kredit/g)].map((m) => Number(m[1].replace(/[.,]/g, "")));
+    const sisa = [...README.matchAll(/(?:sisa \*\*([\d.,]+)\*\* kredit|\*\*([\d.,]+)\*\* remaining)/g)].map((m) =>
+      Number((m[1] ?? m[2]).replace(/[.,]/g, "")),
+    );
     expect(sisa.length, "README harus menyebut sisa kredit").toBeGreaterThan(0);
     for (const n of sisa) expect(n).toBe(KREDIT_ANGGARAN - KREDIT_LEDGER.total);
   });
