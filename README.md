@@ -277,7 +277,7 @@ Set **one** of these in `.env.local`:
 
 ## Competition rules and compliance
 
-- **Sectors data is the core.** Without it there is no backtest and no portfolio check. Every call is recorded in the credit ledger: **467 of 1,000 credits used** (395 universe pull + 68 data proof + 4 real class B test), **533 remaining**, with 250 held in reserve that the code will not spend. These numbers are not typed by hand: `npm run kredit:snapshot -- --pglite` reads them from `api_ledger` into `docs/kredit-ledger.json`, and the methodology page, this README, and `tests/unit/docs/kredit-ledger.test.ts` all derive from that file. Running the app and its backtests costs zero credits.
+- **Sectors data is the core.** Without it there is no backtest and no portfolio check. Every call is recorded in the credit ledger: **467** of 1,000 credits used (395 universe pull + 68 data proof + 4 real class B test), **533** remaining, with 250 held in reserve that the code will not spend. These numbers are not typed by hand: `npm run kredit:snapshot -- --pglite` reads them from `api_ledger` into `docs/kredit-ledger.json`, and the methodology page, this README, and `tests/unit/docs/kredit-ledger.test.ts` all derive from that file. Running the app and its backtests costs zero credits.
 - **Custom agent logic:** a tool-use loop plus structured output over our own backtest engine, not a wrapped prompt.
 - **No order execution.** There is no buy or sell action anywhere in the app, and no code path that can place an order.
 - **Not investment advice.** A disclaimer sits in the footer of every screen and in the agent's system prompt. Real companies are mentioned only with official facts and source links. When the server runs on sample data, every screen says so, and no event is attributed to Sectors.
@@ -299,6 +299,7 @@ Measured on `tests/fixtures/korpus-anjuran.json` (106 legitimate sentences + 101
 | Precision: legitimate sentences left unchanged | 66/106 = 62.3% | **106/106 = 100%** |
 | Recall: advice flagged | 77/101 = 76.2% | 56/101 = 55.4% |
 | Legitimate sentences destroyed | 40 | **0** |
+| Advice written by the reviewers that is now caught | 1/25 | **11/25** |
 
 We **chose precision**: the test gate fails if a single legitimate sentence changes, but never because recall is low. What we accept by making that choice, stated plainly: the bare words "beli"/"jual" (buy/sell) are not filtered because they collide with factual sentences such as "net retail buy volume 81%"; "harga wajar" (fair price) is not filtered because it collides with our own refusal "we never compute a fair price"; "akan naik" (will rise) is not filtered because it collides with backtest output such as "findings will rise from 26 to 41"; slang and typos are not chased; and ticker codes are not normalised, so "Hindari SRIL" (avoid SRIL) passes.
 

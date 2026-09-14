@@ -20,9 +20,15 @@ const HITUNG_ULANG = ringkasSesudah(ukur(KORPUS), KORPUS);
 const README = readFileSync(path.resolve(process.cwd(), "README.md"), "utf8");
 const DECISIONS = readFileSync(path.resolve(process.cwd(), "docs", "decisions.md"), "utf8");
 
-/** "58.4" → "58,4" (desimal Bahasa Indonesia seperti di README). */
-function koma(n: number): string {
-  return String(n).replace(".", ",");
+/**
+ * Format persen seperti yang tertulis di README.
+ *
+ * Sejak README ditulis ulang dalam Bahasa Inggris (2026-09-14) desimalnya
+ * memakai titik ("55.4%"), bukan koma. Yang dijaga tes ini tidak berubah:
+ * angkanya harus PERSIS angka snapshot, bukan ketikan tangan.
+ */
+function persenReadme(n: number): string {
+  return String(n);
 }
 
 describe("docs/penjaga-frasa.json", () => {
@@ -67,10 +73,10 @@ describe("README memakai angka snapshot, bukan angka yang diketik ulang", () => 
   const l = PENJAGA_FRASA.sebelum;
 
   it.each([
-    ["presisi sesudah", `${s.harusUtuhTotal - s.harusUtuhBerubah}/${s.harusUtuhTotal} = ${koma(s.presisiPersen)}%`],
-    ["presisi sebelum", `${l.harusUtuhTotal - l.harusUtuhBerubah}/${l.harusUtuhTotal} = ${koma(l.presisiPersen)}%`],
-    ["recall sesudah", `${s.harusDitandaiKena}/${s.harusDitandaiTotal} = ${koma(s.recallPersen)}%`],
-    ["recall sebelum", `${l.harusDitandaiKena}/${l.harusDitandaiTotal} = ${koma(l.recallPersen)}%`],
+    ["presisi sesudah", `${s.harusUtuhTotal - s.harusUtuhBerubah}/${s.harusUtuhTotal} = ${persenReadme(s.presisiPersen)}%`],
+    ["presisi sebelum", `${l.harusUtuhTotal - l.harusUtuhBerubah}/${l.harusUtuhTotal} = ${persenReadme(l.presisiPersen)}%`],
+    ["recall sesudah", `${s.harusDitandaiKena}/${s.harusDitandaiTotal} = ${persenReadme(s.recallPersen)}%`],
+    ["recall sebelum", `${l.harusDitandaiKena}/${l.harusDitandaiTotal} = ${persenReadme(l.recallPersen)}%`],
     ["korpus penyerang sesudah", `${s.penyerangBocorTertangkap}/${s.penyerangBocorTotal}`],
     ["korpus penyerang sebelum", `${l.penyerangBocorTertangkap}/${l.penyerangBocorTotal}`],
   ])("README memuat %s (%s)", (_nama, teks) => {
@@ -93,19 +99,28 @@ describe("tidak ada dokumen yang mengklaim penyensor menangkap semua anjuran", (
     ["penyaring menutup semua/seluruh anjuran", /penyaring[^.\n]{0,40}(semua|seluruh)\s+(kalimat|anjuran|saran)/i],
     ["penyensor memblokir semua kalimat beranjuran", /(memblokir|menangkap)\s+semua\s+(kalimat\s+)?(beranjuran|anjuran)/i],
     ["nol bocor", /\bnol bocor\b/i],
+    // Padanan Inggris, sejak README ditulis ulang dalam Bahasa Inggris (2026-09-14).
+    // Tanpa ini README berbahasa Inggris lulus kosong dan penjaganya mati diam-diam.
+    ["(en) discarded entirely by the filter", /discarded entirely by the filter/i],
+    ["(en) removes the sentence unconditionally", /(removes?|deletes?|drops?)\s+(the|every)\s+sentence\s+unconditionally/i],
+    ["(en) the filter covers all advice", /filter[^.\n]{0,40}(all|every)\s+(piece of\s+)?(investment\s+)?(sentences?|advice|recommendations?)/i],
+    ["(en) blocks or catches all advice", /\b(blocks?|catch(es)?|stops?)\s+(all|every)\s+(piece of\s+)?(investment\s+)?advice/i],
+    ["(en) zero leaks", /\bzero leaks?\b/i],
   ];
 
   it.each(KLAIM_TERLARANG)("README tidak mengklaim: %s", (_nama, pola) => {
     // Kalimat yang MENYANGKAL klaim itu boleh ada; yang dilarang klaimnya.
     const kalimat = README.split(/\n|(?<=\.)\s/).filter((k) => pola.test(k));
     for (const k of kalimat) {
-      expect(k, k).toMatch(/tidak|bukan|TIDAK|klaim itu pernah/);
+      expect(k, k).toMatch(/tidak|bukan|TIDAK|klaim itu pernah|\bnot\b|\bNOT\b|\bnever\b|\bwrong\b/);
     }
   });
 
   it("README & decisions.md menyatakan batas backstop secara eksplisit", () => {
-    expect(README).toMatch(/recall rendah dengan sengaja|TIDAK menjamin semua anjuran tertangkap/i);
-    expect(README).toMatch(/tidak mengklaim punya penyensor yang\s+memblokir semua kalimat beranjuran/i);
+    // README berbahasa Inggris sejak 2026-09-14: kalimat pengakuannya diterjemahkan,
+    // bukan dihapus. decisions.md tetap berbahasa Indonesia.
+    expect(README).toMatch(/Low recall by design|does NOT guarantee every piece of advice is caught/i);
+    expect(README).toMatch(/We do \*\*not\*\* claim a filter that blocks every piece of advice/i);
     expect(DECISIONS).toMatch(/tidak menjamin semua anjuran tertangkap/i);
     expect(DECISIONS).toMatch(/putaran 5/i);
   });
