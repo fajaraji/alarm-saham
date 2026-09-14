@@ -29,9 +29,25 @@ The facts behind this product, with sources:
 - **59 companies were on the IDX Special Monitoring Board as of 30 June 2026**, the board that flags companies in specific conditions, including those at risk of forced delisting. Source: [Kontan](https://amp.kontan.co.id/news/bei-umumkan-59-emiten-berpotensi-delisting-paksa-dua-bumn-masuk-daftar). This list is our main scoring universe.
 - **45,866 investors held Sritex (SRIL) shares** when the stock was declared for delisting, including one holder with more than 1% worth Rp30.56 billion. Source: [hargasaham.id](https://www.hargasaham.id/delisting-sritex-investor-terdampak-lo-kheng-hong/).
 
-For most of these companies the official signs were already in the same data we now pull from Sectors, often years earlier. Open `/putar-ulang?kode=TELE` and drag the time slider back.
+**Why it is urgent.** While the exchange suspends a stock, it cannot be sold on the exchange. A warning only helps before that point.
+
+For many of these companies the official signs were already in the same data we now pull from Sectors, often more than a year earlier. Open `/putar-ulang?kode=TELE` and drag the time slider back.
 
 **What existing tools already do, and the gap we fill.** IDX itself marks troubled stocks with special notation codes, and Indonesian retail apps already surface red flags and AI summaries. What none of them lets you do is **step 2: write your own alarm and test it against history** before trusting it. That is the core of this product.
+
+## Why test an alarm against the past?
+
+An alarm is set to watch the future. The question is whether the rule behind it is any good, and waiting for the future to find out means finding out after the money is already stuck.
+
+So before you use a rule, the app runs it over companies whose outcome is already known: companies that were delisted or put under special monitoring, and healthy companies that were not. The test answers three questions:
+
+1. Before those companies collapsed, would this rule have warned?
+2. How many months earlier?
+3. On healthy companies, does it warn when nothing was wrong?
+
+For the default rule the answers are: it warned early on **26 of 74** troubled companies, **9 months** earlier on average, and it wrongly warned on **1 of 30** healthy companies. Before using it, you already know it misses about two cases in three but rarely raises a false alarm. You can add blocks and test again.
+
+The past is used to check the rule. The future is where you use it. A rule that warned in time before is not guaranteed to warn in time again; testing reduces the guesswork, it does not remove it.
 
 ## What it does: three steps
 
@@ -43,7 +59,7 @@ For most of these companies the official signs were already in the same data we 
 | Methodology | `/cara-kami-menghitung` | Block definitions read from the engine's own constants, how scores are computed, the universe, anti-lookahead, honest limitations, the credit ledger, and per-company tables. |
 | Glossary | `/kamus` | Every term explained in everyday language, with the same definitions used by the dotted-underline tooltips across the app. |
 
-The homepage shows a real case as its hero: TELE's warning signs pulled from the database (negative equity in September 2024, suspension in December 2024, negative equity again in two later quarters), ending in the day it stopped trading, 20 months after the first sign.
+The homepage leads with a stock search: type the code of a stock you hold and see the official signs on record for it. Below that sits one real example, read from the database: TELE (PT Omni Inovasi Indonesia Tbk), scheduled for delisting effective 10 November 2026 after bankruptcy. At least eight signs were already on record well before then, the earliest being negative equity in September 2023; the timeline shows the latest four, including a trading suspension in December 2024.
 
 ## Why this is an agent, not just a prompt
 

@@ -97,7 +97,11 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   // Dicocokkan sebagai PATH, bukan URL penuh: spec ini juga dijalankan
   // terhadap URL hidup (E2E_BASE_URL), yang domainnya bukan 127.0.0.1.
   await expect.poll(() => new URL(page.url()).pathname).toBe("/");
-  await expect(page.getByRole("link", { name: /Mulai dari langkah 1/ })).toBeVisible();
+  // Hero beranda sejak 2026-09-14 adalah kotak cari saham milik pengguna, bukan
+  // tautan "Mulai dari langkah 1": keduanya membawa ke /putar-ulang, dan dua CTA
+  // dengan niat yang sama di satu halaman membingungkan.
+  await expect(page.getByRole("search", { name: "Cek saham milikmu" })).toBeVisible();
+  await expect(page.getByLabel("Kode saham")).toBeVisible();
   await expect(page.getByTestId("disclaimer")).toContainText("bukan saran investasi");
 
   expect(konsol.daftar, `console.error selama alur:\n${konsol.daftar.join("\n")}`).toEqual([]);
