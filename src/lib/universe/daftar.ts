@@ -12,6 +12,16 @@ export interface EmitenDelisting {
   catatan?: string;
 }
 
+/**
+ * Tanggal efektif penghapusan 18 emiten di `EMITEN_DELISTING` dari bursa.
+ *
+ * Sumber: Bareksa, 13 April 2026 (dikutip di README) dan docs/universe-pull.md.
+ * Dulu tanggal ini hanya ada di komentar berkas. Ia dijadikan konstanta karena
+ * beranda menyebutnya kepada pengguna, dan tanggal yang ditampilkan ke pengguna
+ * harus dibaca dari satu tempat, bukan diketik ulang di halaman.
+ */
+export const TANGGAL_EFEKTIF_DELISTING = "2026-11-10";
+
 export const EMITEN_DELISTING: readonly EmitenDelisting[] = [
   { symbol: "COWL", suspensiCatatan: "2020-07-13", alasan: "pailit" },
   { symbol: "MTRA", suspensiCatatan: "2020-11-17", alasan: "pailit" },
