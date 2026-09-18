@@ -1,0 +1,12 @@
+# 25: Petunjuk Telegram hanya saat bot aktif
+
+**What to build:** Petunjuk untuk mengirim /mulai ke bot Telegram di kotak masuk layar pasang hanya tampil bila server melaporkan bot benar-benar aktif. Saat bot mati (situs live saat ini melapor rahasia webhook kosong), petunjuk itu tidak ada, jadi pengguna tidak disuruh menghubungi bot yang tidak akan menjawab. Bila bot diaktifkan kemudian, petunjuk muncul tanpa perubahan kode. Sumber: feedback gelombang 1, poin 7.
+
+**Blocked by:** None (can start immediately)
+
+**Status:** ready-for-agent
+
+- [ ] Bot tidak aktif: kotak masuk tidak menyebut Telegram maupun /mulai
+- [ ] Bot aktif: petunjuk /mulai beserta kode portofolio tampil
+- [ ] Status bot diperiksa di server, tanpa pernah mengirim token ke browser
+- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
