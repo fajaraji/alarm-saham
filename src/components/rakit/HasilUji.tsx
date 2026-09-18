@@ -82,6 +82,83 @@ function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }
   );
 }
 
+const FRASA_KELOMPOK: Record<Exclude<Group, "control">, string> = {
+  delisting: "saham yang dihapus dari bursa",
+  watchlist: "saham di papan pemantauan khusus",
+};
+
+/**
+ * Satu kalimat jawaban di atas angka-angka (tiket 21).
+ *
+ * Angkanya SAMA dengan kotak skor di bawahnya, tidak dihitung ulang: kotak
+ * "Tertangkap" memakai kelompok dihapus dari bursa, "Lebih awal" memakai
+ * rata-rata SELURUH saham kena (dihapus + pemantauan khusus), "Alarm palsu"
+ * memakai kontrol sehat. Karena itu kalimat ini menyebut kedua kelompok kena
+ * lebih dulu, baru rata-ratanya. Menulis "6 dari 18, rata-rata 8,4 bulan lebih
+ * awal" akan menyesatkan: 8,4 bukan rata-rata keenam saham itu.
+ */
+function KalimatJawaban({ h }: { h: BacktestResult }) {
+  const kena = (["delisting", "watchlist"] as const).map((g) => ({ g, ...h.perGroup[g] })).filter((x) => x.total > 0);
+  const totalKena = kena.reduce((a, x) => a + x.total, 0);
+  const totalTertangkap = kena.reduce((a, x) => a + x.hits, 0);
+  const b = (x: string | number) => <b className="font-semibold text-ink">{x}</b>;
+  return (
+    <p className="m-0 mb-3 text-[14px] leading-relaxed text-ink-2" data-testid="kalimat-hasil">
+      {totalTertangkap === 0 ? (
+        <>Alarmmu tidak berbunyi lebih dulu pada satu pun dari {b(totalKena)} saham kena.</>
+      ) : (
+        <>
+          Alarmmu berbunyi lebih dulu pada{" "}
+          {kena.map((x, i) => (
+            <span key={x.g}>
+              {i > 0 ? " dan " : ""}
+              {b(x.hits)} dari {x.total} {FRASA_KELOMPOK[x.g]}
+            </span>
+          ))}
+          .
+          {h.leadMonthsAvg != null ? <> Rata-rata {b(angkaId(h.leadMonthsAvg, " bulan"))} sebelum kejadiannya.</> : null}
+        </>
+      )}
+      {h.controls > 0 ? (
+        h.falseAlarms === 0 ? (
+          <> Tidak salah bunyi pada satu pun dari {h.controls} saham sehat.</>
+        ) : (
+          <>
+            {" "}
+            Salah bunyi pada {b(h.falseAlarms)} dari {h.controls} saham sehat.
+          </>
+        )
+      ) : null}
+    </p>
+  );
+}
+
+/** Nama saham kena yang tertangkap, paling awal bunyinya lebih dulu. */
+function DaftarTertangkap({ h }: { h: BacktestResult }) {
+  const tertangkap = h.perSymbol
+    .filter((r) => r.group !== "control" && r.fired)
+    .sort((a, b) => (b.leadMonths ?? -1) - (a.leadMonths ?? -1) || a.symbol.localeCompare(b.symbol));
+  if (tertangkap.length === 0) return null;
+  return (
+    <div className="mb-3">
+      <p className="m-0 mb-1.5 text-[12px] font-semibold text-ink-3">Saham yang tertangkap</p>
+      <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0" aria-label="Saham yang tertangkap" data-testid="daftar-tertangkap">
+        {tertangkap.map((r) => (
+          <li
+            key={r.symbol}
+            data-testid={`tertangkap-${r.symbol}`}
+            title={tooltipEmiten(r)}
+            className="rounded-md bg-ok-soft px-2 py-1 text-[12px] text-ink"
+          >
+            <span className="font-mono font-semibold">{r.symbol}</span>
+            {r.leadMonths != null ? <span className="text-ink-2"> · {r.leadMonths} bln lebih awal</span> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
   const h = hasil?.hasil;
   const sumber = hasil ? (hasil.sumber === "db" ? TEKS.sumberDb : TEKS.sumberFixture) : null;
@@ -122,6 +199,10 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
       ) : null}
 
       <div className={basi ? "opacity-40 transition-opacity" : "transition-opacity"}>
+        {/* Urutan baca (tiket 21): jawaban dulu, lalu siapa yang tertangkap, lalu
+            angka ringkas, dan grid semua saham yang diuji terlipat di bawah. */}
+        {h ? <KalimatJawaban h={h} /> : null}
+        {h ? <DaftarTertangkap h={h} /> : null}
         <div className="my-2.5 grid grid-cols-3 gap-2">
           <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
             <div className="text-[11.5px] font-semibold text-ink-3">Tertangkap</div>
@@ -145,7 +226,16 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
             <div className="text-[11px] text-ink-2">dari <Istilah id="kontrol_sehat">saham sehat</Istilah></div>
           </div>
         </div>
-        {h ? URUTAN.map((g) => <BarisKelompok key={g} hasil={h} group={g} />) : null}
+        {h ? (
+          <details className="mt-2" data-testid="rincian-kelompok">
+            <summary className="cursor-pointer text-[12.5px] font-semibold text-accent">
+              Lihat semua {h.perSymbol.length} saham yang diuji, per kelompok
+            </summary>
+            {URUTAN.map((g) => (
+              <BarisKelompok key={g} hasil={h} group={g} />
+            ))}
+          </details>
+        ) : null}
       </div>
     </section>
   );
