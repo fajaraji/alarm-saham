@@ -236,12 +236,6 @@
   background: var(--pu-warn-soft);
   color: var(--pu-warn);
 }
-.pu-sumber-detail {
-  font-weight: 400;
-  font-family: var(--pu-mono);
-  font-size: 10.5px;
-}
-
 .pu-badge {
   display: inline-block;
   font-size: 11px;

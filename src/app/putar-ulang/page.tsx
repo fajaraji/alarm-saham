@@ -59,12 +59,15 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
             <Istilah id="kredit_sectors">kredit</Istilah> dan diputuskan manusia.
           </p>
           <MintaTarik symbol={kode} />
+          {/* Label biasa, bukan `sumber.keterangan`: keterangan itu memuat nama
+              driver dan host database (jalur Neon) atau nama variabel lingkungan
+              (jalur data contoh), yang tidak ada gunanya bagi pengguna. */}
           <p className="pu-hint" style={{ marginTop: 10 }}>
-            Sumber data saat ini: {sumber.keterangan}.
+            Sumber data saat ini: {contoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors"}.
           </p>
         </div>
       ) : (
-        <PutarUlang emiten={emiten} keteranganSumber={sumber.keterangan} />
+        <PutarUlang emiten={emiten} />
       );
   }
 
