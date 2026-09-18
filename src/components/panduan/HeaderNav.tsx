@@ -4,14 +4,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { NAV_HEADER } from "./langkah";
 import { TombolPanduan } from "./TombolPanduan";
 
-const LANGKAH = [
-  { href: "/putar-ulang", n: "1", label: "Putar ulang" },
-  { href: "/rakit", n: "2", label: "Rakit alarm" },
-  { href: "/pasang", n: "3", label: "Pasang" },
-  { href: "/kamus", n: "?", label: "Kamus" },
-] as const;
+const LANGKAH = NAV_HEADER;
 
 export function HeaderNav() {
   const pathname = usePathname() ?? "";

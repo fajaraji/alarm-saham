@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Istilah } from "@/components/panduan/Istilah";
+import { NavigasiLangkah } from "@/components/panduan/NavigasiLangkah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { PanelPasang } from "@/components/pasang/PanelPasang";
 import { TEKS } from "@/components/pasang/teks";
@@ -48,6 +49,7 @@ export default async function HalamanPasang() {
       />
 
       <PanelPasang />
+      <NavigasiLangkah sekarang="/pasang" />
     </main>
   );
 }

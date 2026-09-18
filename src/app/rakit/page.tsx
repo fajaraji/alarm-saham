@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { NavigasiLangkah } from "@/components/panduan/NavigasiLangkah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { PapanRakit } from "@/components/rakit/PapanRakit";
 import { TEKS } from "@/components/rakit/teks";
@@ -32,6 +33,7 @@ export default function HalamanRakit() {
       />
 
       <PapanRakit />
+      <NavigasiLangkah sekarang="/rakit" />
     </main>
   );
 }

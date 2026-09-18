@@ -9,6 +9,7 @@ import { daftarBisaDicari } from "@/lib/putar-ulang/daftar-cari";
 import { getEventSource } from "@/lib/engine/sumber";
 import { muatEmitenDariSumber, normalKode } from "@/lib/putar-ulang/muat";
 import { Istilah } from "@/components/panduan/Istilah";
+import { NavigasiLangkah } from "@/components/panduan/NavigasiLangkah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { MintaTarik } from "@/components/putar-ulang/MintaTarik";
 import { Pencarian } from "@/components/putar-ulang/Pencarian";
@@ -102,6 +103,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           mengulang petunjuk pertama. Kotak cari yang kosong sudah menjelaskan
           dirinya lewat placeholder dan daftar saran. */}
       {isi}
+      <NavigasiLangkah sekarang="/putar-ulang" />
     </>
   );
 }
