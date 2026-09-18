@@ -114,6 +114,15 @@ export function PutarUlang({ emiten }: Props) {
               ))}{" "}
               · dinilai pada {t} · hanya data bertanggal ≤ {t}
             </div>
+            {/* Ditaruh di sini, bukan di kotak "Keterbatasan data": yang tidak bisa
+                dinilai adalah salah satu blok lampu ini, jadi keterangannya
+                menempel pada lampu. Di kotak itu ia muncul di hampir semua emiten
+                dan jadi hiasan yang diabaikan. */}
+            {emiten.ekuitasTidakDinilai ? (
+              <div className="d" data-testid="ekuitas-tidak-dinilai">
+                Blok ekuitas negatif tidak dinilai untuk emiten ini, karena angka ekuitasnya tidak kami tarik.
+              </div>
+            ) : null}
           </div>
         </div>
         <p className="pu-sub" style={{ marginTop: 10 }} data-testid="ringkasan" data-jumlah={ringkas.jumlah}>

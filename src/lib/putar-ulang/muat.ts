@@ -30,8 +30,27 @@ export interface EmitenPutarUlang {
   today: string;
   events: EmitenEvents;
   kejadian: Kejadian[];
-  /** Catatan jujur tentang keterbatasan data emiten ini. */
+  /**
+   * Catatan jujur tentang keterbatasan data emiten ini, KHUSUS yang mengubah
+   * apa yang dilihat di layar: hanya ada data suspensi, di luar universe uji,
+   * laporan keuangan tidak tersedia di sumber, atau server memakai data contoh.
+   *
+   * Dua catatan yang dulu ada di sini dikeluarkan (tiket 19), karena tampil di
+   * hampir SEMUA emiten sehingga kotaknya jadi hiasan yang diabaikan:
+   * - "tidak ada filing orang dalam": lampu layar ini memakai aturan bawaan
+   *   (suspensi ATAU laporan hilang ATAU ekuitas negatif), yang tidak memakai
+   *   data filing sama sekali. Catatan itu tidak mengubah apa pun di layar.
+   * - "angka ekuitas tidak ditarik": catatan ini MEMANG mengubah lampu, jadi
+   *   tidak dibuang, melainkan dipindah ke `ekuitasTidakDinilai` dan ditulis
+   *   satu baris di samping lampu, tempat dampaknya berada.
+   */
   catatan: string[];
+  /**
+   * true bila emiten punya daftar kuartal laporan tetapi angka ekuitasnya tidak
+   * kami tarik (laporan keuangan kuartalan 1 kredit per kuartal, hanya ditarik
+   * untuk 18 emiten delisting). Blok ekuitas negatif di lampu tidak bisa dinilai.
+   */
+  ekuitasTidakDinilai: boolean;
   /**
    * true bila seluruh isi halaman berasal dari fixture contoh (server tanpa
    * DATABASE_URL dan tanpa ./.pglite), bukan dari data Sectors. UI WAJIB
@@ -73,6 +92,7 @@ function kodeTidakSah(masukan: string, today: string, contoh = false): EmitenPut
     events: kosong(""),
     kejadian: [],
     catatan: ["Kode saham harus 2–5 huruf, mis. SRIL."],
+    ekuitasTidakDinilai: false,
     sumberContoh: contoh,
   };
 }
@@ -116,14 +136,9 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
       "Server ini belum terhubung ke database Sectors, jadi yang tampil adalah data CONTOH (fixture universe-kecil.json): tanggal suspensi dan daftar kuartal meniru data nyata, tetapi angka keuangan, rasio rights issue, dan filing bersifat ilustratif, bukan angka resmi.",
     );
   }
-  if (status !== "tidak_ada" && events.filings.length === 0) {
-    catatan.push("Tidak ada filing orang dalam untuk emiten ini di feed Sectors (feed filing baru dimulai 2024).");
-  }
-  if (status === "lengkap" && events.financials.length === 0) {
-    catatan.push(
-      "Angka keuangan kuartalan (ekuitas) tidak ditarik untuk emiten ini: hemat kredit; blok ekuitas negatif tidak bisa dinilai.",
-    );
-  }
+  // Lihat dokumentasi `catatan` dan `ekuitasTidakDinilai` di atas: catatan
+  // filing tidak lagi dibuat, catatan ekuitas pindah ke samping lampu.
+  const ekuitasTidakDinilai = status === "lengkap" && events.financials.length === 0;
 
   return {
     symbol,
@@ -135,6 +150,7 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
     events,
     kejadian,
     catatan,
+    ekuitasTidakDinilai,
     sumberContoh: contoh,
   };
 }

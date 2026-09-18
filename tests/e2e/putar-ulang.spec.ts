@@ -96,6 +96,19 @@ test.describe("/putar-ulang", () => {
     }
   });
 
+  test("emiten tanpa angka ekuitas: tanpa kotak keterbatasan, lampu menyebut blok ekuitas tidak dinilai", async ({ page }) => {
+    // Tiket 19. BBCA (kontrol sehat) punya daftar kuartal tetapi angka
+    // ekuitasnya tidak ditarik, seperti 89 dari 107 emiten universe. Dulu
+    // kotak "Keterbatasan data" muncul di sini dengan catatan yang sama persis
+    // seperti di hampir semua emiten lain.
+    test.skip(!ADA_PGLITE, PESAN_SKIP_PGLITE);
+    await buka(page, "/putar-ulang?kode=BBCA");
+    await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "BBCA");
+    await expect(page.getByTestId("catatan")).toHaveCount(0);
+    await expect(page.getByTestId("ekuitas-tidak-dinilai")).toContainText("Blok ekuitas negatif tidak dinilai");
+    await expect(page.locator("body")).not.toContainText("filing orang dalam untuk emiten ini");
+  });
+
   test("cari ZZZZ → pesan jujur + tombol minta ditarik hanya mencatat", async ({ page }) => {
     await buka(page, "/putar-ulang?kode=ZZZZ");
     const kosong = page.getByTestId("tidak-ada");

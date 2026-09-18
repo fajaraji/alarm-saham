@@ -23,6 +23,9 @@ describe.skipIf(!adaPglite)("muatEmiten (PGlite in-memory)", () => {
     await t.db.insert(symbols).values([
       { symbol: "UJIA", companyName: "PT Uji A Tbk", group: "delisting", targetEventDate: "2021-05-18" },
       { symbol: "UJIB", companyName: "PT Uji B Tbk", group: "delisting", targetEventDate: "2020-07-13" },
+      // Punya daftar kuartal tetapi TANPA angka ekuitas, seperti 89 dari 107
+      // emiten universe (financials hanya ditarik untuk 18 emiten delisting).
+      { symbol: "UJID", companyName: "PT Uji D Tbk", group: "control", targetEventDate: null },
     ]);
     await t.db.insert(suspensions).values([
       { symbol: "UJIA", suspensionDate: "2021-05-18", reason: "Suspend more than 6 month", pdfUrl: "https://www.idx.co.id/a.pdf" },
@@ -32,6 +35,14 @@ describe.skipIf(!adaPglite)("muatEmiten (PGlite in-memory)", () => {
     await t.db.insert(reportDates).values(
       ["2020-03-31", "2020-06-30", "2020-09-30", "2020-12-31", "2021-03-31"].map((d) => ({
         symbol: "UJIA",
+        reportDate: d,
+        fiscalYear: Number(d.slice(0, 4)),
+        quarter: `q${Math.ceil(Number(d.slice(5, 7)) / 3)}`,
+      })),
+    );
+    await t.db.insert(reportDates).values(
+      ["2025-12-31", "2026-03-31"].map((d) => ({
+        symbol: "UJID",
         reportDate: d,
         fiscalYear: Number(d.slice(0, 4)),
         quarter: `q${Math.ceil(Number(d.slice(5, 7)) / 3)}`,
@@ -64,7 +75,21 @@ describe.skipIf(!adaPglite)("muatEmiten (PGlite in-memory)", () => {
     expect(hilang[0]).toMatchObject({ date: "2021-10-28" });
     expect(hilang).toHaveLength(20);
     expect(e.kejadian.filter((k) => k.jenis === "ekuitas_negatif").map((k) => k.date)).toEqual(["2021-03-31"]);
-    expect(e.catatan.some((c) => /filing/i.test(c))).toBe(true);
+    // Tiket 19: catatan filing dibuang (lampu tidak memakai data filing), dan
+    // emiten yang PUNYA angka ekuitas tidak diberi keterangan "tidak dinilai".
+    expect(e.catatan.some((c) => /filing/i.test(c))).toBe(false);
+    expect(e.catatan).toEqual([]);
+    expect(e.ekuitasTidakDinilai).toBe(false);
+  });
+
+  it("emiten universe tanpa angka ekuitas → tanpa kotak catatan, blok ekuitas ditandai tidak dinilai", async () => {
+    // Tiket 19. Dulu emiten seperti ini (89 dari 107) menampilkan kotak
+    // "Keterbatasan data" berisi catatan filing + ekuitas, sama persis di
+    // hampir semua emiten. Keterangan ekuitas kini menempel pada lampu.
+    const e = await muatEmiten(t.db, "UJID", TODAY);
+    expect(e.status).toBe("lengkap");
+    expect(e.catatan).toEqual([]);
+    expect(e.ekuitasTidakDinilai).toBe(true);
   });
 
   it("emiten universe tanpa dates (404 di sumber) → hanya suspensi + catatan", async () => {
