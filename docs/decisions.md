@@ -281,3 +281,14 @@ Yang menentukan keputusannya bukan biaya token, melainkan tampilan kegagalan: ga
 Konsekuensi yang harus diikuti tes: banner "Fitur AI belum aktif" tidak lagi muncul sendiri, karena ia adalah hasil 503 dari panggilan diagnosis. Enam tes bergantung pada perilaku lama — tiga di `tests/ui/rakit.test.tsx`, dua di `tests/e2e/aksesibilitas.spec.ts` (axe perlu memeriksa panel AI dalam keadaan terisi), satu di `tests/e2e/rakit.spec.ts` — semuanya kini menekan tombolnya lebih dulu, persis seperti pengguna. Ditambah satu tes regresi baru yang mengunci keputusan ini: *"uji ke masa lalu TIDAK memanggil diagnosis AI sampai tombolnya diklik"*, memeriksa langsung daftar panggilan fetch (`/api/backtest` 1 kali, `/api/agent/diagnosis` 0 kali sebelum klik).
 
 Gerbang sesudah perubahan: lint 0, typecheck 0, **683 tes unit** (62 berkas), build 0, e2e jalur database 53 lulus / 1 skip, e2e jalur data contoh 51 lulus / 3 skip.
+
+## Revisi tampilan yang disetujui pemilik, dan aturan kepadatan teks (2026-09-12 → 19)
+
+Dicatat supaya review berikutnya punya patokan. Sebelum ini, keputusan-keputusan berikut hanya hidup di pesan commit, sehingga code-review gelombang 1 tidak memeriksa apakah perubahan baru menambah beban baca.
+
+- **Antislop, 7 temuan** (2026-09-12, `71b4deb`, rincian di `anti-slop/audit-001-2026-09-12.md`): 87 em dash menjadi 0, huruf kapital bertracking lebar dibuang, langkah 1 beranda jadi satu titik masuk, angka di baris petunjuk dibuang, header ponsel 460 → 140px, eyebrow beranda dibuang, glif pisah di kotak skor menjadi "belum diuji".
+- **U1–U6, pangkas pengulangan teks** (2026-09-12, `eab9f7b`): petunjuk layar bisa dilipat; sub-judul yang mengulang petunjuk dibuang; kalimat yang menunjuk tombol tepat di atasnya dibuang; footer dipangkas (57 → 43 kata); daftar isi metodologi; kamus dua kolom. Terukur: kata di `<main>` /putar-ulang 135 → 87.
+- **Beranda** (2026-09-13 → 14, `c3f0743`, `b3ca87a`): dirancang ulang dengan taste-skill, lalu opsi B pilihan pemilik: kotak cari jadi hero, contoh TELE dipindah ke bagian kedua dengan penjelasan.
+- **Gelombang 1** (2026-09-19, tiket 18–27, PR #8): perbaikan dari feedback rekan tim.
+
+Pemilik kemudian menilai hasil gelombang 1 masih menambah teks di beberapa tempat, dan bahwa prinsip "jangan terlalu banyak teks" tidak tertulis di PLAN maupun DESIGN. Prinsip itu kini menjadi bagian **Kepadatan teks** di `DESIGN.md` (10 aturan), dan dipakai sebagai standar dalam code-review sejak 2026-09-19.
