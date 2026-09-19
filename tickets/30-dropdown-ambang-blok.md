@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Chip diganti `<select>` berlabel "Ambang <nama blok>" dengan kedua pilihan dan artinya; memilih memakai aksi `setAmbang` reducer, jadi hasil uji lama ikut basi seperti dulu. Tes UI memeriksa kedua pilihan terlihat sebelum memilih; e2e memakai selectOption; axe dua tema di gerbang akhir.
 
-- [ ] Setiap blok di papan punya dropdown ambang berlabel yang menampilkan kedua pilihan
-- [ ] Memilih ambang mengubah aturan dan menandai hasil uji lama sebagai basi, seperti chip sebelumnya
-- [ ] Dropdown bisa dipakai dengan keyboard dan lolos axe di tema terang dan gelap
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Setiap blok di papan punya dropdown ambang berlabel yang menampilkan kedua pilihan
+- [x] Memilih ambang mengubah aturan dan menandai hasil uji lama sebagai basi, seperti chip sebelumnya
+- [x] Dropdown bisa dipakai dengan keyboard dan lolos axe di tema terang dan gelap
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

@@ -97,7 +97,7 @@ describe("PapanRakit", () => {
     expect(screen.getByTestId("palet-suspensi")).toBeEnabled();
   });
 
-  it("tombol ATAU/DAN di antara blok dan chip ambang longgar↔ketat", () => {
+  it("tombol ATAU/DAN di antara blok dan dropdown ambang longgar/ketat (tiket 30)", () => {
     render(<PapanRakit />);
     fireEvent.click(screen.getByTestId("palet-suspensi"));
     expect(screen.queryByTestId("tombol-gabung")).not.toBeInTheDocument();
@@ -110,13 +110,13 @@ describe("PapanRakit", () => {
 
     const blok = screen.getByTestId("blok-suspensi");
     expect(blok).toHaveAttribute("data-threshold", "longgar");
-    const chip = within(blok).getByRole("button", { name: /^Ambang/ });
-    expect(chip).toHaveTextContent("pernah 12 bln terakhir");
-    fireEvent.click(chip);
+    // Kedua pilihan terlihat sebelum memilih, dengan artinya.
+    const pilih = within(blok).getByRole("combobox", { name: "Ambang Saham disuspensi" });
+    expect(within(pilih).getAllByRole("option").map((o) => o.textContent)).toEqual(["pernah 12 bln terakhir", "masih berlaku > 6 bln"]);
+    expect(pilih).toHaveValue("longgar");
+    fireEvent.change(pilih, { target: { value: "ketat" } });
     expect(screen.getByTestId("blok-suspensi")).toHaveAttribute("data-threshold", "ketat");
-    expect(within(screen.getByTestId("blok-suspensi")).getByRole("button", { name: /^Ambang/ })).toHaveTextContent(
-      "masih berlaku > 6 bln",
-    );
+    expect(screen.getByTestId("ambang-suspensi")).toHaveValue("ketat");
   });
 
   it("Uji ke masa lalu pada papan kosong → pesan awam, tanpa panggilan API", () => {

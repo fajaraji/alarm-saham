@@ -70,7 +70,7 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   // ATAU → DAN, dan ambang longgar → ketat
   await page.getByTestId("tombol-gabung").click();
   await expect(page.getByTestId("tombol-gabung")).toHaveText("DAN");
-  await page.getByTestId("blok-suspensi").getByRole("button", { name: /^Ambang/ }).click();
+  await page.getByTestId("ambang-suspensi").selectOption("ketat");
   await expect(page.getByTestId("blok-suspensi")).toHaveAttribute("data-threshold", "ketat");
 
   // Uji ke masa lalu: /api/backtest memakai getEventSource() (tiket 13) — PGlite

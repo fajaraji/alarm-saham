@@ -1,10 +1,10 @@
 "use client";
-// Satu blok syarat di papan: pegangan seret (keyboard-able), label, chip
-// ambang yang bisa diklik (longgar ↔ ketat), tombol buang.
+// Satu blok syarat di papan: pegangan seret (keyboard-able), label, dropdown
+// ambang (tiket 30), tombol buang.
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import type { Block, BlockKind } from "@/lib/engine/rules";
+import { THRESHOLDS, type Block, type BlockKind, type Threshold } from "@/lib/engine/rules";
 import { INFO_BLOK } from "@/lib/rakit/blok";
 
 import type { DataSeret } from "./dnd";
@@ -12,19 +12,17 @@ import type { DataSeret } from "./dnd";
 interface Props {
   blok: Block;
   baruMasuk: boolean;
-  onToggleAmbang: (kind: BlockKind) => void;
+  onUbahAmbang: (kind: BlockKind, threshold: Threshold) => void;
   onHapus: (kind: BlockKind) => void;
 }
 
-export function BlokPapan({ blok, baruMasuk, onToggleAmbang, onHapus }: Props) {
+export function BlokPapan({ blok, baruMasuk, onUbahAmbang, onHapus }: Props) {
   const info = INFO_BLOK[blok.kind];
   const data: DataSeret = { asal: "papan", kind: blok.kind };
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: blok.kind,
     data,
   });
-  const ambang = info.ambang[blok.threshold];
-  const ambangLain = info.ambang[blok.threshold === "longgar" ? "ketat" : "longgar"];
 
   return (
     <li
@@ -47,15 +45,21 @@ export function BlokPapan({ blok, baruMasuk, onToggleAmbang, onHapus }: Props) {
         ⋮⋮
       </button>
       <span title={info.tooltip}>{info.label}</span>
-      <button
-        type="button"
-        onClick={() => onToggleAmbang(blok.kind)}
-        title={`Klik untuk mengubah ambang menjadi: ${ambangLain}`}
-        aria-label={`Ambang ${info.label}: ${ambang} (${blok.threshold}). Klik untuk mengubah menjadi ${ambangLain}`}
-        className="ml-auto rounded-md bg-white/90 px-2 py-0.5 text-xs font-medium text-[#151c2b] hover:bg-white"
+      {/* Dropdown, bukan chip yang berganti saat diklik: dengan chip, pengguna
+          baru tahu pilihan lainnya sesudah mengklik (feedback gelombang 2). */}
+      <select
+        value={blok.threshold}
+        onChange={(e) => onUbahAmbang(blok.kind, e.target.value as Threshold)}
+        aria-label={`Ambang ${info.label}`}
+        data-testid={`ambang-${blok.kind}`}
+        className="ml-auto max-w-full cursor-pointer rounded-md border-0 bg-white/90 py-0.5 pl-2 pr-1 text-xs font-medium text-[#151c2b] hover:bg-white"
       >
-        {ambang}
-      </button>
+        {THRESHOLDS.map((t) => (
+          <option key={t} value={t}>
+            {info.ambang[t]}
+          </option>
+        ))}
+      </select>
       <button
         type="button"
         onClick={() => onHapus(blok.kind)}

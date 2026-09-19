@@ -335,7 +335,7 @@ export function PapanRakit() {
           onKalimat={setKalimat}
           onMintaAi={() => void mintaRakit()}
           onToggleCombine={() => dispatch({ tipe: "toggleCombine" })}
-          onToggleAmbang={(kind) => dispatch({ tipe: "toggleAmbang", kind })}
+          onUbahAmbang={(kind, threshold) => dispatch({ tipe: "setAmbang", kind, threshold })}
           onHapus={(kind) => dispatch({ tipe: "hapus", kind })}
           onNama={(name) => dispatch({ tipe: "setNama", name })}
           onUji={() => void uji()}
