@@ -19,7 +19,7 @@ function ringkasAlasan(h: HasilSaham): string {
     return `suspensi aktif sejak ${h.suspensiAktif}${lain ? ` +${lain}` : ""}`;
   }
   if (h.alasan.length === 0) {
-    if (h.kelasB.status === "dilewati") return h.kelasB.keterangan.replace(/^dilewati: /, "dilewati: ");
+    if (h.kelasB.status === "dilewati") return "data terkini tidak ditarik";
     return "tidak ada syarat terpenuhi";
   }
   const pertama = h.alasan[0].label.toLowerCase();

@@ -53,11 +53,22 @@ export const AMBANG_B = {
 
 export const JENDELA_B = { brokerHari: 14, dailyHari: 90 } as const;
 
+/**
+ * Angka mentah di balik `detail`, supaya layar bisa menyusun kalimat biasa
+ * (src/lib/jaga/kalimat-b.ts, tiket 26) tanpa mengurai teks teknis. Tidak ada
+ * bila datanya kosong atau pengambilannya gagal.
+ */
+export type UkuranBlokB =
+  | { jenis: "ritel"; porsiRitel: number; netAsingInstitusi: number; mulai: string; akhir: string; hariBursa: number }
+  | { jenis: "puncak"; turun: number; closeAkhir: number; tanggalAkhir: string; puncak: number; tanggalPuncak: string }
+  | { jenis: "free_float"; freeFloat: number };
+
 export interface HasilBlokB {
   kind: BlokBKind;
   terpenuhi: boolean;
   /** Kalimat faktual (angka + rentang tanggal), tanpa penilaian. */
   detail: string;
+  ukuran?: UkuranBlokB;
   /** Tanggal data terakhir yang dipakai (YYYY-MM-DD) bila ada. */
   tanggal: string | null;
   sumber: string;
@@ -161,6 +172,7 @@ export function nilaiRitelDominan(ringkas: BrokerSummary, cohort: Map<string, In
     kind,
     terpenuhi,
     detail: `broker ritel ${pct(porsi)} dari nilai pembelian ${rentang}; broker asing/institusi ${arah} ${fmtRp(netAsingInstitusi)} (ambang: ritel >= ${pct(AMBANG_B.ritelPorsi)} dan asing/institusi net melepas; ${dikenal}/${total} baris broker dikenal registry)`,
+    ukuran: { jenis: "ritel", porsiRitel: porsi, netAsingInstitusi, mulai: hari[0].date, akhir: tanggal, hariBursa: hari.length },
     tanggal,
     sumber,
   };
@@ -178,6 +190,7 @@ export function nilaiFreeFloat(entri: FreeFloatEntry | undefined, tanggalSnapsho
     kind,
     terpenuhi: ff < AMBANG_B.freeFloat,
     detail: `free float ${(ff * 100).toFixed(1)}% (ambang < ${pct(AMBANG_B.freeFloat)})`,
+    ukuran: { jenis: "free_float", freeFloat: ff },
     tanggal: tanggalSnapshot,
     sumber,
   };
@@ -201,6 +214,14 @@ export function nilaiJatuhDariPuncak(bars: DailyBar[]): HasilBlokB {
     kind,
     terpenuhi: rasio <= AMBANG_B.jatuhRasio,
     detail: `penutupan ${akhir.date} = ${akhir.close} vs tertinggi 90 hari ${puncak.close} (${puncak.date}), turun ${pct(1 - rasio)} (ambang >= ${pct(1 - AMBANG_B.jatuhRasio)})`,
+    ukuran: {
+      jenis: "puncak",
+      turun: 1 - rasio,
+      closeAkhir: akhir.close as number,
+      tanggalAkhir: akhir.date,
+      puncak: puncak.close as number,
+      tanggalPuncak: puncak.date,
+    },
     tanggal: akhir.date,
     sumber,
   };

@@ -2,6 +2,7 @@
 // Panel pesan penjelasan per saham: teks awam (template atau rapian AI),
 // daftar alasan terstruktur (blok, tanggal, sumber), dan rincian kelas B.
 import type { HasilSaham } from "@/lib/jaga/evaluasi";
+import { JUDUL_TEMUAN_B, kalimatBlokB, kalimatDilewati } from "@/lib/jaga/kalimat-b";
 import type { Penjelasan } from "@/lib/jaga/penjelasan";
 
 import { Istilah } from "@/components/panduan/Istilah";
@@ -13,6 +14,36 @@ interface Props {
   saham: HasilSaham[];
   penjelasan: Penjelasan[];
   today: string | null;
+}
+
+/**
+ * Hasil "data terkini" (kelas B) satu saham, satu kalimat per temuan berikut
+ * angkanya (tiket 26). Dulu baris ini berbunyi `ritel_dominan: tidak (...)`.
+ */
+function DataTerkini({ h }: { h: HasilSaham }) {
+  const k = h.kelasB;
+  return (
+    <div data-testid={`kelas-b-${h.symbol}`} data-status={k.status} className="mt-2 rounded-lg bg-surface-2 px-3 py-2 text-[12.5px]">
+      <p className="m-0 text-[11.5px] font-semibold text-ink-3">Data terkini dari Sectors</p>
+      {k.status === "dilewati" || k.blok.length === 0 ? (
+        <p className="m-0 mt-0.5 leading-snug text-ink-2" data-testid={`kelas-b-dilewati-${h.symbol}`}>
+          {kalimatDilewati(k)}
+        </p>
+      ) : (
+        <ul className="m-0 mt-1 flex list-none flex-col gap-1.5 p-0">
+          {k.blok.map((b) => (
+            <li key={b.kind} data-testid={`temuan-b-${h.symbol}-${b.kind}`} data-terpenuhi={b.terpenuhi}>
+              <span className="font-semibold text-ink">{JUDUL_TEMUAN_B[b.kind]}</span>
+              {b.terpenuhi ? (
+                <span className="ml-1.5 rounded-full bg-crit-soft px-1.5 py-px text-[11px] font-semibold text-crit">memenuhi syarat alarm</span>
+              ) : null}
+              <span className="block leading-snug text-ink-2">{kalimatBlokB(b)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 export function PesanPenjelasan({ saham, penjelasan, today }: Props) {
@@ -55,18 +86,7 @@ export function PesanPenjelasan({ saham, penjelasan, today }: Props) {
                 </ul>
               </details>
             ) : null}
-            {h.kelasB.status !== "nonaktif" ? (
-              <p className="mb-0 mt-2 text-[12px] text-ink-3" data-testid={`kelas-b-${h.symbol}`}>
-                Data terkini: {h.kelasB.keterangan}
-                {h.kelasB.blok.length ? (
-                  <>
-                    {" "}
-                    ·{" "}
-                    {h.kelasB.blok.map((b) => `${b.kind}: ${b.terpenuhi ? "terpenuhi" : "tidak"} (${b.detail})`).join("; ")}
-                  </>
-                ) : null}
-              </p>
-            ) : null}
+            {h.kelasB.status !== "nonaktif" ? <DataTerkini h={h} /> : null}
           </li>
         );
       })}

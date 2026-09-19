@@ -351,9 +351,10 @@ export default function HalamanCaraKamiMenghitung() {
           })}
         </div>
         <p className="mt-3 text-sm text-ink-2">
-          Blok kelas B (<Istilah id="ritel_dominan">ritel dominan</Istilah>, <Istilah id="free_float">free float</Istilah> kecil, <Istilah id="jatuh_dari_puncak">jatuh dari puncak 90 hari</Istilah>) memakai data terkini yang tidak punya
+          Blok kelas B (<Istilah id="ritel_dominan">ritel dominan</Istilah> dan <Istilah id="jatuh_dari_puncak">jatuh dari puncak 90 hari</Istilah>) memakai data terkini yang tidak punya
           sejarah di Sectors, sehingga hanya untuk mode &ldquo;pasang&rdquo; dan <strong>tidak pernah</strong> ikut skor uji
-          ke masa lalu.
+          ke masa lalu. <Istilah id="free_float">Free float</Istilah> kecil sempat menjadi blok ketiga, lalu dibuang dari layar
+          pasang: snapshot seluruh bursa seharga 10 kredit hanya memberi satu angka hari ini per saham.
         </p>
       </section>
 
@@ -427,7 +428,7 @@ export default function HalamanCaraKamiMenghitung() {
           </li>
           <li>
             <strong><Istilah id="free_float">Free float</Istilah> tanpa sejarah</strong>: hanya snapshot hari ini (TTL cache 24 jam), jadi tidak bisa diuji ke masa
-            lalu, dipakai untuk nama emiten dan mode pasang saja.
+            lalu, dan hanya dipakai untuk nama emiten.
           </li>
           <li>
             <strong>Alarm palsu AADI</strong> adalah keterbatasan definisi kami, bukan tanda apa pun tentang emitennya: AADI
