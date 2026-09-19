@@ -20,7 +20,7 @@ export interface PesanInboxBaru {
   teks: string;
 }
 
-const STATUS_SAH: StatusSaham[] = ["hijau", "kuning", "merah"];
+const STATUS_SAH: StatusSaham[] = ["abu", "hijau", "kuning", "merah"];
 
 function statusAman(s: string): StatusSaham {
   return (STATUS_SAH as string[]).includes(s) ? (s as StatusSaham) : "kuning";

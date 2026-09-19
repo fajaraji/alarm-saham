@@ -67,12 +67,14 @@ export const TEKS_TAUTAN = {
 // melaporkan apakah alarm yang KAMU rakit berbunyi. Sama dengan kalimat di
 // src/lib/jaga/penjelasan.ts.
 export const LABEL_STATUS: Record<StatusSaham, string> = {
+  abu: "Belum bisa dinilai",
   hijau: "Aman menurut alarmmu",
   kuning: "1 tanda",
   merah: "Alarm berbunyi",
 };
 
 export const KELAS_STATUS: Record<StatusSaham, string> = {
+  abu: "bg-surface-2 text-ink-2 border-line",
   hijau: "bg-ok-soft text-ok border-ok/30",
   kuning: "bg-warn-soft text-warn border-warn/30",
   merah: "bg-crit-soft text-crit border-crit/30",

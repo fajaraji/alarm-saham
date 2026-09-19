@@ -147,6 +147,7 @@ export async function simpanRunJaga(
       .values({
         alarmId: a.id,
         score: {
+          abu: ringkas.filter((s) => s.status === "abu").length,
           hijau: ringkas.filter((s) => s.status === "hijau").length,
           kuning: ringkas.filter((s) => s.status === "kuning").length,
           merah: ringkas.filter((s) => s.status === "merah").length,

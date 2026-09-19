@@ -24,6 +24,9 @@ export interface EmitenDelisting {
  */
 export const TANGGAL_EFEKTIF_DELISTING = "2026-11-10";
 
+/** Tanggal sumber berita daftar delisting itu (Bareksa); pengumuman BEI paling lambat tanggal ini. */
+export const TANGGAL_SUMBER_DELISTING = "2026-04-13";
+
 export const EMITEN_DELISTING: readonly EmitenDelisting[] = [
   { symbol: "COWL", suspensiCatatan: "2020-07-13", alasan: "pailit" },
   { symbol: "MTRA", suspensiCatatan: "2020-11-17", alasan: "pailit" },

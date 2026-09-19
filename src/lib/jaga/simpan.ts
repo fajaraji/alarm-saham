@@ -121,7 +121,7 @@ export function gabungKotakMasuk(server: PesanKotakMasuk[], lokal: PesanKotakMas
   return [...peta.values()].sort((a, b) => (a.waktu < b.waktu ? 1 : a.waktu > b.waktu ? -1 : 0)).slice(0, MAKS_KOTAK_MASUK);
 }
 
-const URUTAN: Record<StatusSaham, number> = { hijau: 0, kuning: 1, merah: 2 };
+const URUTAN: Record<StatusSaham, number> = { abu: 0, hijau: 0, kuning: 1, merah: 2 };
 
 /**
  * Bendera baru = saham yang statusnya memburuk dibanding cek sebelumnya, atau
@@ -140,7 +140,7 @@ export function turunkanBendera(
     const l = lama.get(s.symbol);
     const alarmLama = new Set((l?.alarmBerbunyi ?? []).map((a) => a.id));
     const alarmBaru = s.alarmBerbunyi.filter((a) => !alarmLama.has(a.id));
-    const memburuk = l ? URUTAN[s.status] > URUTAN[l.status] : s.status !== "hijau";
+    const memburuk = l ? URUTAN[s.status] > URUTAN[l.status] : URUTAN[s.status] > 0;
     if (!memburuk && alarmBaru.length === 0) continue;
     const judul = alarmBaru.length
       ? `${s.symbol}: alarm ${alarmBaru.map((a) => `“${a.name}”`).join(", ")} berbunyi`

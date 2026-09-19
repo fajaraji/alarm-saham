@@ -250,3 +250,13 @@ describe("penjelasanPortofolio: paralel dan berbatas waktu (tiket 37)", () => {
     expect(p.map((x) => x.olehAi)).toEqual([false, false, false]);
   });
 });
+
+describe("status 'belum bisa dinilai' (tiket 38)", () => {
+  it("saham tanpa data tidak disebut aman dan tidak diklaim 'tidak ada syarat terpenuhi'", () => {
+    const abu: HasilSaham = { ...HIJAU, symbol: "UNVR", status: "abu", adaData: false, kelasB: { status: "nonaktif", keterangan: "", blok: [] }, catatan: ["UNVR tidak ada di data kami; blok kelas A tidak bisa dinilai."] };
+    const t = templatePenjelasan(abu, "2026-09-07");
+    expect(t).toMatch(/^UNVR \(belum bisa dinilai\) pada 7 Sep 2026\./);
+    expect(t).toContain("tidak ada di data kami");
+    expect(t).not.toMatch(/aman|tidak ada satu pun syarat/i);
+  });
+});

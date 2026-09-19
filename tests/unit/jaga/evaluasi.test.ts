@@ -131,17 +131,43 @@ describe("cekPortofolio (fixture + penyedia kelas B buatan)", () => {
     const sril = hasil.saham[1];
     expect(sril.status).toBe("merah");
     expect(sril.alarmBerbunyi).toEqual([]);
-    expect(sril.alasan.map((a) => a.kind)).toEqual(["suspensi"]);
+    // SRIL ada di daftar delisting BEI: fakta resmi itu ikut sebagai tanda (tiket 38).
+    expect(sril.alasan.map((a) => a.kind)).toEqual(["suspensi", "daftar_bei"]);
   });
 
-  it("saham tanpa data → catatan jujur, hijau bila tidak ada blok", async () => {
+  it("saham tanpa data → catatan jujur, status 'belum bisa dinilai' (abu), bukan hijau (tiket 38)", async () => {
     const hasil = await cekPortofolio({
       symbols: ["ZZZZ"],
       alarms: [...ALARM_BAWAAN],
       opts: { kelasB: false, today: TODAY, source: fx, universe: fx.universe },
     });
     expect(hasil.saham[0].adaData).toBe(false);
-    expect(hasil.saham[0].status).toBe("hijau");
+    expect(hasil.saham[0].status).toBe("abu");
     expect(hasil.saham[0].catatan[0]).toMatch(/tidak ada di data kami/);
+  });
+});
+
+describe("fakta resmi BEI sebagai tanda (tiket 38)", () => {
+  it("saham di daftar berpotensi delisting tidak pernah tampil aman walau data kami kosong (kasus WSKT)", async () => {
+    const hasil = await cekPortofolio({
+      symbols: ["WSKT"],
+      alarms: [...ALARM_BAWAAN],
+      opts: { kelasB: false, today: TODAY, source: fx, universe: fx.universe },
+    });
+    const w = hasil.saham[0];
+    expect(w.status).toBe("kuning");
+    expect(w.alasan.map((a) => a.kind)).toEqual(["daftar_bei"]);
+    expect(w.alasan[0].detail).toContain("30 Jun 2026");
+    expect(w.alasan[0].sumber).toContain("Peng-S-00019/BEI.PLP/06-2026");
+  });
+
+  it("fakta resmi hanya berlaku sesudah tanggal pengumumannya (tanpa melihat masa depan)", async () => {
+    const hasil = await cekPortofolio({
+      symbols: ["WSKT"],
+      alarms: [...ALARM_BAWAAN],
+      opts: { kelasB: false, today: "2026-05-01", source: fx, universe: fx.universe },
+    });
+    expect(hasil.saham[0].alasan).toEqual([]);
+    expect(hasil.saham[0].status).toBe("abu");
   });
 });

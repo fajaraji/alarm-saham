@@ -4,9 +4,9 @@
 
 **Blocked by:** 40 (label daftar berpotensi delisting)
 
-**Status:** ready-for-agent
+**Status:** selesai. Status baru `abu` ("Belum bisa dinilai") untuk saham tanpa data dan tanpa tanda, di peta, pesan, kotak masuk, dan Telegram (⚪); tidak memicu bendera. Fakta resmi BEI (18 emiten dihapus dari bursa, 59 berpotensi delisting) dihitung sebagai satu tanda bersumber, hanya sesudah tanggal pengumumannya. WSKT kini kuning dengan alasan pengumuman BEI. Tes: evaluasi (WSKT, batas tanggal, ZZZZ abu), template abu, e2e /pasang lulus.
 
-- [ ] Saham tanpa data berstatus "belum bisa dinilai", bukan hijau, di layar dan di pesan
-- [ ] Saham di daftar BEI berpotensi delisting minimal berstatus kuning dengan alasan yang menyebut pengumumannya
-- [ ] Tes memakai data tiruan, nol kredit
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Saham tanpa data berstatus "belum bisa dinilai", bukan hijau, di layar dan di pesan
+- [x] Saham di daftar BEI berpotensi delisting minimal berstatus kuning dengan alasan yang menyebut pengumumannya
+- [x] Tes memakai data tiruan, nol kredit
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

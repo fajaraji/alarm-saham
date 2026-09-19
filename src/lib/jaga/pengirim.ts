@@ -73,7 +73,7 @@ function fmtTanggal(t: string): string {
   return `${d} ${BULAN[(m || 1) - 1]} ${y}`;
 }
 
-const IKON: Record<StatusSaham, string> = { hijau: "🟢", kuning: "🟡", merah: "🔴" };
+const IKON: Record<StatusSaham, string> = { abu: "⚪", hijau: "🟢", kuning: "🟡", merah: "🔴" };
 
 /**
  * Susun pesan Telegram (teks polos, tanpa parse_mode agar tidak perlu escape).

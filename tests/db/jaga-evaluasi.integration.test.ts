@@ -93,9 +93,10 @@ describe.skipIf(!adaPglite)("cekPortofolio (PGlite in-memory)", () => {
     const sril = hasil.saham[0];
     expect(sril.status).toBe("merah");
     expect(sril.suspensiAktif).toBe("2024-11-01");
-    expect(sril.alasan.map((a) => a.kind).sort()).toEqual(["ekuitas_negatif", "laporan_hilang", "suspensi"]);
+    // SRIL ada di daftar delisting BEI: fakta resmi itu ikut sebagai tanda (tiket 38).
+    expect(sril.alasan.map((a) => a.kind).sort()).toEqual(["daftar_bei", "ekuitas_negatif", "laporan_hilang", "suspensi"]);
     expect(sril.alarmBerbunyi).toEqual([{ id: ALARM_BAWAAN[0].id, name: "Saham mau pailit" }]);
-    expect(sril.alasan.every((a) => a.sumber.startsWith("Sectors /v2/"))).toBe(true);
+    expect(sril.alasan.filter((a) => a.kind !== "daftar_bei").every((a) => a.sumber.startsWith("Sectors /v2/"))).toBe(true);
     expect(sril.kelasB.status).toBe("nonaktif");
     const bbca = hasil.saham[1];
     expect(bbca.status).toBe("hijau");

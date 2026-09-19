@@ -34,6 +34,7 @@ export const INSTRUKSI_PENJELASAN_JAGA = `${INSTRUKSI_DASAR}
 Tugasmu: MERAPIKAN pesan alarm untuk satu saham dalam portofolio pengguna. Kamu menerima teks pesan yang sudah berisi semua fakta (syarat yang terpenuhi, tanggal, sumber). Tulis ulang menjadi 2–4 kalimat awam yang enak dibaca: pertahankan SEMUA angka, tanggal, nama blok, dan sumber; jangan menambah fakta, tebakan, atau penilaian; jangan memberi saran apa pun. Tutup dengan kalimat persis: "${DISCLAIMER}"`;
 
 const LABEL_STATUS: Record<HasilSaham["status"], string> = {
+  abu: "belum bisa dinilai",
   hijau: "aman menurut alarmmu",
   kuning: "satu tanda terlihat",
   merah: "alarm berbunyi",
@@ -50,7 +51,11 @@ export function sumberSingkat(sumber: string): string {
 export function templatePenjelasan(h: HasilSaham, today: string): string {
   const kalimat: string[] = [];
   const alarm = h.alarmBerbunyi.map((a) => `“${a.name}”`).join(", ");
-  if (h.alasan.length === 0) {
+  if (h.status === "abu") {
+    // Tidak ada yang diperiksa, jadi tidak ada klaim "tidak ada syarat yang
+    // terpenuhi"; alasannya ada di catatan cakupan di bawah (tiket 38).
+    kalimat.push(`${h.symbol} (${LABEL_STATUS[h.status]}) pada ${fmtTanggal(today)}.`);
+  } else if (h.alasan.length === 0) {
     kalimat.push(
       `${h.symbol} (${LABEL_STATUS[h.status]}): tidak ada satu pun syarat yang terpenuhi pada ${fmtTanggal(today)}.`,
     );
