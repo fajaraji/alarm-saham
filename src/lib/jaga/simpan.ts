@@ -93,6 +93,23 @@ export function simpanKotakMasuk(daftar: PesanKotakMasuk[]): PesanKotakMasuk[] {
 }
 
 /**
+ * Buang salinan portofolio, hasil cek terakhir, dan kotak masuk dari browser.
+ * Dipakai saat browser berganti pemilik lewat tautan rahasia (tiket 23), supaya
+ * saham milik pemilik lama tidak ikut tersimpan ke portofolio pemilik baru.
+ */
+export function lupakanPortofolioLokal(): void {
+  const s = storage();
+  if (!s) return;
+  for (const k of [KUNCI_PORTOFOLIO, KUNCI_HASIL_TERAKHIR, KUNCI_KOTAK_MASUK]) {
+    try {
+      s.removeItem(k);
+    } catch {
+      // abaikan
+    }
+  }
+}
+
+/**
  * Gabungkan kotak masuk server (cron harian, tiket 12) dengan yang tersimpan di
  * browser: unik per id (versi server menang), terbaru dulu, dipotong MAKS.
  * Murni — tidak menulis localStorage.

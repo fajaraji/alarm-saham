@@ -34,6 +34,24 @@ export const TEKS = {
   disimpanLokal: "tersimpan di browser ini (server tanpa database)",
 } as const;
 
+// Pesan saat halaman dibuka lewat tautan rahasia `/pasang#kunci=...` (tiket 23).
+export const TEKS_TAUTAN = {
+  pulih: "Portofolio dari tautan sudah dibuka di browser ini.",
+  pulihKosong: "Kunci dari tautan sudah dipakai, tetapi server belum menyimpan saham apa pun untuk kunci itu.",
+  sama: "Tautan ini untuk portofolio yang memang sedang terbuka di browser ini.",
+  tanpaDb:
+    "Tautan ini tidak bisa memulihkan apa pun di sini. Server ini berjalan tanpa database, jadi portofolio dan alarm hanya tersimpan di browser tempat semuanya dibuat.",
+  tidakSah: "Tautan ini tidak memuat kunci portofolio yang utuh, jadi tidak dipakai. Coba salin ulang tautannya dari awal sampai akhir.",
+  gagalSimpan: "Browser ini tidak mengizinkan penyimpanan, jadi kunci dari tautan tidak bisa dipakai.",
+  batal: "Tautan tidak dipakai. Portofolio di browser ini tetap yang tadi.",
+  gagalMuat: (pesan: string) => `Portofolio dari tautan belum bisa dimuat (${pesan}). Muat ulang halaman untuk mencoba lagi.`,
+  konfirmasiJudul: "Buka portofolio dari tautan?",
+  konfirmasiTeks:
+    "Browser ini sudah memegang portofolio lain. Kalau diganti, portofolio yang sekarang hanya bisa dibuka lagi lewat tautannya sendiri.",
+  tombolGanti: "Ganti ke portofolio dari tautan",
+  tombolBatal: "Batal, tetap yang sekarang",
+} as const;
+
 // "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya
 // melaporkan apakah alarm yang KAMU rakit berbunyi. Sama dengan kalimat di
 // src/lib/jaga/penjelasan.ts.

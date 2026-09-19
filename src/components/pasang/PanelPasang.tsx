@@ -27,6 +27,7 @@ import {
   gabungKotakMasuk,
   hasilTerakhirLokal,
   kotakMasukLokal,
+  lupakanPortofolioLokal,
   portofolioLokal,
   simpanHasilTerakhir,
   simpanKotakMasuk,
@@ -34,17 +35,49 @@ import {
   turunkanBendera,
   type PesanKotakMasuk,
 } from "@/lib/jaga/simpan";
-import { daftarAlarmLokal, tokenPemilik } from "@/lib/rakit/simpan";
+import {
+  bacaKunciTautan,
+  daftarAlarmLokal,
+  gantiTokenPemilik,
+  pasangTokenPemilik,
+  tokenPemilik,
+  tokenPemilikAda,
+  type KunciTautan,
+} from "@/lib/rakit/simpan";
+import { Dialog } from "@/components/ui/Dialog";
 
 import { KartuAlarm, type AlarmTampil } from "./KartuAlarm";
 import { KotakMasuk } from "./KotakMasuk";
 import { PesanPenjelasan } from "./PesanPenjelasan";
 import { PetaPortofolio } from "./PetaPortofolio";
-import { TEKS } from "./teks";
+import { TEKS, TEKS_TAUTAN } from "./teks";
 
 const POLA_KODE = /^[A-Z]{4}$/;
 
 type Penyimpanan = "memuat" | "server" | "lokal";
+
+interface PesanTautan {
+  jenis: "pulih" | "pulihKosong" | "sama" | "tanpaDb" | "tidakSah" | "gagalSimpan" | "gagalMuat" | "batal";
+  teks: string;
+  nada: "ok" | "warn" | "crit";
+}
+
+function pesanTautan(jenis: Exclude<PesanTautan["jenis"], "gagalMuat">): PesanTautan {
+  const nada = jenis === "tidakSah" || jenis === "gagalSimpan" ? "crit" : jenis === "tanpaDb" ? "warn" : "ok";
+  return { jenis, teks: TEKS_TAUTAN[jenis], nada };
+}
+
+const KELAS_NADA: Record<PesanTautan["nada"], string> = {
+  ok: "border-ok bg-ok-soft",
+  warn: "border-warn bg-warn-soft",
+  crit: "border-crit bg-crit-soft",
+};
+
+/** Hapus `#kunci=...` dari bilah alamat dan dari entri riwayat yang sama. */
+function bersihkanHash() {
+  const { pathname, search } = window.location;
+  window.history.replaceState(null, "", pathname + search);
+}
 
 function alarmBawaanTampil(): AlarmTampil[] {
   return ALARM_BAWAAN.map((a) => ({ ...a, asal: "bawaan" as const }));
@@ -71,6 +104,15 @@ export function PanelPasang() {
   // Id portofolio di server = kode untuk /mulai di bot Telegram (tiket 12).
   const [idPortofolio, setIdPortofolio] = useState<string | null>(null);
 
+  // Tautan rahasia (tiket 23): pesan hasilnya, kunci yang menunggu konfirmasi
+  // (browser sudah memegang kunci lain), dan putaran muat ulang setelah ganti.
+  const [pesanTautanKini, setPesanTautan] = useState<PesanTautan | null>(null);
+  const [kunciTertunda, setKunciTertunda] = useState<string | null>(null);
+  const [putaran, setPutaran] = useState(0);
+  // Dibaca SEKALI per kunjungan: ref bertahan saat effect diulang (StrictMode,
+  // atau muat ulang setelah ganti pemilik), padahal hash sudah dihapus.
+  const tautan = useRef<KunciTautan | null>(null);
+
   const siap = useRef(false);
   const noCek = useRef(0);
 
@@ -79,9 +121,25 @@ export function PanelPasang() {
     setAdaData((m) => ({ ...m, [s]: ada }));
   }
 
-  // ----- muat awal: token, portofolio (lokal → server), alarm (lokal → server), kotak masuk
+  // ----- muat awal: tautan rahasia, token, portofolio (lokal → server), alarm (lokal → server), kotak masuk
   useEffect(() => {
     (async () => {
+      if (!tautan.current) {
+        tautan.current = bacaKunciTautan(window.location.hash);
+        if (tautan.current.jenis !== "tidak-ada") bersihkanHash();
+      }
+      let dariTautan = false;
+      if (tautan.current.jenis === "tidak-sah") setPesanTautan(pesanTautan("tidakSah"));
+      else if (tautan.current.jenis === "sah") {
+        const kunci = tautan.current.kunci;
+        const kini = tokenPemilikAda();
+        if (kini === kunci) dariTautan = true;
+        else if (!kini) {
+          dariTautan = pasangTokenPemilik(kunci);
+          if (!dariTautan) setPesanTautan(pesanTautan("gagalSimpan"));
+        } else setKunciTertunda(kunci);
+      }
+
       const t = tokenPemilik();
       setToken(t);
       const lokal = portofolioLokal();
@@ -125,6 +183,11 @@ export function PanelPasang() {
         } else {
           setPenyimpanan(rp.galat.kode === KODE_TANPA_DB || rp.galat.status === 501 ? "lokal" : "lokal");
         }
+        if (dariTautan) {
+          if (rp.ok) setPesanTautan(pesanTautan(rp.data.portofolio ? "pulih" : "pulihKosong"));
+          else if (rp.galat.kode === KODE_TANPA_DB || rp.galat.status === 501) setPesanTautan(pesanTautan("tanpaDb"));
+          else setPesanTautan({ jenis: "gagalMuat", teks: TEKS_TAUTAN.gagalMuat(rp.galat.pesan), nada: "crit" });
+        }
         if (ra.ok) {
           const dariServer: AlarmTampil[] = ra.data.alarms.flatMap((a) => {
             const rules = a.rules.map((r) => RuleSchema.safeParse(r)).filter((p) => p.success).map((p) => p.data);
@@ -149,7 +212,52 @@ export function PanelPasang() {
       siap.current = true;
       for (const s of simbolAwal) void periksaData(s);
     })();
+  }, [putaran]);
+
+  // Tautan yang ditempel ke bilah alamat saat /pasang SUDAH terbuka hanya
+  // mengganti hash (tanpa memuat ulang halaman), jadi effect di atas tidak
+  // berjalan lagi. Tangkap di sini.
+  useEffect(() => {
+    function onHash() {
+      const k = bacaKunciTautan(window.location.hash);
+      if (k.jenis === "tidak-ada") return;
+      bersihkanHash();
+      if (k.jenis === "tidak-sah") setPesanTautan(pesanTautan("tidakSah"));
+      else if (tokenPemilikAda() === k.kunci) setPesanTautan(pesanTautan("sama"));
+      else setKunciTertunda(k.kunci);
+    }
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  function gantiKePemilikTautan(kunci: string) {
+    if (!gantiTokenPemilik(kunci)) {
+      setKunciTertunda(null);
+      setPesanTautan(pesanTautan("gagalSimpan"));
+      return;
+    }
+    lupakanPortofolioLokal();
+    tautan.current = { jenis: "sah", kunci };
+    noCek.current++;
+    siap.current = false;
+    setKunciTertunda(null);
+    setPesanTautan(null);
+    setToken(null);
+    setPenyimpanan("memuat");
+    setSymbols([]);
+    setAdaData({});
+    setHasil(null);
+    setSedangCek(false);
+    setGalatCek(null);
+    setKotak([]);
+    setIdPortofolio(null);
+    setPutaran((p) => p + 1);
+  }
+
+  function batalGantiPemilik() {
+    setKunciTertunda(null);
+    setPesanTautan(pesanTautan("batal"));
+  }
 
   // ----- simpan setiap kali portofolio/alarm aktif berubah (setelah muat awal)
   async function simpan(daftar: string[], aktifIds: Set<string>) {
@@ -244,6 +352,39 @@ export function PanelPasang() {
             {penyimpanan === "memuat" ? "memuat…" : penyimpanan === "server" ? TEKS.disimpanServer : TEKS.disimpanLokal}
           </span>
         </p>
+        {pesanTautanKini ? (
+          <p
+            role={pesanTautanKini.nada === "crit" ? "alert" : "status"}
+            data-testid="pesan-tautan"
+            data-jenis={pesanTautanKini.jenis}
+            className={`mb-2.5 rounded-lg border-l-[3px] px-3 py-2 text-[13px] ${KELAS_NADA[pesanTautanKini.nada]}`}
+          >
+            {pesanTautanKini.teks}
+          </p>
+        ) : null}
+        {kunciTertunda ? (
+          <Dialog judul={TEKS_TAUTAN.konfirmasiJudul} onTutup={batalGantiPemilik} testId="dialog-ganti-pemilik">
+            <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">{TEKS_TAUTAN.konfirmasiTeks}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-testid="tombol-ganti-pemilik"
+                onClick={() => gantiKePemilikTautan(kunciTertunda)}
+                className="rounded-lg bg-accent px-4 py-2 text-[13px] font-semibold text-accent-ink"
+              >
+                {TEKS_TAUTAN.tombolGanti}
+              </button>
+              <button
+                type="button"
+                data-testid="tombol-batal-ganti"
+                onClick={batalGantiPemilik}
+                className="rounded-lg border border-line-strong px-4 py-2 text-[13px] font-semibold hover:bg-surface-2"
+              >
+                {TEKS_TAUTAN.tombolBatal}
+              </button>
+            </div>
+          </Dialog>
+        ) : null}
         <form
           className="mb-3 flex flex-wrap gap-2"
           onSubmit={(e) => {
