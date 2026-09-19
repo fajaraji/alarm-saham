@@ -10,6 +10,7 @@
 // `usulanBlok[].perluTinjau` memasang tanda peringatan di atas alasannya dan
 // teks aslinya tetap tampil supaya pengguna bisa menilainya sendiri.
 import type { BlockKind, Threshold } from "@/lib/engine/rules";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 import { labelAmbang, labelBlok } from "@/lib/rakit/blok";
 import { PESAN_AI_NONAKTIF, type ResponDiagnosis } from "@/lib/rakit/api";
 
@@ -25,13 +26,32 @@ const LABEL_ALAT: Record<string, (i: Record<string, unknown>) => string> = {
   getFilings: (i) => `Memeriksa filing orang dalam ${String(i.symbol ?? "")}`,
   getCorporateActions: (i) => `Memeriksa aksi korporasi ${String(i.symbol ?? "")}`,
   getFinancials: (i) => `Memeriksa ekuitas ${String(i.symbol ?? "")}`,
-  runAlarmOn: (i) => `Menguji alarm pada ${String(i.symbol ?? "")} per ${String(i.t ?? "")}`,
+  runAlarmOn: (i) => `Menguji alarm pada ${String(i.symbol ?? "")} per ${tanggalAwam(i.t)}`,
 };
+
+function tanggalAwam(x: unknown): string {
+  return typeof x === "string" && /^\d{4}-\d{2}-\d{2}/.test(x) ? fmtTanggal(x) : String(x ?? "");
+}
 
 export function labelLangkah(t: LangkahJejak): string {
   const f = LABEL_ALAT[t.tool];
   const input = t.input && typeof t.input === "object" ? (t.input as Record<string, unknown>) : {};
-  return f ? f(input).trim() : t.tool;
+  // Alat yang belum punya label ditulis umum; nama mesinnya tidak ditampilkan.
+  return f ? f(input).trim() : "Memeriksa data";
+}
+
+/**
+ * Satu baris jejak untuk pengguna: tindakan AI lalu hasilnya, dua-duanya dalam
+ * kalimat biasa. `ringkasanHasil` (data untuk model: nama mesin blok, tanggal
+ * ISO, galat mentah) sengaja tidak ditampilkan; aturan 8 DESIGN.md.
+ */
+function BarisJejak({ t }: { t: LangkahJejak }) {
+  return (
+    <>
+      <span className="font-semibold text-ink">{labelLangkah(t)}.</span>
+      {t.ringkasanAwam ? <> {t.ringkasanAwam}</> : null}
+    </>
+  );
 }
 
 interface Props {
@@ -86,9 +106,7 @@ export function PanelAi(p: Props) {
             <ol className="mb-0 mt-1.5 list-decimal pl-5 text-xs text-ink-2" aria-label="Langkah AI sejauh ini" data-testid="langkah-langsung">
               {p.langkahLangsung.map((t, i) => (
                 <li key={`${t.step}-${i}`} className="mt-0.5">
-                  <span className="font-semibold text-ink">{labelLangkah(t)}</span>
-                  {": "}
-                  {t.ringkasanHasil}
+                  <BarisJejak t={t} />
                 </li>
               ))}
             </ol>
@@ -160,12 +178,7 @@ export function PanelAi(p: Props) {
                   // Kunci gabungan: beberapa alat bisa dipanggil di langkah yang
                   // sama, jadi `t.step` saja bentrok.
                   <li key={`${t.step}-${i}`} className="mt-0.5">
-                    <span className="font-mono">{t.tool}</span>
-                    {t.input && typeof t.input === "object" && Object.keys(t.input as object).length > 0 ? (
-                      <span className="font-mono text-ink-3"> {JSON.stringify(t.input)}</span>
-                    ) : null}
-                    {": "}
-                    {t.ringkasanHasil}
+                    <BarisJejak t={t} />
                   </li>
                 ))}
               </ol>

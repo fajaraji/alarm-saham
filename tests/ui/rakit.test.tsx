@@ -248,7 +248,13 @@ describe("PapanRakit", () => {
         usulanBlok: [{ kind: "ekuitas_negatif", threshold: "longgar", alasan: "Ekuitas TELE negatif sejak 2024." }],
         trace: [
           { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "1 emiten terlewat" },
-          { step: 1, tool: "getFinancials", input: { symbol: "TELE" }, ringkasanHasil: "ekuitas negatif" },
+          {
+            step: 1,
+            tool: "getFinancials",
+            input: { symbol: "TELE" },
+            ringkasanHasil: "16 kuartal keuangan; terakhir 2019-12-31 ekuitas -1100000000000",
+            ringkasanAwam: "Ekuitas per 31 Des 2019: minus Rp1,1 triliun.",
+          },
         ],
         langkah: 3,
         perluTinjau: false,
@@ -264,7 +270,11 @@ describe("PapanRakit", () => {
     expect(screen.getByRole("list", { name: /Emiten yang dibahas/ })).toHaveTextContent("TELE");
     const jejak = screen.getByRole("list", { name: /Jejak pemeriksaan AI/ });
     expect(within(jejak).getAllByRole("listitem")).toHaveLength(2);
-    expect(jejak).toHaveTextContent("getFinancials");
+    // Jejak akhir memakai kalimat yang sama dengan jejak langsung: tindakan +
+    // hasil dalam bahasa biasa. Nama alat, JSON input, dan ringkasan untuk
+    // model (tanggal ISO, angka mentah) tidak pernah tampil (DESIGN.md aturan 8).
+    expect(jejak).toHaveTextContent("Memeriksa ekuitas TELE. Ekuitas per 31 Des 2019: minus Rp1,1 triliun.");
+    expect(jejak).not.toHaveTextContent(/getFinancials|{"symbol"|2019-12-31|-1100000000000/);
 
     const sebelum = panggilan.filter((p) => p.url === "/api/backtest").length;
     fireEvent.click(screen.getByTestId("usulan-ekuitas_negatif"));
@@ -383,8 +393,15 @@ describe("PanelAi: langkah agent tampil langsung (tiket 22)", () => {
         diagnosis={null}
         sedang
         langkahLangsung={[
-          { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "59 terlewat" },
-          { step: 1, tool: "getSuspensions", input: { symbol: "TOYS" }, ringkasanHasil: "1 suspensi: 2024-07-02" },
+          { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "59 terlewat", ringkasanAwam: "59 saham terlewat; 18 tertangkap." },
+          {
+            step: 1,
+            tool: "getSuspensions",
+            input: { symbol: "TOYS" },
+            ringkasanHasil: "1 suspensi: 2024-07-02",
+            ringkasanAwam: "Disuspensi 1 kali: 2 Jul 2024.",
+          },
+          { step: 2, tool: "runAlarmOn", input: { symbol: "TOYS", t: "2024-06-30" }, ringkasanHasil: "GALAT: timeout", ringkasanAwam: "Data ini gagal dibaca; AI melanjutkan tanpa data itu." },
         ]}
         galat={null}
         adaHasil
@@ -393,11 +410,12 @@ describe("PanelAi: langkah agent tampil langsung (tiket 22)", () => {
       />,
     );
     const daftar = screen.getByTestId("langkah-langsung");
-    expect(within(daftar).getAllByRole("listitem")).toHaveLength(2);
-    expect(daftar).toHaveTextContent("Mencari saham yang terlewat: 59 terlewat");
-    expect(daftar).toHaveTextContent("Memeriksa suspensi TOYS: 1 suspensi: 2024-07-02");
-    // Nama alat mentah tidak ditampilkan ke pengguna selagi menunggu.
-    expect(daftar).not.toHaveTextContent("getSuspensions");
+    expect(within(daftar).getAllByRole("listitem")).toHaveLength(3);
+    expect(daftar).toHaveTextContent("Mencari saham yang terlewat. 59 saham terlewat; 18 tertangkap.");
+    expect(daftar).toHaveTextContent("Memeriksa suspensi TOYS. Disuspensi 1 kali: 2 Jul 2024.");
+    expect(daftar).toHaveTextContent("Menguji alarm pada TOYS per 30 Jun 2024. Data ini gagal dibaca");
+    // Nama alat, tanggal ISO, dan galat mentah tidak ditampilkan ke pengguna.
+    expect(daftar).not.toHaveTextContent(/getSuspensions|runAlarmOn|2024-07-02|GALAT|timeout/);
     // Tombol diagnosis tidak ada selagi berjalan.
     expect(screen.queryByRole("button", { name: /Minta diagnosis/ })).toBeNull();
   });

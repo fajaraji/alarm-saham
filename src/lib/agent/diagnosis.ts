@@ -29,6 +29,7 @@ import { BLOCK_KINDS, LABEL_BLOK, ringkasAturan, THRESHOLDS, type BlockKind, typ
 import type { BacktestResult, PerSymbolResult } from "../engine/score";
 import { periksaFrasa, sensorObjek } from "./guard";
 import { INSTRUKSI_DIAGNOSIS, INSTRUKSI_RANGKUM } from "./instructions";
+import { RINGKAS_AWAM_GAGAL, ringkasAwamTool } from "./ringkas-awam";
 import { instruksiSistem, opsiProvider, pakaiGateway, pilihModel, providerDari, type Provider } from "./model";
 import { gabungUsage, ringkasUsage, type UsageRingkas } from "./usage";
 
@@ -85,6 +86,12 @@ export interface TraceStep {
   tool: string;
   input: unknown;
   ringkasanHasil: string;
+  /**
+   * Kalimat awam untuk layar (ringkas-awam.ts). `ringkasanHasil` di atas ikut
+   * dikirim ke model sebagai data, jadi tidak pernah ditampilkan ke pengguna.
+   * Opsional supaya jejak lama yang tersimpan di database tetap terbaca.
+   */
+  ringkasanAwam?: string;
 }
 
 /**
@@ -446,6 +453,7 @@ export function traceLangkah(s: StepResult<DiagnosisTools>, i: number): TraceSte
         : galat
           ? `GALAT: ${potong(String((galat.error as Error)?.message ?? galat.error))}`
           : "(tanpa hasil)",
+      ringkasanAwam: hasil ? ringkasAwamTool(tc.toolName, hasil.output) : galat ? RINGKAS_AWAM_GAGAL : "",
     };
   });
 }
