@@ -15,11 +15,12 @@ interface Props {
   children: ReactNode;
   testId?: string;
   /**
-   * Elemen yang menerima fokus lagi setelah dialog ditutup. Perlu bila dialog
-   * dibuka sesudah pekerjaan async: tombol pemicunya sempat `disabled`
-   * ("Menyimpan…"), dan browser memindahkan fokus dari tombol yang dinonaktifkan
-   * ke body, sehingga `document.activeElement` saat dialog dibuka bukan lagi
-   * tombol itu.
+   * Cadangan penerima fokus setelah dialog ditutup, dipakai HANYA bila saat
+   * dialog dibuka fokus ada di body. Itu terjadi bila dialog dibuka sesudah
+   * pekerjaan async: tombol pemicunya sempat `disabled` ("Menyimpan…"), dan
+   * browser memindahkan fokus dari tombol yang dinonaktifkan ke body. Bila
+   * dialog dibuka dari tombol yang masih memegang fokus (mis. "Lihat tautan"),
+   * fokus kembali ke tombol itu.
    */
   fokusKembali?: () => HTMLElement | null;
 }
@@ -68,7 +69,7 @@ export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = sebelumnya;
-      const tujuan = kembali.current?.() ?? pemicu;
+      const tujuan = pemicu ?? kembali.current?.() ?? null;
       if (tujuan?.isConnected) tujuan.focus();
     };
   }, []);

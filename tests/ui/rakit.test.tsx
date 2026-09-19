@@ -192,8 +192,13 @@ describe("PapanRakit", () => {
     const kalimat = screen.getByTestId("kalimat-hasil");
     expect(kalimat).toHaveTextContent(`${tangkap} dari ${totalDelisting} saham yang dihapus dari bursa`);
     expect(kalimat).toHaveTextContent(
-      palsu === "0" ? `Tidak salah bunyi pada satu pun dari ${kontrol} saham sehat` : `${palsu} dari ${kontrol} saham sehat`,
+      palsu === "0" ? `tidak salah bunyi pada satu pun dari ${kontrol} saham sehat` : `${palsu} dari ${kontrol} saham sehat`,
     );
+    // Satu kalimat (DESIGN.md aturan 5), dan tiga angka ringkas ada di lipatan
+    // yang sama dengan grid, bukan terbuka tepat di bawah kalimat yang sudah
+    // menyebutnya (aturan 1).
+    expect(kalimat.textContent!.trim().match(/\.(\s|$)/g)).toHaveLength(1);
+    expect(screen.getByTestId("skor-tertangkap").closest("details")).toBe(screen.getByTestId("rincian-kelompok"));
     // Daftar tertangkap hanya saham kena yang berbunyi; grid rinci terlipat.
     expect(within(screen.getByTestId("daftar-tertangkap")).getByTestId("tertangkap-SRIL")).toHaveTextContent("SRIL");
     expect(screen.queryByTestId("tertangkap-BBCA")).toBeNull();
@@ -350,8 +355,23 @@ describe("PapanRakit", () => {
     // Ditutup, lalu dibuka lagi lewat tombol di catatan simpan.
     fireEvent.keyDown(document, { key: "Escape" });
     expect(dialog).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("tombol-lihat-tautan"));
+    const lihat = screen.getByTestId("tombol-lihat-tautan");
+    lihat.focus();
+    fireEvent.click(lihat);
     expect(screen.getByRole("dialog", { name: "Simpan tautan rahasiamu" })).toBeInTheDocument();
+    // Fokus kembali ke tombol yang membuka dialog, bukan ke tombol Simpan.
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(document.activeElement).toBe(screen.getByTestId("tombol-lihat-tautan"));
+  });
+
+  it("tanpa database tidak ada tombol 'Lihat tautan rahasia' (tidak ada tautan untuk dilihat)", async () => {
+    render(<PapanRakit />);
+    fireEvent.click(screen.getByTestId("palet-suspensi"));
+    fireEvent.click(screen.getByRole("button", { name: TEKS.tombolSimpan }));
+    await screen.findByRole("dialog", { name: "Alarm hanya tersimpan di browser ini" });
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.getByTestId("catatan-simpan")).toHaveTextContent(/tersimpan di browser ini\.$/);
+    expect(screen.queryByTestId("tombol-lihat-tautan")).toBeNull();
   });
 });
 
@@ -379,7 +399,7 @@ describe("HasilUji: nol saham tertangkap (tiket 21)", () => {
     render(<HasilUji hasil={{ sumber: "fixture", dilewati: [], hasil } as never} basi={false} sedangUji={false} galat={null} />);
     const totalKena = asli.perGroup.delisting.total + asli.perGroup.watchlist.total;
     expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`tidak berbunyi lebih dulu pada satu pun dari ${totalKena} saham kena`);
-    expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`Tidak salah bunyi pada satu pun dari ${asli.controls} saham sehat`);
+    expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`tidak salah bunyi pada satu pun dari ${asli.controls} saham sehat`);
     expect(screen.queryByTestId("daftar-tertangkap")).toBeNull();
   });
 });

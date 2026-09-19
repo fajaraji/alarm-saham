@@ -31,13 +31,13 @@ function Pembuka({ tautan }: { tautan: string | null }) {
 }
 
 describe("DialogTautan", () => {
-  it("menampilkan tautan, penjelasan satu-satunya jalan, dan Salin memberi umpan balik", async () => {
+  it("menampilkan tautan, penjelasan hanya-tautan-ini, dan Salin memberi umpan balik", async () => {
     const tulis = vi.fn(async () => {});
     pasangClipboard(tulis);
     render(<DialogTautan tautan={TAUTAN} onTutup={() => {}} />);
     const dialog = screen.getByRole("dialog", { name: TEKS_DIALOG_TAUTAN.judul });
     expect(dialog).toHaveAttribute("aria-modal", "true");
-    expect(dialog).toHaveTextContent("satu-satunya cara");
+    expect(dialog).toHaveTextContent("Hanya tautan ini yang bisa membuka portofolio");
     expect(screen.getByLabelText(TEKS_DIALOG_TAUTAN.label)).toHaveValue(TAUTAN);
 
     fireEvent.click(screen.getByRole("button", { name: TEKS_DIALOG_TAUTAN.tombolSalin }));

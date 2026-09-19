@@ -12,16 +12,14 @@ import { Dialog } from "./Dialog";
 
 export const TEKS_DIALOG_TAUTAN = {
   judul: "Simpan tautan rahasiamu",
-  penjelasan:
-    "Tautan ini satu-satunya cara membuka portofolio dan alarm yang sama di perangkat atau browser lain. Kami tidak memakai akun, jadi tautan yang hilang tidak bisa dikirim ulang.",
-  peringatan: "Siapa pun yang memegang tautan ini bisa melihat dan mengubah portofoliomu. Jangan dibagikan.",
+  penjelasan: "Hanya tautan ini yang bisa membuka portofolio dan alarmmu di perangkat lain; tanpa akun, tautan yang hilang tidak bisa dikirim ulang.",
+  peringatan: "Siapa pun yang memegangnya bisa mengubah portofoliomu, jadi jangan dibagikan.",
   label: "Tautan rahasia",
   tombolSalin: "Salin tautan",
   tersalin: "Tautan tersalin.",
   salinManual: "Browser tidak mengizinkan salin otomatis. Tautannya sudah ditandai: tekan Ctrl+C, atau tahan lalu pilih Salin di ponsel.",
   judulLokal: "Alarm hanya tersimpan di browser ini",
-  penjelasanLokal:
-    "Server ini belum punya database, jadi belum ada tautan yang bisa membuka alarm dan portofolio ini di perangkat lain. Menghapus data browser ini ikut menghapusnya.",
+  penjelasanLokal: "Server ini belum punya database, jadi belum ada tautan untuk membukanya di perangkat lain. Menghapus data browser ikut menghapusnya.",
   tombolTutup: "Tutup",
 } as const;
 

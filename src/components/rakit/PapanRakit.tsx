@@ -300,7 +300,7 @@ export function PapanRakit() {
     setCatatanSimpan(
       diDb
         ? `Alarm “${rule.name}” tersimpan di server dan di browser ini.`
-        : `Alarm “${rule.name}” tersimpan di browser ini saja. Server belum punya database, jadi belum ada tautan untuk membukanya di perangkat lain.`,
+        : `Alarm “${rule.name}” tersimpan di browser ini.`,
     );
     setTautanTersimpan({ tautan: diDb ? tautanPemilik(window.location.origin, token) : null });
     setDialogTautan(true);
@@ -344,7 +344,7 @@ export function PapanRakit() {
             setGalatUji(null);
           }}
           onSimpan={() => void simpan()}
-          onTautan={tautanTersimpan ? () => setDialogTautan(true) : null}
+          onTautan={tautanTersimpan?.tautan ? () => setDialogTautan(true) : null}
         />
         <div className="rounded-[14px] border border-line bg-surface p-3.5">
           {ringkasan ? (
