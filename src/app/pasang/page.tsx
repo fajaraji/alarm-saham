@@ -26,18 +26,19 @@ export default async function HalamanPasang() {
       {/* Kalimat pembuka lama ("Tambahkan saham yang kamu pegang, pilih alarm
           yang aktif, lalu klik Cek sekarang") dibuang: baris petunjuk di bawah
           mengatakan persis hal yang sama di langkah 1 dan 2. Yang disisakan di
-          sini justru yang TIDAK ada di petunjuk, yaitu perilaku kredit dan
-          data. */}
+          sini justru yang TIDAK ada di petunjuk: sumber data dan bahwa cek
+          biasa tidak memakai kredit. Klausa "data terkini hanya ditarik kalau
+          kamu minta" juga dibuang (2026-09-19): label kotak centangnya sudah
+          mengatakan itu, tepat di bawah. */}
       <p className="mb-4 max-w-[70ch] text-[13.5px] text-ink-2">
         {nyata ? (
-          <>Alarm mengecek data resmi di server kami tanpa memakai <Istilah id="kredit_sectors">kredit</Istilah>;</>
+          <>Alarm mengecek data resmi di server kami tanpa memakai <Istilah id="kredit_sectors">kredit</Istilah>.</>
         ) : (
           <>
             Server ini belum terhubung ke database Sectors, jadi alarm mengecek <b>data contoh</b> (bukan data Sectors
-            nyata) tanpa memakai <Istilah id="kredit_sectors">kredit</Istilah>;
+            nyata) tanpa memakai <Istilah id="kredit_sectors">kredit</Istilah>.
           </>
-        )}{" "}
-        data terkini (pembeli 14 hari dan harga 90 hari) hanya ditarik kalau kamu minta.
+        )}
       </p>
       <PetunjukLayar
         langkah={[

@@ -43,8 +43,9 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   const pesan = page.getByTestId("pesan-SRIL");
   await expect(pesan).toContainText("alarm berbunyi");
   // Tanggal suspensi yang dilaporkan berbeda per sumber: DB memuat seluruh feed
-  // BEI (suspensi pertama 2021-05-18), fixture hanya dua baris (terakhir 2024-11-01).
-  await expect(pesan).toContainText(ADA_PGLITE ? "2021-05-18" : "2024-11-01");
+  // BEI (suspensi pertama 18 Mei 2021), fixture hanya dua baris (terakhir 1 Nov 2024).
+  // Tanggal ditulis untuk dibaca orang, bukan ISO (DESIGN.md aturan 9).
+  await expect(pesan).toContainText(ADA_PGLITE ? "18 Mei 2021" : "1 Nov 2024");
   await expect(pesan).toContainText("bukan saran investasi");
   await expect(pesan).toContainText("Saham mau pailit");
   // Atribusi sumber di pesan penjelasan harus ikut jujur pada jalur fixture.

@@ -11,7 +11,7 @@ import {
   petaCohort,
   type HasilBlokB,
 } from "../../../src/lib/jaga/blok-b";
-import { JUDUL_TEMUAN_B, kalimatBlokB, kalimatDilewati, rupiahAwam } from "../../../src/lib/jaga/kalimat-b";
+import { dilewatiKarenaServer, JUDUL_TEMUAN_B, kalimatBlokB, kalimatDilewati, rupiahAwam } from "../../../src/lib/jaga/kalimat-b";
 
 const NAMA_MESIN = new RegExp(BLOK_B_KINDS.join("|"));
 
@@ -47,12 +47,13 @@ describe("kalimatBlokB", () => {
     );
     expect(b.terpenuhi).toBe(true);
     const k = kalimatBlokB(b);
+    // Satu kalimat: "terpenuhi" dikatakan lencana di layar, bukan kalimat kedua.
     expect(k).toBe(
-      "Dalam 2 hari bursa (24 Agu 2026 sampai 25 Agu 2026), 90% nilai pembelian datang dari broker ritel, sementara broker asing dan institusi melepas bersih Rp3,1 miliar. Pembelinya didominasi ritel sementara institusi melepas.",
+      "Dalam 2 hari bursa (24 Agu 2026 sampai 25 Agu 2026), 90% nilai pembelian datang dari broker ritel, sementara broker asing dan institusi melepas bersih Rp3,1 miliar.",
     );
   });
 
-  it("ritel dominan tidak terpenuhi: angkanya tetap disebut, dan syaratnya dijelaskan", () => {
+  it("ritel dominan tidak terpenuhi: angkanya tetap disebut, dalam satu kalimat", () => {
     const b = nilaiRitelDominan(
       ringkas([
         [
@@ -66,14 +67,14 @@ describe("kalimatBlokB", () => {
     const k = kalimatBlokB(b);
     expect(k).toContain("40% nilai pembelian datang dari broker ritel");
     expect(k).toContain("menambah bersih Rp2,5 miliar");
-    expect(k).toContain("butuh ritel minimal 70% dan institusi melepas");
+    expect(k.match(/\./g)?.length).toBe(1);
   });
 
   it("jatuh dari puncak: persen di bawah harga tertinggi 90 hari, berikut harga dan tanggalnya", () => {
     const b = nilaiJatuhDariPuncak([bar("2026-07-01", 1000), bar("2026-08-01", 800), bar("2026-09-05", 650)]);
     expect(b.terpenuhi).toBe(true);
     expect(kalimatBlokB(b)).toBe(
-      "Harga penutupan terakhir (Rp650 pada 5 Sep 2026) 35% di bawah harga tertinggi 90 hari (Rp1.000 pada 1 Jul 2026). Turunnya sudah melewati batas 30%.",
+      "Harga penutupan terakhir (Rp650 pada 5 Sep 2026) 35% di bawah harga tertinggi 90 hari (Rp1.000 pada 1 Jul 2026).",
     );
     const naik = nilaiJatuhDariPuncak([bar("2026-07-01", 900), bar("2026-09-05", 1000)]);
     expect(kalimatBlokB(naik)).toBe("Harga penutupan terakhir (Rp1.000 pada 5 Sep 2026) adalah yang tertinggi dalam 90 hari.");
@@ -92,11 +93,11 @@ describe("kalimatBlokB", () => {
     ];
     const kalimat = kosong.map(kalimatBlokB);
     expect(kalimat).toEqual([
-      "Tidak ada transaksi broker dalam 14 hari terakhir; kemungkinan saham ini tidak diperdagangkan.",
-      "Broker yang bertransaksi tidak ada di daftar broker Sectors, jadi porsi pembeli ritel tidak bisa dihitung.",
+      "Tidak ada transaksi broker dalam 14 hari terakhir.",
+      "Porsi pembeli ritel tidak bisa dihitung: brokernya tidak ada di daftar Sectors.",
       "Tidak ada harga penutupan dalam 90 hari terakhir.",
       "Saham ini tidak ada di data saham beredar Sectors.",
-      "Tidak dicek: kredit Sectors tim tinggal cadangan, jadi data ini tidak ditarik.",
+      "Tidak dicek: kredit Sectors tim tinggal cadangan.",
       "Sectors tidak punya data ini untuk saham ini.",
       "Data ini gagal diambil dari Sectors. Coba cek lagi nanti.",
       "Data ini gagal diambil karena kesalahan di server kami. Coba cek lagi nanti.",
@@ -116,19 +117,24 @@ describe("kalimatBlokB", () => {
 });
 
 describe("kalimatDilewati", () => {
-  it("saham yang dilewati menyebut alasannya", () => {
-    expect(
-      kalimatDilewati({
-        status: "dilewati",
-        keterangan: "dilewati: saham ini sedang disuspensi sejak 2024-11-01, dan data broker saham yang disuspensi kosong padahal tetap memakai kredit",
-        blok: [],
-      }),
-    ).toBe(
-      "Data terkini tidak ditarik untuk saham ini: saham ini sedang disuspensi sejak 2024-11-01, dan data broker saham yang disuspensi kosong padahal tetap memakai kredit.",
+  it("saham yang dilewati menyebut alasannya dalam satu kalimat", () => {
+    expect(kalimatDilewati({ status: "dilewati", keterangan: "dilewati: saham ini disuspensi", blok: [] })).toBe(
+      "Data terkini tidak ditarik karena saham ini disuspensi.",
     );
     expect(kalimatDilewati({ status: "dilewati", keterangan: "dilewati: cadangan kredit", blok: [] })).toBe(
-      "Data terkini tidak ditarik untuk saham ini: kredit Sectors tim tinggal cadangan.",
+      "Data terkini tidak ditarik karena kredit Sectors tim tinggal cadangan.",
     );
+  });
+
+  it("alasan yang berlaku untuk seluruh server tidak ditulis per saham", () => {
+    const server = {
+      status: "dilewati" as const,
+      keterangan: "dilewati: server ini belum bisa menarik data terkini (butuh kunci Sectors dan database pencatat kredit)",
+      blok: [],
+    };
+    expect(dilewatiKarenaServer(server)).toBe(true);
+    expect(kalimatDilewati(server)).toBe("");
+    expect(dilewatiKarenaServer({ status: "dilewati", keterangan: "dilewati: saham ini disuspensi", blok: [] })).toBe(false);
   });
 });
 

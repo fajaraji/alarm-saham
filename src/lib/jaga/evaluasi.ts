@@ -280,7 +280,9 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     } else if (suspensi) {
       kelasB = {
         status: "dilewati",
-        keterangan: `dilewati: saham ini sedang disuspensi sejak ${suspensi}, dan data broker saham yang disuspensi kosong padahal tetap memakai kredit`,
+        // Tanggalnya tidak diulang: kalimat suspensi di pesan yang sama sudah
+        // menyebutnya. Alasan kreditnya ada di halaman metodologi.
+        keterangan: "dilewati: saham ini disuspensi",
         blok: [],
       };
     } else {

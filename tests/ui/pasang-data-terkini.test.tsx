@@ -9,6 +9,8 @@ import { PesanPenjelasan } from "../../src/components/pasang/PesanPenjelasan";
 import type { DailyBar } from "../../src/lib/data/types";
 import { BLOK_B_KINDS, nilaiJatuhDariPuncak, nilaiRitelDominan, petaCohort } from "../../src/lib/jaga/blok-b";
 import type { HasilSaham } from "../../src/lib/jaga/evaluasi";
+import { kalimatBlokB } from "../../src/lib/jaga/kalimat-b";
+import { templatePenjelasan } from "../../src/lib/jaga/penjelasan";
 
 const NAMA_MESIN = new RegExp(BLOK_B_KINDS.join("|"));
 
@@ -40,15 +42,14 @@ function saham(symbol: string, kelasB: HasilSaham["kelasB"]): HasilSaham {
   return { symbol, status: "hijau", adaData: true, suspensiAktif: null, alasan: [], alarmBerbunyi: [], kelasB, catatan: [] };
 }
 
+/** Pesan layar Pasang dengan teks template sungguhan (bukan teks kosong). */
+function renderPesan(h: HasilSaham) {
+  return render(<PesanPenjelasan saham={[h]} penjelasan={[{ symbol: h.symbol, teks: templatePenjelasan(h, "2026-09-07"), olehAi: false, perluTinjau: false }]} />);
+}
+
 describe("PesanPenjelasan: data terkini", () => {
   it("setiap saham menampilkan dua temuan dalam kalimat biasa berikut angkanya, tanpa nama mesin", () => {
-    render(
-      <PesanPenjelasan
-        saham={[saham("BBCA", { status: "dijalankan", keterangan: "1 dari 2 syarat data terkini terpenuhi", blok: [ritel, puncak] })]}
-        penjelasan={[]}
-        today="2026-09-07"
-      />,
-    );
+    renderPesan(saham("BBCA", { status: "dijalankan", keterangan: "1 dari 2 syarat data terkini terpenuhi", blok: [ritel, puncak] }));
     const kotak = screen.getByTestId("kelas-b-BBCA");
     const temuanRitel = within(kotak).getByTestId("temuan-b-BBCA-ritel_dominan");
     expect(temuanRitel).toHaveAttribute("data-terpenuhi", "true");
@@ -59,25 +60,41 @@ describe("PesanPenjelasan: data terkini", () => {
     expect(temuanPuncak).toHaveTextContent("10% di bawah harga tertinggi 90 hari (Rp500 pada 1 Jul 2026)");
     expect(temuanPuncak).not.toHaveTextContent("memenuhi syarat alarm");
     expect(kotak.textContent).not.toMatch(NAMA_MESIN);
+    expect(screen.getByTestId("pesan-BBCA").textContent).not.toMatch(NAMA_MESIN);
   });
 
-  it("saham yang dilewati menyebut alasannya", () => {
-    render(
-      <PesanPenjelasan
-        saham={[
-          saham("SRIL", {
-            status: "dilewati",
-            keterangan: "dilewati: saham ini sedang disuspensi sejak 2024-11-01, dan data broker saham yang disuspensi kosong padahal tetap memakai kredit",
-            blok: [],
-          }),
-        ]}
-        penjelasan={[]}
-        today="2026-09-07"
-      />,
-    );
-    expect(screen.getByTestId("kelas-b-dilewati-SRIL")).toHaveTextContent(
-      "Data terkini tidak ditarik untuk saham ini: saham ini sedang disuspensi sejak 2024-11-01",
-    );
+  it("setiap kalimat temuan terbaca sekali tanpa membuka apa pun; kotak data terkini ada di lipatan Rincian", () => {
+    const h = saham("BBCA", { status: "dijalankan", keterangan: "x", blok: [ritel, puncak] });
+    // Temuan yang terpenuhi ikut menjadi alasan, persis seperti keluaran cekPortofolio.
+    h.alasan = [{ kind: "ritel_dominan", kelas: "B", label: "Ritel dominan, institusi melepas", detail: kalimatBlokB(ritel), tanggal: "2026-09-04", sumber: "Sectors /v2/broker-summary/ (14 hari)", alarm: [] }];
+    renderPesan(h);
+    const kartu = screen.getByTestId("pesan-BBCA");
+    const kotak = screen.getByTestId("kelas-b-BBCA");
+    expect(kotak.closest("details")).not.toBeNull();
+    expect(kotak.closest("details")).not.toHaveAttribute("open");
+    // Teks yang terlihat = kartu tanpa isi <details> yang tertutup.
+    const lipatan = kartu.querySelector("details")!;
+    const terlihat = (kartu.textContent ?? "").replace(lipatan.textContent ?? "", "") + (lipatan.querySelector("summary")?.textContent ?? "");
+    for (const k of [kalimatBlokB(ritel), kalimatBlokB(puncak)]) {
+      expect(terlihat.split(k.replace(/\.$/, "")).length - 1, k).toBe(1);
+    }
+    // Daftar alasan di lipatan tidak mengulang temuan kelas B (kotaknya sudah memuatnya).
+    expect(screen.queryByTestId("alasan-BBCA-ritel_dominan")).toBeNull();
+    // Sumber di teks utama cukup namanya; endpoint lengkap hanya di lipatan.
+    expect(terlihat).not.toContain("/v2/");
+  });
+
+  it("saham yang dilewati menyebut alasannya sekali, dalam satu kalimat", () => {
+    renderPesan(saham("SRIL", { status: "dilewati", keterangan: "dilewati: saham ini disuspensi", blok: [] }));
+    const kartu = screen.getByTestId("pesan-SRIL");
+    expect(kartu).toHaveTextContent("Data terkini tidak ditarik karena saham ini disuspensi.");
+    expect(kartu.textContent!.split("tidak ditarik").length - 1).toBe(1);
+    expect(screen.queryByTestId("kelas-b-SRIL")).toBeNull();
+  });
+
+  it("alasan yang berlaku untuk seluruh server tidak diulang per saham", () => {
+    renderPesan(saham("BBCA", { status: "dilewati", keterangan: "dilewati: server ini belum bisa menarik data terkini (butuh kunci Sectors dan database pencatat kredit)", blok: [] }));
+    expect(screen.getByTestId("pesan-BBCA")).not.toHaveTextContent(/tidak ditarik|belum bisa menarik/);
   });
 });
 

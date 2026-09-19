@@ -84,8 +84,10 @@ describe("templatePenjelasan", () => {
     const t = templatePenjelasan(MERAH, "2026-09-07");
     expect(t).toMatch(/^SRIL \(alarm berbunyi\): 3 syarat terpenuhi pada 7 Sep 2026/);
     expect(t).toContain("(1) Laporan keuangan hilang/berhenti");
-    expect(t).toContain("[tanggal 2024-12-31]");
-    expect(t).toContain("[sumber: Sectors /v2/company/get_quarterly_financial_dates/ (di DB kami)]");
+    // Tanggal dibaca orang dan sumber cukup namanya (DESIGN.md aturan 8 dan 9);
+    // endpoint lengkap hanya di rincian terlipat layar Pasang.
+    expect(t).toContain("(31 Des 2024, sumber: Sectors)");
+    expect(t).not.toMatch(/\/v2\/|\[tanggal|\d{4}-\d{2}-\d{2}\]/);
     expect(t).toContain("(3) Ritel dominan, institusi melepas");
     expect(t).toContain("Alarm yang berbunyi: “Saham mau pailit”, “Jebakan IPO/harga”.");
     expect(t).toContain("masih tersuspensi menurut data kami (sejak 18 Mei 2021)");
@@ -99,7 +101,7 @@ describe("templatePenjelasan", () => {
   it("hijau: tidak ada syarat, keterangan kelas B dilewati, disclaimer", () => {
     const t = templatePenjelasan(HIJAU, "2026-09-07");
     expect(t).toContain("BBCA (aman menurut alarmmu): tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
-    expect(t).toContain("Data terkini tidak ditarik untuk saham ini: kredit Sectors tim tinggal cadangan.");
+    expect(t).toContain("Data terkini tidak ditarik karena kredit Sectors tim tinggal cadangan.");
     expect(t.endsWith(DISCLAIMER)).toBe(true);
   });
 

@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { ALARM_BAWAAN, type AlarmKlien } from "@/lib/jaga/bawaan";
 import type { BlokBKind } from "@/lib/jaga/blok-b";
 import type { HasilPortofolio, HasilSaham } from "@/lib/jaga/evaluasi";
+import { dilewatiKarenaServer } from "@/lib/jaga/kalimat-b";
 import {
   cekAdaData,
   cekPortofolioServer,
@@ -23,6 +24,7 @@ import {
   type ResponCek,
 } from "@/lib/jaga/api";
 import { RuleSchema } from "@/lib/engine/rules";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 import {
   gabungKotakMasuk,
   hasilTerakhirLokal,
@@ -453,6 +455,12 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
             <span className="block text-[11.5px] text-ink-3">{TEKS.kelasBSub}</span>
           </span>
         </label>
+        {hasil && hasil.saham.some((s) => dilewatiKarenaServer(s.kelasB)) ? (
+          // Alasan yang sama untuk semua saham disebut sekali di sini, bukan per saham.
+          <p data-testid="kelas-b-server" className="mb-2 ml-6 text-[12px] text-ink-2">
+            {TEKS.kelasBServer}
+          </p>
+        ) : null}
         <PetaPortofolio symbols={symbols} hasil={petaHasil} adaData={adaData} onHapus={hapus} sedangCek={sedangCek} />
         {galatCek ? (
           <p role="alert" data-testid="galat-cek" className="mt-2 rounded-lg border-l-[3px] border-crit bg-crit-soft px-3 py-2 text-[13px]">
@@ -461,7 +469,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
         ) : null}
         {hasil ? (
           <p className="mt-2.5 text-xs text-ink-3" data-testid="ringkasan-cek">
-            Dicek {hasil.today} dengan{" "}
+            Dicek {fmtTanggal(hasil.today)} dengan{" "}
             {/* `data-sumber` = penanda mesin untuk tes: teks label fixture memuat
                 substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks. */}
             <span
@@ -479,8 +487,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
         ) : null}
 
         <h3 className="mt-5 font-display text-[15px] font-bold">{TEKS.pesanJudul}</h3>
-        <p className="mb-2.5 text-xs text-ink-3">{TEKS.pesanSub}</p>
-        <PesanPenjelasan saham={hasil?.saham ?? []} penjelasan={hasil?.penjelasan ?? []} today={hasil?.today ?? null} />
+        <PesanPenjelasan saham={hasil?.saham ?? []} penjelasan={hasil?.penjelasan ?? []} />
       </section>
 
       <div className="flex flex-col gap-4">
@@ -488,10 +495,9 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
           <h3 id="judul-alarm" className="font-display text-[15px] font-bold">
             {TEKS.alarmJudul}
           </h3>
-          <p className="mb-2.5 text-xs text-ink-3">{TEKS.alarmSub}</p>
           <KartuAlarm alarms={alarms} aktif={aktif} onToggle={toggleAlarm} />
           <p className="mt-2.5 text-[11.5px] leading-snug text-ink-3">
-            Alarm baru dibuat di layar <a href="/rakit" className="underline">Rakit alarm</a>; yang tersimpan di browser ini atau di server otomatis muncul di sini.
+            Alarm baru dibuat di layar <a href="/rakit" className="underline">Rakit alarm</a>.
           </p>
         </section>
         <KotakMasuk pesan={kotak} onTandaiDibaca={tandaiDibaca} kodePortofolio={idPortofolio} telegramAktif={telegramAktif} />

@@ -2,10 +2,11 @@
 //
 // Dulu layar Pasang menampilkan `ritel_dominan: tidak (broker ritel 45% dari
 // nilai pembelian ...)`: nama mesin blok, lalu teks teknis dengan ambang dan
-// jumlah baris registry. Di sini setiap temuan menjadi satu kalimat yang
-// menyebut angkanya, dan saham yang dilewati menyebut alasannya. Murni: tanpa
-// I/O, dipakai layar Pasang dan template pesan penjelasan (kotak masuk,
-// Telegram).
+// jumlah baris registry. Di sini setiap temuan menjadi SATU kalimat yang
+// menyebut angkanya (DESIGN.md aturan 5), dan saham yang dilewati menyebut
+// alasannya. Murni: tanpa I/O, dipakai layar Pasang dan template pesan
+// penjelasan (kotak masuk, Telegram).
+import { fmtTanggal } from "../putar-ulang/ringkas";
 import { AMBANG_B, type BlokBKind, type HasilBlokB } from "./blok-b";
 import type { KelasBSaham } from "./evaluasi";
 
@@ -15,14 +16,6 @@ export const JUDUL_TEMUAN_B: Record<BlokBKind, string> = {
   jatuh_dari_puncak: "Harga dibanding puncak 90 hari",
   free_float_kecil: "Saham yang beredar di publik",
 };
-
-const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-
-function tanggal(t: string): string {
-  const [y, m, d] = t.split("-").map(Number);
-  if (!y || !m || !d) return t;
-  return `${d} ${BULAN[m - 1]} ${y}`;
-}
 
 function persen(x: number): string {
   return `${Math.round(x * 100)}%`;
@@ -52,35 +45,35 @@ function hargaRp(x: number): string {
  */
 function kalimatTanpaAngka(b: HasilBlokB): string {
   const d = b.detail;
-  if (d.startsWith("dilewati: cadangan kredit")) return "Tidak dicek: kredit Sectors tim tinggal cadangan, jadi data ini tidak ditarik.";
+  if (d.startsWith("dilewati: cadangan kredit")) return "Tidak dicek: kredit Sectors tim tinggal cadangan.";
   if (d.startsWith("tidak ada data di Sectors")) return "Sectors tidak punya data ini untuk saham ini.";
   if (d.startsWith("gagal: Sectors HTTP")) return "Data ini gagal diambil dari Sectors. Coba cek lagi nanti.";
   if (d.startsWith("gagal:")) return "Data ini gagal diambil karena kesalahan di server kami. Coba cek lagi nanti.";
-  if (d.startsWith("tidak ada transaksi broker")) return "Tidak ada transaksi broker dalam 14 hari terakhir; kemungkinan saham ini tidak diperdagangkan.";
-  if (d.startsWith("cohort broker tidak dikenal")) return "Broker yang bertransaksi tidak ada di daftar broker Sectors, jadi porsi pembeli ritel tidak bisa dihitung.";
+  if (d.startsWith("tidak ada transaksi broker")) return "Tidak ada transaksi broker dalam 14 hari terakhir.";
+  if (d.startsWith("cohort broker tidak dikenal")) return "Porsi pembeli ritel tidak bisa dihitung: brokernya tidak ada di daftar Sectors.";
   if (d.startsWith("nilai pembelian nol")) return "Tidak ada nilai pembelian dalam 14 hari terakhir.";
   if (d.startsWith("tidak ada harga penutupan")) return "Tidak ada harga penutupan dalam 90 hari terakhir.";
   if (d.startsWith("simbol tidak ada di snapshot")) return "Saham ini tidak ada di data saham beredar Sectors.";
   return d.charAt(0).toUpperCase() + d.slice(1) + (/[.!?]$/.test(d) ? "" : ".");
 }
 
-/** Satu temuan data terkini sebagai kalimat biasa, berikut angkanya. */
+/**
+ * Satu temuan data terkini sebagai satu kalimat berikut angkanya. Apakah
+ * temuannya memenuhi syarat alarm dikatakan lencana di layar, dan ambangnya
+ * dijelaskan tooltip kamus, jadi kalimatnya tidak mengulang keduanya.
+ */
 export function kalimatBlokB(b: HasilBlokB): string {
   const u = b.ukuran;
   if (u?.jenis === "ritel") {
     const net = u.netAsingInstitusi;
     const arah =
       net < 0 ? `melepas bersih ${rupiahAwam(net)}` : net > 0 ? `menambah bersih ${rupiahAwam(net)}` : "tidak menambah maupun melepas";
-    const dasar = `Dalam ${u.hariBursa} hari bursa (${tanggal(u.mulai)} sampai ${tanggal(u.akhir)}), ${persen(u.porsiRitel)} nilai pembelian datang dari broker ritel, sementara broker asing dan institusi ${arah}.`;
-    return b.terpenuhi
-      ? `${dasar} Pembelinya didominasi ritel sementara institusi melepas.`
-      : `${dasar} Ini belum pola ritel dominan, yang butuh ritel minimal ${persen(AMBANG_B.ritelPorsi)} dan institusi melepas.`;
+    return `Dalam ${u.hariBursa} hari bursa (${fmtTanggal(u.mulai)} sampai ${fmtTanggal(u.akhir)}), ${persen(u.porsiRitel)} nilai pembelian datang dari broker ritel, sementara broker asing dan institusi ${arah}.`;
   }
   if (u?.jenis === "puncak") {
-    const akhir = `${hargaRp(u.closeAkhir)} pada ${tanggal(u.tanggalAkhir)}`;
+    const akhir = `${hargaRp(u.closeAkhir)} pada ${fmtTanggal(u.tanggalAkhir)}`;
     if (u.turun <= 0) return `Harga penutupan terakhir (${akhir}) adalah yang tertinggi dalam 90 hari.`;
-    const dasar = `Harga penutupan terakhir (${akhir}) ${persen(u.turun)} di bawah harga tertinggi 90 hari (${hargaRp(u.puncak)} pada ${tanggal(u.tanggalPuncak)}).`;
-    return b.terpenuhi ? `${dasar} Turunnya sudah melewati batas ${persen(1 - AMBANG_B.jatuhRasio)}.` : dasar;
+    return `Harga penutupan terakhir (${akhir}) ${persen(u.turun)} di bawah harga tertinggi 90 hari (${hargaRp(u.puncak)} pada ${fmtTanggal(u.tanggalPuncak)}).`;
   }
   if (u?.jenis === "free_float") {
     const porsi = `${angka(u.freeFloat * 100)}%`;
@@ -91,9 +84,22 @@ export function kalimatBlokB(b: HasilBlokB): string {
   return kalimatTanpaAngka(b);
 }
 
-/** Alasan data terkini tidak ditarik untuk satu saham, sebagai kalimat. */
+/**
+ * Data terkini dilewati karena SERVER-nya (tanpa kunci Sectors atau database
+ * pencatat kredit), bukan karena sahamnya. Alasan itu sama untuk setiap saham,
+ * jadi layar menyebutnya sekali, bukan per saham (DESIGN.md aturan 1).
+ */
+export function dilewatiKarenaServer(kelasB: KelasBSaham): boolean {
+  return kelasB.status === "dilewati" && kelasB.keterangan.startsWith("dilewati: server");
+}
+
+/**
+ * Alasan data terkini tidak ditarik untuk satu saham, dalam satu kalimat.
+ * String kosong bila alasannya berlaku untuk seluruh server.
+ */
 export function kalimatDilewati(kelasB: KelasBSaham): string {
-  const mentah = kelasB.keterangan.replace(/^dilewati:\s*/, "");
+  if (dilewatiKarenaServer(kelasB)) return "";
+  const mentah = kelasB.keterangan.replace(/^dilewati:\s*/, "").replace(/[.!?]$/, "");
   const alasan = mentah.startsWith("cadangan kredit") ? "kredit Sectors tim tinggal cadangan" : mentah;
-  return `Data terkini tidak ditarik untuk saham ini: ${alasan}${/[.!?]$/.test(alasan) ? "" : "."}`;
+  return `Data terkini tidak ditarik karena ${alasan}.`;
 }

@@ -48,7 +48,6 @@ export function KotakMasuk({ pesan, onTandaiDibaca, kodePortofolio, telegramAkti
           </button>
         ) : null}
       </div>
-      <p className="mb-2.5 text-xs text-ink-3">{TEKS.kotakSub}</p>
       <p className="mb-2.5 text-[11.5px] leading-snug text-ink-3" data-testid="kotak-cron">
         Setiap pagi (±06:30 WIB) server mengecek ulang portofoliomu; bendera baru muncul di sini.
         {telegramAktif && kodePortofolio ? (

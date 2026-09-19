@@ -131,7 +131,7 @@ describe.skipIf(!adaPglite)("cekPortofolio (PGlite in-memory)", () => {
     expect(setelahPertama - sebelum).toBe(3);
     // SRIL: suspensi aktif → tidak ada satu pun URL SRIL yang dipanggil.
     expect(pertama.saham[1].kelasB.status).toBe("dilewati");
-    expect(pertama.saham[1].kelasB.keterangan).toMatch(/disuspensi sejak 2024-11-01/);
+    expect(pertama.saham[1].kelasB.keterangan).toBe("dilewati: saham ini disuspensi");
     expect(panggilan.some((p) => p.url.includes("SRIL"))).toBe(false);
 
     const kedua = await cekPortofolio({
