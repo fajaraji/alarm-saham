@@ -148,9 +148,11 @@ export const KLAIM_CAKUPAN_NYATA: RegExp[] = [
 /**
  * Kalimat pembatas halaman metodologi. Selama ia ada, /cara-kami-menghitung
  * boleh memuat angka universe nyata; kalau dihapus, gerbang ikut gagal.
+ * Sejak tiket 27 kalimatnya tanpa nama berkas ("hasil uji yang kami simpan"
+ * menggantikan "snapshot yang di-commit (docs/...)"), tetapi isinya sama.
  */
 export const PEMBATAS_METODOLOGI =
-  /snapshot yang di-commit[\s\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini/i;
+  /hasil uji yang kami simpan[\s\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini/i;
 
 /** Klaim yang WAJIB ada di jalur data nyata (footer memikul kalimat sumbernya). */
 export const KLAIM_WAJIB_JALUR_DB = /fakta resmi dari feed Sectors/i;

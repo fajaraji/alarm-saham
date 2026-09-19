@@ -20,9 +20,7 @@ import { KREDIT_LEDGER } from "@/lib/metodologi/kredit";
 import {
   CONTOH_LABEL_BACKSTOP,
   JUMLAH_FRASA_BACKSTOP,
-  KORPUS_PENJAGA,
   PENJAGA_FRASA,
-  PERINTAH_UKUR_PENJAGA,
 } from "@/lib/metodologi/penjaga";
 import {
   KREDIT_ANGGARAN,
@@ -32,7 +30,6 @@ import {
   KREDIT_TANGGAL_LEDGER,
   KREDIT_TOTAL_LEDGER,
   KREDIT_UNIVERSE,
-  PERINTAH_SNAPSHOT,
   SKOR_NYATA,
   barisKelompok,
   ringkasSkor,
@@ -195,12 +192,10 @@ export default function HalamanCaraKamiMenghitung() {
       </h1>
       <p className="m-0 max-w-[70ch] text-ink-2">
         Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
-        ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>snapshot yang di-commit</b>{" "}
-        (<code className="font-mono">docs/skor-nyata.json</code>, <code className="font-mono">docs/kredit-ledger.json</code>, dan{" "}
-        <code className="font-mono">docs/penjaga-frasa.json</code>),
-        hasil menjalankan mesin uji di atas database berisi data Sectors, bukan hasil hitung ulang dari sumber data yang
-        sedang dipakai server ini. Tidak ada angka yang dibuat-buat untuk demo, dan tes otomatis memastikan angka di halaman
-        ini sama dengan keluaran mesin uji.
+        ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>hasil uji yang kami simpan</b>{" "}
+        pada {SKOR_NYATA.today}, dari mesin uji yang dijalankan di atas database berisi data Sectors. Angka itu{" "}
+        <b>bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini</b>. Tidak ada angka yang dibuat-buat
+        untuk demo, dan tes otomatis memastikan angka di halaman ini sama dengan keluaran mesin uji.
       </p>
 
       {/* Daftar isi menempel. Halaman ini 2.128 kata dan 5.493px tinggi, dan
@@ -267,9 +262,8 @@ export default function HalamanCaraKamiMenghitung() {
           tertangkap/terlewat tetapi tidak ikut rata-rata &ldquo;lebih awal&rdquo; karena data laporan baru mulai 2020.
         </p>
         <p className="mt-2 text-sm text-ink-2">
-          Cara mereproduksi (nol panggilan API, dari database lokal):{" "}
-          <code className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[12px]">{PERINTAH_SNAPSHOT}</code>. Tanpa
-          database, tambahkan <code className="font-mono">--fixture</code> untuk contoh kecil 8 emiten.
+          Hasil ini bisa diulang tanpa satu pun panggilan API, dari salinan database yang sama. Langkahnya ada di README
+          repositori.
         </p>
         <div className="mt-4 grid gap-3">
           <TabelKelompok group="delisting" />
@@ -420,7 +414,7 @@ export default function HalamanCaraKamiMenghitung() {
           <li>
             <strong><Istilah id="insider_jual">Filing orang dalam</Istilah> hanya sejak 2024.</strong> Feed filings tidak memuat satu pun baris ≤ 2023, sehingga
             blok &ldquo;orang dalam menjual&rdquo; hanya boleh diklaim untuk jendela 2024 ke depan (aturan cadangan
-            PLAN §7.2 terpicu: klaimnya dalam bulan, bukan tahun).
+            kami terpicu: klaimnya dalam bulan, bukan tahun).
           </li>
           <li>
             <strong>Suspensi per simbol hanya 1 baris</strong> (suspensi terakhir). Sejarah suspensi diambil dari feed seluruh
@@ -481,11 +475,10 @@ export default function HalamanCaraKamiMenghitung() {
           </li>
         </ol>
         <p className="mt-3 max-w-[70ch] text-ink-2">
-          Angkanya diukur, bukan diklaim. Tolok ukurnya <code className="font-mono">{KORPUS_PENJAGA}</code>:{" "}
+          Angkanya diukur, bukan diklaim. Tolok ukurnya adalah kumpulan kalimat uji:{" "}
           {PENJAGA_FRASA.sesudah.harusUtuhTotal} kalimat sah yang wajib utuh dan {PENJAGA_FRASA.sesudah.harusDitandaiTotal}{" "}
-          anjuran, isinya kalimat verbatim dari kedua pemeriksa. Diukur {PENJAGA_FRASA.tanggal} dengan{" "}
-          <code className="font-mono">{PERINTAH_UKUR_PENJAGA}</code>, dan dicetak ulang setiap kali{" "}
-          <code className="font-mono">npm test</code> berjalan.
+          anjuran, isinya kalimat verbatim dari kedua pemeriksa. Diukur {PENJAGA_FRASA.tanggal}, dan diukur ulang setiap kali
+          tes otomatis berjalan.
         </p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[560px] border-collapse text-[13px]" data-testid="tabel-penjaga">
@@ -551,7 +544,7 @@ export default function HalamanCaraKamiMenghitung() {
           Kredit Sectors yang terpakai
         </h2>
         <p className="mt-1 max-w-[70ch] text-ink-2">
-          Setiap panggilan API dicatat di buku kredit (tabel <code className="font-mono">api_ledger</code>), termasuk cache hit
+          Setiap panggilan API dicatat di buku kredit di database kami, termasuk cache hit
           dan 404. Per {KREDIT_TANGGAL_LEDGER}: <strong data-testid="kredit-total">{KREDIT_TOTAL_LEDGER} dari {KREDIT_ANGGARAN}</strong>{" "}
           kredit terpakai; sisa {KREDIT_ANGGARAN - KREDIT_TOTAL_LEDGER}, dengan {KREDIT_CADANGAN_JURI} kredit cadangan untuk demo juri
           yang tidak disentuh kode (panggilan ditolak bila sisa di bawah cadangan). Uji ke masa lalu dan halaman ini tidak
@@ -607,8 +600,8 @@ export default function HalamanCaraKamiMenghitung() {
                 <td className="px-3 py-2">Total ledger</td>
                 <td className="px-3 py-2 text-right font-mono">{kreditPembuktian + kreditUniverse + kreditKelasB}</td>
                 <td className="px-3 py-2 text-ink-2">
-                  = {KREDIT_TOTAL_LEDGER} menurut api_ledger ({KREDIT_LEDGER.baris} baris, snapshot{" "}
-                  <code className="font-mono">docs/kredit-ledger.json</code>); run ulang penarikan = 0 kredit (idempoten)
+                  = {KREDIT_TOTAL_LEDGER} menurut buku kredit ({KREDIT_LEDGER.baris} baris, disimpan {KREDIT_TANGGAL_LEDGER});
+                  menarik ulang data yang sama = 0 kredit
                 </td>
               </tr>
             </tbody>
@@ -617,10 +610,8 @@ export default function HalamanCaraKamiMenghitung() {
       </section>
 
       <p className="mt-8 text-sm text-ink-2">
-        Rincian teknis lebih lanjut: <code className="font-mono">docs/mesin-uji.md</code> (asumsi mesin),{" "}
-        <code className="font-mono">docs/data-proof.md</code> (kedalaman data per endpoint),{" "}
-        <code className="font-mono">docs/universe-pull.md</code> (penarikan & kredit), dan{" "}
-        <code className="font-mono">docs/decisions.md</code> (log keputusan) di repositori.
+        Rincian teknis lebih lanjut (asumsi mesin uji, kedalaman data per endpoint, penarikan data dan kreditnya, serta
+        catatan keputusan) ada di README repositori.
       </p>
     </main>
   );

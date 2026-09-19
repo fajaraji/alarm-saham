@@ -21,7 +21,7 @@ export interface SkorNyata extends BacktestResult {
 /** Snapshot skor nyata yang di-commit (tanggal = field `today`). */
 export const SKOR_NYATA = skorMentah as unknown as SkorNyata;
 
-/** Perintah yang menghasilkan snapshot (dipakai di halaman & README). */
+/** Perintah yang menghasilkan snapshot. Dicatat di README; halaman metodologi sengaja tidak menampilkannya (tiket 27). */
 export const PERINTAH_SNAPSHOT =
   "npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07 --json";
 
