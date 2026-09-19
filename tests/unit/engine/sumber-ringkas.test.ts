@@ -9,6 +9,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getEventSource, jenisSumberTerpilih, sumberNyata } from "../../../src/lib/engine/sumber";
+import { salinPglite } from "../pglite-salinan";
 
 const ADA_PGLITE = existsSync(path.resolve(process.cwd(), ".pglite"));
 
@@ -43,13 +44,21 @@ describe("jenisSumberTerpilih()", () => {
   });
 
   it.skipIf(!ADA_PGLITE)("pglite bila foldernya ada — dan sama dengan getEventSource()", async () => {
+    // Salinan ./.pglite, ditunjuk lewat ALARM_PGLITE_DIR (jalur yang sama dengan
+    // server): lihat tests/unit/pglite-salinan.ts.
+    const salinan = salinPglite();
     vi.stubEnv("DATABASE_URL", "");
     vi.stubEnv("TANPA_PGLITE", "");
-    expect(jenisSumberTerpilih()).toBe("pglite");
-    expect(sumberNyata()).toBe(true);
-    const s = await getEventSource();
-    expect(s.jenis).toBe(jenisSumberTerpilih());
-    await s.tutup();
+    vi.stubEnv("ALARM_PGLITE_DIR", salinan.dir);
+    try {
+      expect(jenisSumberTerpilih()).toBe("pglite");
+      expect(sumberNyata()).toBe(true);
+      const s = await getEventSource();
+      expect(s.jenis).toBe(jenisSumberTerpilih());
+      await s.tutup();
+    } finally {
+      salinan.hapus();
+    }
   }, 60_000);
 });
 

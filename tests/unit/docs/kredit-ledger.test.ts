@@ -15,6 +15,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { BERKAS_KREDIT_LEDGER, KREDIT_LEDGER } from "../../../src/lib/metodologi/kredit";
+import { salinPglite } from "../pglite-salinan";
 import {
   KREDIT_ANGGARAN,
   KREDIT_KELAS_B,
@@ -95,10 +96,12 @@ describe("docs/kredit-ledger.json: satu angka kredit untuk semua permukaan", () 
   });
 
   it.skipIf(!adaPglite)("angka snapshot = hitung ulang dari tabel api_ledger di ./.pglite", async () => {
-    const { bukaDb, DIR_PGLITE_DEFAULT } = await import("../../../src/lib/db/buka");
+    const { bukaDb } = await import("../../../src/lib/db/buka");
     const { apiLedger } = await import("../../../src/lib/db/schema");
     const { sql } = await import("drizzle-orm");
-    const t = await bukaDb({ pgliteDir: DIR_PGLITE_DEFAULT });
+    // Salinan, bukan ./.pglite sendiri: lihat tests/unit/pglite-salinan.ts.
+    const salinan = salinPglite();
+    const t = await bukaDb({ pgliteDir: salinan.dir });
     try {
       const [r] = await t.db
         .select({
@@ -112,6 +115,7 @@ describe("docs/kredit-ledger.json: satu angka kredit untuk semua permukaan", () 
       expect(r.cacheHit).toBe(KREDIT_LEDGER.cacheHit);
     } finally {
       await t.tutup();
+      salinan.hapus();
     }
   }, 60_000);
 });
