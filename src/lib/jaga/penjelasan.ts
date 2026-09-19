@@ -94,7 +94,20 @@ export interface OpsiPenjelasan {
   model?: LanguageModel;
   /** Paksa template saja (mis. saat kunci tidak ada). Default: `hasAiKey()` atau ada `model`. */
   pakaiAi?: boolean;
+  /** Batas waktu rapian AI satu saham; lewat batas = template (tiket 37). */
+  batasMs?: number;
 }
+
+/**
+ * Batas waktu rapian AI per saham, dan berapa saham dirapikan bersamaan
+ * (tiket 37). Dulu rapian berjalan SATU PER SATU tanpa batas waktu: 6–8 saham
+ * melewati maxDuration 60 detik /api/portofolio/cek dan pengguna mendapat 504.
+ * Dengan 4 jalur paralel dan batas 12 detik, 8 saham paling lama sekitar 24
+ * detik untuk bagian ini. Saham yang melewati batas memakai template, yang
+ * memang sumber kebenarannya: tidak ada fakta yang hilang.
+ */
+export const BATAS_AI_PER_SAHAM_MS = 12_000;
+export const JALUR_AI_PARALEL = 4;
 
 function pastikanDisclaimer(teks: string): string {
   const rapi = teks.trim();
@@ -114,6 +127,7 @@ export async function penjelasanSaham(h: HasilSaham, opsi: OpsiPenjelasan): Prom
       instructions: instruksiSistem(INSTRUKSI_PENJELASAN_JAGA, provider),
       prompt: `Rapikan pesan berikut tanpa mengubah faktanya:\n\n${template}`,
       providerOptions: opsiProvider(provider, "low"),
+      abortSignal: AbortSignal.timeout(opsi.batasMs ?? BATAS_AI_PER_SAHAM_MS),
     });
     const teks = hasil.text.trim();
     if (!teks) return { symbol: h.symbol, teks: template, olehAi: false, perluTinjau: false };
@@ -139,9 +153,19 @@ export async function penjelasanSaham(h: HasilSaham, opsi: OpsiPenjelasan): Prom
 
 export async function penjelasanPortofolio(
   hasil: HasilPortofolio,
-  opsi: Omit<OpsiPenjelasan, "today"> = {},
+  opsi: Omit<OpsiPenjelasan, "today"> & { paralel?: number } = {},
 ): Promise<Penjelasan[]> {
-  const keluar: Penjelasan[] = [];
-  for (const h of hasil.saham) keluar.push(await penjelasanSaham(h, { ...opsi, today: hasil.today }));
+  const { paralel = JALUR_AI_PARALEL, ...opsiSaham } = opsi;
+  const keluar: Penjelasan[] = new Array(hasil.saham.length);
+  let berikut = 0;
+  // Beberapa jalur mengambil saham berikutnya dari antrean yang sama; urutan
+  // hasil tetap sama dengan urutan saham.
+  async function jalur() {
+    while (berikut < hasil.saham.length) {
+      const i = berikut++;
+      keluar[i] = await penjelasanSaham(hasil.saham[i], { ...opsiSaham, today: hasil.today });
+    }
+  }
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(paralel, hasil.saham.length)) }, jalur));
   return keluar;
 }
