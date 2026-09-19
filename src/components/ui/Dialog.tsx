@@ -76,7 +76,7 @@ export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(15,20,32,.55)] p-5"
+      className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) onTutup();
       }}
@@ -88,7 +88,7 @@ export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props
         aria-labelledby={idJudul}
         tabIndex={-1}
         data-testid={testId}
-        className="w-full max-w-[500px] rounded-2xl bg-surface p-6 text-ink shadow-panel outline-none"
+        className="my-auto w-full max-w-[500px] rounded-2xl bg-surface p-5 text-ink shadow-panel outline-none sm:p-6"
       >
         <h2 id={idJudul} className="m-0 mb-2 font-display text-lg font-bold tracking-tight">
           {judul}

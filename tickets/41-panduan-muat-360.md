@@ -4,8 +4,8 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Lapisan overlay (dan `Dialog` yang polanya sama) kini `overflow-y-auto` dengan kartu `my-auto`: di tengah bila muat, mulai dari atas dan bisa digulir bila lebih tinggi dari layar. Padding dan judul lebih kecil di bawah `sm`. Uji e2e 360×640 di `tests/e2e/ponsel.spec.ts`.
 
-- [ ] Di 360×640 seluruh isi overlay terjangkau (bisa digulir) dan tombol "Saya sudah paham" bisa diklik
-- [ ] Tidak ada gulir mendatar
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Di 360×640 seluruh isi overlay terjangkau (bisa digulir) dan tombol "Saya sudah paham" bisa diklik
+- [x] Tidak ada gulir mendatar
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

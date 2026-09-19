@@ -116,9 +116,13 @@ export function OverlayPanduan({ sumberNyata }: PropsOverlayPanduan) {
 
   if (!terbuka) return null;
 
+  // Lapisan bisa digulir dan kartunya `my-auto`: di tengah bila muat, mulai
+  // dari atas bila lebih tinggi dari layar. Dulu `place-items-center` tanpa
+  // gulir memotong kartu di atas dan bawah pada ponsel 360 px, sehingga tombol
+  // "Saya sudah paham" tidak terjangkau (tiket 41).
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(15,20,32,.55)] p-5"
+      className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
       data-testid="overlay-panduan"
       data-sumber={sumberNyata ? "db" : "fixture"}
       onMouseDown={(ev) => {
@@ -131,9 +135,9 @@ export function OverlayPanduan({ sumberNyata }: PropsOverlayPanduan) {
         aria-modal="true"
         aria-labelledby="judul-panduan"
         tabIndex={-1}
-        className="w-full max-w-[560px] rounded-2xl bg-surface p-7 text-ink shadow-panel outline-none"
+        className="my-auto w-full max-w-[560px] rounded-2xl bg-surface p-5 text-ink shadow-panel outline-none sm:p-7"
       >
-        <h2 id="judul-panduan" className="m-0 mb-1.5 font-display text-2xl font-extrabold tracking-tight">
+        <h2 id="judul-panduan" className="m-0 mb-1.5 font-display text-xl font-extrabold tracking-tight sm:text-2xl">
           Alarm Saham: cara pakainya dalam 3 langkah
         </h2>
         <p className="m-0 mb-3.5 text-ink-2">

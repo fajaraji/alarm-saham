@@ -28,3 +28,24 @@ for (const jalur of ["/putar-ulang", "/rakit", "/pasang"] as const) {
     }
   });
 }
+
+test.describe("ponsel 360 px (tiket 41)", () => {
+  test.use({ viewport: { width: 360, height: 640 } });
+
+  test("overlay panduan kunjungan pertama bisa digulir dan tombolnya terjangkau", async ({ page }) => {
+    await buka(page, "/putar-ulang");
+    // Kunjungan pertama: kosongkan penanda "panduan selesai" dari storageState.
+    await page.evaluate(() => window.localStorage.removeItem("alarm-saham:panduan-selesai"));
+    await page.reload();
+    const overlay = page.getByTestId("overlay-panduan");
+    await expect(overlay).toBeVisible();
+    // Judul di atas kartu tidak terpotong.
+    const judul = await page.locator("#judul-panduan").boundingBox();
+    expect(judul, "judul panduan").not.toBeNull();
+    expect(judul!.y).toBeGreaterThanOrEqual(0);
+    await page.getByTestId("panduan-paham").click();
+    await expect(overlay).toHaveCount(0);
+    const lebar = await page.evaluate(() => ({ dokumen: document.documentElement.scrollWidth, layar: window.innerWidth }));
+    expect(lebar.dokumen).toBeLessThanOrEqual(lebar.layar);
+  });
+});
