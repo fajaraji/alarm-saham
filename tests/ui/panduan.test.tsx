@@ -313,7 +313,7 @@ describe("NavigasiLangkah (tiket 20)", () => {
     ["/pasang", "Langkah 2: Rakit alarm", null, null],
   ] as const)("%s: tombol sebelumnya/berikutnya menyebut dan menuju langkah yang benar", (sekarang, sebelum, berikut, hrefBerikut) => {
     render(<NavigasiLangkah sekarang={sekarang} />);
-    const nav = screen.getByRole("navigation", { name: "Pindah langkah" });
+    const nav = screen.getByRole("navigation", { name: "Sebelumnya dan berikutnya" });
     const tombolSebelum = within(nav).queryByTestId("langkah-sebelumnya");
     const tombolBerikut = within(nav).queryByTestId("langkah-berikutnya");
     if (sebelum) expect(tombolSebelum).toHaveTextContent(sebelum);

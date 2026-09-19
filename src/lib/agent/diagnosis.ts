@@ -146,6 +146,14 @@ export interface DiagnosisInput {
    * menyala sendiri saat LLM_BASE_URL diisi. Diset eksplisit oleh tes.
    */
   duaFase?: boolean;
+  /**
+   * Dipanggil setiap kali satu langkah loop tool selesai, dengan jejak langkah
+   * itu (tiket 22). Route memakainya untuk mengirim langkah ke pengguna selagi
+   * agent masih bekerja, alih-alih diam 60-240 detik. Langkah tanpa tool call
+   * (mis. langkah jawaban akhir) tidak memicu panggilan. Isinya identik dengan
+   * potongan `trace` di hasil akhir (lihat `traceLangkah`).
+   */
+  onLangkah?: (langkah: TraceStep[]) => void;
   /** Alarm pemilik trace (opsional) untuk penyimpanan ke tabel `runs`. */
   alarmId?: string;
   /** Penyimpan trace; default menulis ke DB bila `hasDb()`, dilewati bila tidak. */
@@ -414,28 +422,37 @@ function ringkasHasilTool(tool: string, output: unknown): string {
   }
 }
 
+/**
+ * Trace SATU langkah SDK: setiap tool call di langkah itu + hasilnya.
+ *
+ * Dipakai dua kali, dan itu sengaja: oleh `susunTrace` untuk jejak di jawaban
+ * akhir, dan oleh callback `onStepEnd` untuk jejak yang dikirim langsung ke
+ * pengguna selagi agent bekerja (tiket 22). Karena keduanya memanggil fungsi
+ * yang sama pada objek langkah yang sama, jejak langsung dan jejak akhir
+ * identik dengan sendirinya, bukan karena dua kode dijaga agar tetap mirip.
+ */
+export function traceLangkah(s: StepResult<DiagnosisTools>, i: number): TraceStep[] {
+  return s.toolCalls.map((tc) => {
+    const hasil = s.toolResults.find((r) => r.toolCallId === tc.toolCallId);
+    const galat = s.content.find(
+      (p) => p.type === "tool-error" && p.toolCallId === tc.toolCallId,
+    ) as { error?: unknown } | undefined;
+    return {
+      step: i,
+      tool: tc.toolName,
+      input: tc.input,
+      ringkasanHasil: hasil
+        ? ringkasHasilTool(tc.toolName, hasil.output)
+        : galat
+          ? `GALAT: ${potong(String((galat.error as Error)?.message ?? galat.error))}`
+          : "(tanpa hasil)",
+    };
+  });
+}
+
 /** Susun trace dari langkah-langkah SDK: setiap tool call + hasilnya. */
 export function susunTrace(steps: ReadonlyArray<StepResult<DiagnosisTools>>): TraceStep[] {
-  const trace: TraceStep[] = [];
-  steps.forEach((s, i) => {
-    for (const tc of s.toolCalls) {
-      const hasil = s.toolResults.find((r) => r.toolCallId === tc.toolCallId);
-      const galat = s.content.find(
-        (p) => p.type === "tool-error" && p.toolCallId === tc.toolCallId,
-      ) as { error?: unknown } | undefined;
-      trace.push({
-        step: i,
-        tool: tc.toolName,
-        input: tc.input,
-        ringkasanHasil: hasil
-          ? ringkasHasilTool(tc.toolName, hasil.output)
-          : galat
-            ? `GALAT: ${potong(String((galat.error as Error)?.message ?? galat.error))}`
-            : "(tanpa hasil)",
-      });
-    }
-  });
-  return trace;
+  return steps.flatMap((s, i) => traceLangkah(s, i));
 }
 
 // ---------------------------------------------------------------------------
@@ -618,8 +635,29 @@ async function jalankanModel(
   const stopWhen = isStepCount(input.maxSteps ?? MAKS_LANGKAH_DEFAULT);
   const output = Output.object({ schema: DiagnosisOutputSchema, name: "hasil_diagnosis" });
 
+  // Jejak langsung: nomor langkah dihitung di sini, naik untuk SETIAP langkah
+  // (termasuk yang tanpa tool call), jadi sama dengan indeks `hasil.steps` yang
+  // dipakai `susunTrace`. Hanya dipasang pada panggilan yang memakai tool; fase
+  // perangkum tidak punya tool, jadi tidak punya langkah untuk dilaporkan.
+  let nomorLangkah = 0;
+  const onStepEnd = input.onLangkah
+    ? (s: StepResult<DiagnosisTools>) => {
+        const t = traceLangkah(s, nomorLangkah++);
+        if (t.length > 0) input.onLangkah!(t);
+      }
+    : undefined;
+
   if (!(input.duaFase ?? pakaiGateway())) {
-    const hasil = await generateText({ model, tools, instructions, prompt: susunPrompt(input), stopWhen, output, providerOptions });
+    const hasil = await generateText({
+      model,
+      tools,
+      instructions,
+      prompt: susunPrompt(input),
+      stopWhen,
+      output,
+      providerOptions,
+      onStepEnd,
+    });
     return {
       keluaran: hasil.output,
       trace: susunTrace(hasil.steps),
@@ -635,6 +673,7 @@ async function jalankanModel(
     prompt: `${susunPrompt(input)}\n\n${TAMBAHAN_JELAJAH}`,
     stopWhen,
     providerOptions,
+    onStepEnd,
   });
   const trace = susunTrace(jelajah.steps);
   const usageJelajah = ringkasUsage(jelajah.usage, jelajah.providerMetadata);

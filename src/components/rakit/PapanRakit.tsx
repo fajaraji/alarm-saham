@@ -74,6 +74,7 @@ export function PapanRakit() {
   const [aiNonaktif, setAiNonaktif] = useState(false);
   const [diagnosis, setDiagnosis] = useState<ResponDiagnosis | null>(null);
   const [sedangDiagnosis, setSedangDiagnosis] = useState(false);
+  const [langkahLangsung, setLangkahLangsung] = useState<ResponDiagnosis["trace"]>([]);
   const [galatDiagnosis, setGalatDiagnosis] = useState<string | null>(null);
 
   const [sedangSimpan, setSedangSimpan] = useState(false);
@@ -145,7 +146,13 @@ export function PapanRakit() {
       const no = ++noDiagnosis.current;
       setSedangDiagnosis(true);
       setGalatDiagnosis(null);
-      const r = await mintaDiagnosis(rule, backtest.hasil);
+      setLangkahLangsung([]);
+      const r = await mintaDiagnosis(rule, backtest.hasil, {
+        // Langkah dari permintaan yang sudah basi (pengguna meminta ulang) dibuang.
+        onLangkah: (l) => {
+          if (hidup.current && no === noDiagnosis.current) setLangkahLangsung((lama) => [...lama, ...l]);
+        },
+      });
       if (!hidup.current || no !== noDiagnosis.current) return;
       setSedangDiagnosis(false);
       if (r.ok) {
@@ -343,6 +350,7 @@ export function PapanRakit() {
             aiNonaktif={aiNonaktif}
             diagnosis={diagnosis}
             sedang={sedangDiagnosis}
+            langkahLangsung={langkahLangsung}
             galat={galatDiagnosis}
             adaHasil={hasil !== null && !basi}
             onMintaDiagnosis={() => {

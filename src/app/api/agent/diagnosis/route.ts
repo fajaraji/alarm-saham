@@ -5,6 +5,10 @@ import { NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 
 import { AiKeyMissingError, diagnosis, hasAiKey, pilihSumber } from "@/lib/agent";
+// Protokol jawaban bertahap ada di modul sendiri: berkas route Next.js tidak
+// boleh mengekspor apa pun selain handler dan konfigurasi, dan klien butuh
+// tipe yang sama untuk membacanya.
+import { barisNdjson, TIPE_BERTAHAP, type BarisBertahap } from "@/lib/agent/bertahap";
 import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { GROUPS, RuleError, RuleSchema, runBacktest, type BacktestResult } from "@/lib/engine";
 
@@ -58,6 +62,21 @@ function galat(status: number, kode: string, pesan: string, rincian?: unknown) {
   return Response.json({ error: { kode, pesan, ...(rincian !== undefined ? { rincian } : {}) } }, { status });
 }
 
+/** Galat dari `diagnosis()` → status + kode + pesan. Dipakai kedua mode jawaban. */
+function petaGalat(err: unknown): { status: number; kode: string; pesan: string; rincian?: unknown } {
+  if (err instanceof AiKeyMissingError) return { status: 503, kode: "AI_TIDAK_TERSEDIA", pesan: err.message };
+  if (err instanceof RuleError) return { status: 400, kode: "ATURAN_TIDAK_VALID", pesan: err.message, rincian: err.issues };
+  if (NoObjectGeneratedError.isInstance(err)) {
+    return {
+      status: 502,
+      kode: "DIAGNOSIS_TANPA_JAWABAN",
+      pesan: "Model tidak menghasilkan jawaban terstruktur dalam batas langkah; coba lagi.",
+    };
+  }
+  console.error("[api/agent/diagnosis]", err);
+  return { status: 500, kode: "GALAT_INTERNAL", pesan: "Diagnosis gagal; coba lagi sesaat." };
+}
+
 export async function POST(req: Request): Promise<Response> {
   let body: unknown;
   try {
@@ -82,8 +101,12 @@ export async function POST(req: Request): Promise<Response> {
   const pagar = pagarLaju(kunciEmber("agent-diagnosis", kunciPemanggil(req)), PAGAR);
   if (!pagar.lolos) return jawabanTerlaluSering(pagar.tungguDetik);
 
+  // Persiapan (sumber + backtest) SEBELUM memilih mode jawaban: galat di sini
+  // tetap dijawab JSON dengan status HTTP-nya, persis seperti sebelum tiket 22,
+  // jadi klien lama dan jalur 400/429/503 tidak berubah.
+  const { rule, targetSymbol, alarmId, pakaiFixture } = parsed.data;
+  let persiapan: { source: Awaited<ReturnType<typeof pilihSumber>>["source"]; keterangan: string; backtest: BacktestResult };
   try {
-    const { rule, targetSymbol, alarmId, pakaiFixture } = parsed.data;
     const { source, universe, keterangan } = await pilihSumber(pakaiFixture);
     let backtest: BacktestResult;
     if (parsed.data.backtest) {
@@ -94,15 +117,58 @@ export async function POST(req: Request): Promise<Response> {
       }
       backtest = await runBacktest(rule, universe, source);
     }
-    const hasil = await diagnosis({ rule, backtest, targetSymbol, source, alarmId });
-    return Response.json({ sumber: keterangan, backtest: { hits: backtest.hits, total: backtest.total, falseAlarms: backtest.falseAlarms, controls: backtest.controls }, ...hasil });
+    persiapan = { source, keterangan, backtest };
   } catch (err) {
-    if (err instanceof AiKeyMissingError) return galat(503, "AI_TIDAK_TERSEDIA", err.message);
-    if (err instanceof RuleError) return galat(400, "ATURAN_TIDAK_VALID", err.message, err.issues);
-    if (NoObjectGeneratedError.isInstance(err)) {
-      return galat(502, "DIAGNOSIS_TANPA_JAWABAN", "Model tidak menghasilkan jawaban terstruktur dalam batas langkah; coba lagi.");
-    }
-    console.error("[api/agent/diagnosis]", err);
-    return galat(500, "GALAT_INTERNAL", "Diagnosis gagal; coba lagi sesaat.");
+    const g = petaGalat(err);
+    return galat(g.status, g.kode, g.pesan, g.rincian);
+  }
+  const { source, keterangan, backtest } = persiapan;
+  const bungkus = (hasil: Awaited<ReturnType<typeof diagnosis>>) => ({
+    sumber: keterangan,
+    backtest: { hits: backtest.hits, total: backtest.total, falseAlarms: backtest.falseAlarms, controls: backtest.controls },
+    ...hasil,
+  });
+
+  // Mode bertahap: hanya bila klien memintanya. Sesudah baris pertama terkirim
+  // status HTTP sudah 200, jadi galat dari agent dikirim sebagai baris `galat`.
+  if ((req.headers.get("accept") ?? "").includes(TIPE_BERTAHAP)) {
+    const enc = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const kirim = (baris: BarisBertahap) => controller.enqueue(enc.encode(barisNdjson(baris)));
+        try {
+          const hasil = await diagnosis({
+            rule,
+            backtest,
+            targetSymbol,
+            source,
+            alarmId,
+            onLangkah: (langkah) => kirim({ jenis: "langkah", langkah }),
+          });
+          kirim({ jenis: "selesai", hasil: bungkus(hasil) });
+        } catch (err) {
+          const g = petaGalat(err);
+          kirim({ jenis: "galat", status: g.status, error: { kode: g.kode, pesan: g.pesan, ...(g.rincian !== undefined ? { rincian: g.rincian } : {}) } });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "content-type": `${TIPE_BERTAHAP}; charset=utf-8`,
+        // Jangan disangga proksi: tanpa ini langkah bisa tertahan sampai akhir.
+        "cache-control": "no-cache, no-transform",
+        "x-accel-buffering": "no",
+      },
+    });
+  }
+
+  try {
+    const hasil = await diagnosis({ rule, backtest, targetSymbol, source, alarmId });
+    return Response.json(bungkus(hasil));
+  } catch (err) {
+    const g = petaGalat(err);
+    return galat(g.status, g.kode, g.pesan, g.rincian);
   }
 }

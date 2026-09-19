@@ -10,4 +10,4 @@
 - [x] Emiten dengan angka ekuitas tidak menampilkan baris itu
 - [x] Emiten yang hanya punya data suspensi dan jalur data contoh tetap menampilkan catatannya
 - [x] Tidak ada catatan tentang filing orang dalam di layar putar ulang
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

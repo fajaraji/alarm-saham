@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Kalimat jawaban terikat ke angka kotak skor (tes UI), nol tertangkap diuji dari hasil uji nyata, grid terlipat dan dibuka lewat klik serta Enter di e2e.
 
-- [ ] Kalimat jawaban memakai angka dari hasil uji yang sama dengan kotak skor, bukan angka yang dihitung ulang terpisah
-- [ ] Daftar saham tertangkap hanya berisi saham kena yang alarmnya berbunyi sebelum kejadian targetnya
-- [ ] Grid per kelompok terlipat secara bawaan dan bisa dibuka dengan keyboard
-- [ ] Hasil dengan nol saham tertangkap menampilkan kalimat yang masuk akal, bukan daftar kosong
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Kalimat jawaban memakai angka dari hasil uji yang sama dengan kotak skor, bukan angka yang dihitung ulang terpisah
+- [x] Daftar saham tertangkap hanya berisi saham kena yang alarmnya berbunyi sebelum kejadian targetnya
+- [x] Grid per kelompok terlipat secara bawaan dan bisa dibuka dengan keyboard
+- [x] Hasil dengan nol saham tertangkap menampilkan kalimat yang masuk akal, bukan daftar kosong
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

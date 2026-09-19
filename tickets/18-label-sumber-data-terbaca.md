@@ -10,4 +10,4 @@
 - [x] Membuka kode yang tidak ada di data juga tidak menampilkannya
 - [x] Label sumber tetap jujur di kedua jalur: jalur database menyebut Sectors, jalur data contoh menyebut data contoh
 - [x] Ada tes yang gagal bila keterangan teknis sumber muncul lagi di layar
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

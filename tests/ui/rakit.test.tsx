@@ -353,3 +353,32 @@ describe("HasilUji: nol saham tertangkap (tiket 21)", () => {
     expect(screen.queryByTestId("daftar-tertangkap")).toBeNull();
   });
 });
+
+describe("PanelAi: langkah agent tampil langsung (tiket 22)", () => {
+  it("selagi memeriksa, setiap langkah yang sudah selesai tampil dalam kalimat biasa", async () => {
+    const { PanelAi } = await import("../../src/components/rakit/PanelAi");
+    render(
+      <PanelAi
+        aiNonaktif={false}
+        diagnosis={null}
+        sedang
+        langkahLangsung={[
+          { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "59 terlewat" },
+          { step: 1, tool: "getSuspensions", input: { symbol: "TOYS" }, ringkasanHasil: "1 suspensi: 2024-07-02" },
+        ]}
+        galat={null}
+        adaHasil
+        onMintaDiagnosis={() => {}}
+        onTambahUsulan={() => {}}
+      />,
+    );
+    const daftar = screen.getByTestId("langkah-langsung");
+    expect(within(daftar).getAllByRole("listitem")).toHaveLength(2);
+    expect(daftar).toHaveTextContent("Mencari saham yang terlewat: 59 terlewat");
+    expect(daftar).toHaveTextContent("Memeriksa suspensi TOYS: 1 suspensi: 2024-07-02");
+    // Nama alat mentah tidak ditampilkan ke pengguna selagi menunggu.
+    expect(daftar).not.toHaveTextContent("getSuspensions");
+    // Tombol diagnosis tidak ada selagi berjalan.
+    expect(screen.queryByRole("button", { name: /Minta diagnosis/ })).toBeNull();
+  });
+});

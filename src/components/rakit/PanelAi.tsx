@@ -15,10 +15,34 @@ import { PESAN_AI_NONAKTIF, type ResponDiagnosis } from "@/lib/rakit/api";
 
 import { TEKS } from "./teks";
 
+type LangkahJejak = ResponDiagnosis["trace"][number];
+
+/** Nama alat agent dalam kalimat biasa, untuk jejak yang dibaca pengguna awam. */
+const LABEL_ALAT: Record<string, (i: Record<string, unknown>) => string> = {
+  listMissed: () => "Mencari saham yang terlewat",
+  getSuspensions: (i) => `Memeriksa suspensi ${String(i.symbol ?? "")}`,
+  getReportDates: (i) => `Memeriksa laporan kuartal ${String(i.symbol ?? "")}`,
+  getFilings: (i) => `Memeriksa filing orang dalam ${String(i.symbol ?? "")}`,
+  getCorporateActions: (i) => `Memeriksa aksi korporasi ${String(i.symbol ?? "")}`,
+  getFinancials: (i) => `Memeriksa ekuitas ${String(i.symbol ?? "")}`,
+  runAlarmOn: (i) => `Menguji alarm pada ${String(i.symbol ?? "")} per ${String(i.t ?? "")}`,
+};
+
+export function labelLangkah(t: LangkahJejak): string {
+  const f = LABEL_ALAT[t.tool];
+  const input = t.input && typeof t.input === "object" ? (t.input as Record<string, unknown>) : {};
+  return f ? f(input).trim() : t.tool;
+}
+
 interface Props {
   aiNonaktif: boolean;
   diagnosis: ResponDiagnosis | null;
   sedang: boolean;
+  /**
+   * Langkah agent yang sudah selesai, diterima satu per satu selagi diagnosis
+   * berjalan (tiket 22). Kosong sebelum langkah pertama tiba.
+   */
+  langkahLangsung: LangkahJejak[];
   galat: string | null;
   adaHasil: boolean;
   onMintaDiagnosis: () => void;
@@ -53,7 +77,23 @@ export function PanelAi(p: Props) {
       {p.aiNonaktif ? (
         <BannerAiNonaktif testid="banner-ai-diagnosis" />
       ) : p.sedang ? (
-        <p role="status">{TEKS.aiMemeriksa}</p>
+        // Tiket 22: dulu hanya satu kalimat ini selama 60-240 detik. Sekarang
+        // setiap alat yang dipanggil agent muncul begitu selesai, sehingga
+        // terlihat bahwa agent sedang bekerja dan apa yang sedang ia periksa.
+        <div role="status" data-testid="ai-sedang">
+          <p className="m-0">{TEKS.aiMemeriksa}</p>
+          {p.langkahLangsung.length > 0 ? (
+            <ol className="mb-0 mt-1.5 list-decimal pl-5 text-xs text-ink-2" aria-label="Langkah AI sejauh ini" data-testid="langkah-langsung">
+              {p.langkahLangsung.map((t, i) => (
+                <li key={`${t.step}-${i}`} className="mt-0.5">
+                  <span className="font-semibold text-ink">{labelLangkah(t)}</span>
+                  {": "}
+                  {t.ringkasanHasil}
+                </li>
+              ))}
+            </ol>
+          ) : null}
+        </div>
       ) : p.galat ? (
         <p role="alert" className="rounded-lg border-l-[3px] border-crit bg-crit-soft px-3 py-2">
           {p.galat}
@@ -116,8 +156,10 @@ export function PanelAi(p: Props) {
                 Jejak pemeriksaan AI ({d.trace.length} langkah)
               </summary>
               <ol className="mt-1 list-decimal pl-5 text-xs text-ink-2" aria-label="Jejak pemeriksaan AI">
-                {d.trace.map((t) => (
-                  <li key={t.step} className="mt-0.5">
+                {d.trace.map((t, i) => (
+                  // Kunci gabungan: beberapa alat bisa dipanggil di langkah yang
+                  // sama, jadi `t.step` saja bentrok.
+                  <li key={`${t.step}-${i}`} className="mt-0.5">
                     <span className="font-mono">{t.tool}</span>
                     {t.input && typeof t.input === "object" && Object.keys(t.input as object).length > 0 ? (
                       <span className="font-mono text-ink-3"> {JSON.stringify(t.input)}</span>

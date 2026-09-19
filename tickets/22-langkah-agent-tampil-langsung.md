@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Tes route membaca langkah pertama selagi agent tiruan masih ditahan (bukti aliran, bukan sangga); jejak langsung identik dengan jejak akhir di jalur satu fase dan dua fase; galat di tengah aliran dan aliran putus terbaca.
 
-- [ ] Tes dengan model tiruan membuktikan setiap langkah terkirim ke klien sebelum jawaban akhir
-- [ ] Jejak langsung dan jejak di jawaban akhir identik
-- [ ] Jawaban 503 tanpa kunci AI dan 429 terlalu sering tetap dikenali panel seperti sebelumnya
-- [ ] Galat setelah sebagian langkah terkirim ditampilkan sebagai pesan dan panel kembali bisa dipakai
-- [ ] Tidak memanggil model sungguhan di tes
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Tes dengan model tiruan membuktikan setiap langkah terkirim ke klien sebelum jawaban akhir
+- [x] Jejak langsung dan jejak di jawaban akhir identik
+- [x] Jawaban 503 tanpa kunci AI dan 429 terlalu sering tetap dikenali panel seperti sebelumnya
+- [x] Galat setelah sebagian langkah terkirim ditampilkan sebagai pesan dan panel kembali bisa dipakai
+- [x] Tidak memanggil model sungguhan di tes
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

@@ -3,6 +3,9 @@
 // Pengguna jarang memakai chip bernomor di header untuk pindah langkah, karena
 // tidak yakin chip itu bisa diklik. Tombol di akhir halaman, di tempat mata
 // berhenti setelah membaca, jelas bisa diklik dan menyebut langkah tujuannya.
+// Labelnya sengaja tidak memuat kata "langkah": navigasi header bernama
+// "Langkah", dan dua landmark bernama mirip membingungkan pembaca layar (dan
+// pencocokan nama Playwright yang bersifat substring).
 // Panah di sini adalah penunjuk arah yang memang berarti (mundur / maju),
 // bukan hiasan, jadi dipakai hanya pada dua tombol ini.
 import Link from "next/link";
@@ -25,7 +28,7 @@ export function NavigasiLangkah({ sekarang }: Props) {
 
   return (
     <nav
-      aria-label="Pindah langkah"
+      aria-label="Sebelumnya dan berikutnya"
       data-testid="navigasi-langkah"
       className="mt-10 grid grid-cols-1 gap-3 border-t border-line pt-6 sm:grid-cols-2"
     >
