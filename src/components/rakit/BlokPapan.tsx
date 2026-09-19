@@ -1,6 +1,9 @@
 "use client";
 // Satu blok syarat di papan: pegangan seret (keyboard-able), label, dropdown
-// ambang (tiket 30), tombol buang.
+// ambang (tiket 30), tombol buang. Seluruh badan blok bisa diseret dengan
+// penunjuk atau sentuhan (tiket 31); kontrol di dalamnya bertanda
+// data-tanpa-seret supaya tetap bisa diklik. Seret dengan keyboard tetap lewat
+// pegangan, satu-satunya elemen blok yang bisa difokus untuk itu.
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -8,6 +11,7 @@ import { THRESHOLDS, type Block, type BlockKind, type Threshold } from "@/lib/en
 import { INFO_BLOK } from "@/lib/rakit/blok";
 
 import type { DataSeret } from "./dnd";
+import { ATRIBUT_TANPA_SERET } from "./sensor";
 
 interface Props {
   blok: Block;
@@ -27,15 +31,15 @@ export function BlokPapan({ blok, baruMasuk, onUbahAmbang, onHapus }: Props) {
   return (
     <li
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
+      {...listeners}
+      style={{ transform: CSS.Transform.toString(transform), transition, touchAction: "manipulation" }}
       data-testid={`blok-${blok.kind}`}
       data-threshold={blok.threshold}
-      className={`relative flex flex-wrap items-center gap-2 rounded-lg bg-b-cond px-3 py-2 text-[13px] font-semibold text-b-text shadow-[0_2px_0_rgba(0,0,0,.2)] ${isDragging ? "opacity-45" : ""} ${baruMasuk ? "blok-masuk" : ""}`}
+      className={`butuh-hidrasi relative flex cursor-grab flex-wrap items-center gap-2 rounded-lg bg-b-cond px-3 py-2 text-[13px] font-semibold text-b-text shadow-[0_2px_0_rgba(0,0,0,.2)] active:cursor-grabbing ${isDragging ? "opacity-45" : ""} ${baruMasuk ? "blok-masuk" : ""}`}
     >
       <button
         ref={setActivatorNodeRef}
         type="button"
-        {...listeners}
         {...attributes}
         aria-label={`Pegang untuk memindahkan blok ${info.label}`}
         title="Seret untuk mengurutkan atau membuang"
@@ -52,6 +56,7 @@ export function BlokPapan({ blok, baruMasuk, onUbahAmbang, onHapus }: Props) {
         onChange={(e) => onUbahAmbang(blok.kind, e.target.value as Threshold)}
         aria-label={`Ambang ${info.label}`}
         data-testid={`ambang-${blok.kind}`}
+        {...{ [ATRIBUT_TANPA_SERET]: "" }}
         className="ml-auto max-w-full cursor-pointer rounded-md border-0 bg-white/90 py-0.5 pl-2 pr-1 text-xs font-medium text-[#151c2b] hover:bg-white"
       >
         {THRESHOLDS.map((t) => (
@@ -64,8 +69,9 @@ export function BlokPapan({ blok, baruMasuk, onUbahAmbang, onHapus }: Props) {
         type="button"
         onClick={() => onHapus(blok.kind)}
         aria-label={`Buang blok ${info.label}`}
+        {...{ [ATRIBUT_TANPA_SERET]: "" }}
         title="Buang"
-        className="h-[22px] w-[22px] rounded-md bg-black/20 leading-none text-white hover:bg-black/40"
+        className="h-[22px] w-[22px] cursor-pointer rounded-md bg-black/20 leading-none text-white hover:bg-black/40"
       >
         ×
       </button>

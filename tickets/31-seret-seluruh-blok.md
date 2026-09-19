@@ -4,9 +4,9 @@
 
 **Blocked by:** 30 (Ambang blok dipilih lewat dropdown)
 
-**Status:** ready-for-agent
+**Status:** selesai. Listener seret pindah dari pegangan ke seluruh `<li>` blok; dropdown ambang dan tombol buang bertanda `data-tanpa-seret`, dan SensorPenunjuk/SensorSentuh menolak memulai seret dari elemen bertanda itu. Keyboard tetap lewat pegangan (KeyboardSensor dnd-kit menolak tombol di luar activator node). Tes: activator sensor (UI) dan e2e seret dari label ke posisi lain dan ke area buang, lulus di kedua jalur.
 
-- [ ] Menyeret dari badan blok (bukan pegangan) mengurutkan ulang atau membuang blok
-- [ ] Mengklik dropdown ambang dan tombol buang tidak memulai seret
-- [ ] Seret dengan keyboard lewat pegangan tetap berfungsi
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Menyeret dari badan blok (bukan pegangan) mengurutkan ulang atau membuang blok
+- [x] Mengklik dropdown ambang dan tombol buang tidak memulai seret
+- [x] Seret dengan keyboard lewat pegangan tetap berfungsi
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

@@ -6,7 +6,6 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -38,7 +37,7 @@ import { HasilUji } from "./HasilUji";
 import { Palet } from "./Palet";
 import { PanelAi } from "./PanelAi";
 import { Papan } from "./Papan";
-import { SensorPenunjuk } from "./sensor";
+import { SensorPenunjuk, SensorSentuh } from "./sensor";
 import { TEKS } from "./teks";
 
 /** Jeda antar blok saat AI "memasukkan" aturan ke papan (ms). */
@@ -102,7 +101,7 @@ export function PapanRakit() {
     // SensorPenunjuk, bukan PointerSensor bawaan: sesudah seret, dnd-kit
     // meredam SEMUA klik di halaman selama 50 ms. Lihat ./sensor.ts.
     useSensor(SensorPenunjuk, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(SensorSentuh, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 

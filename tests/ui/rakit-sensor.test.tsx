@@ -36,7 +36,7 @@
 import { PointerSensor } from "@dnd-kit/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SensorPenunjuk } from "@/components/rakit/sensor";
+import { ATRIBUT_TANPA_SERET, SensorPenunjuk, SensorSentuh } from "@/components/rakit/sensor";
 
 type Sensor = typeof PointerSensor;
 
@@ -144,5 +144,40 @@ describe("SensorPenunjuk", () => {
 
     await vi.advanceTimersByTimeAsync(50);
     expect(klikSampaiKeDocument(tombol)).toBe(true);
+  });
+});
+
+// Tiket 31: seluruh badan blok bisa diseret, tetapi kontrol di dalamnya
+// (dropdown ambang, tombol buang) bertanda data-tanpa-seret dan tidak boleh
+// memulai seret. Diuji langsung di activator sensor: itulah gerbang pertama
+// yang dilewati setiap pointerdown/touchstart sebelum dnd-kit menyentuh apa pun.
+describe("activator sensor: kontrol bertanda data-tanpa-seret tidak memulai seret", () => {
+  function peristiwa(target: Element, tambahan: Record<string, unknown>) {
+    return { nativeEvent: { target, ...tambahan } } as never;
+  }
+
+  it("penunjuk: badan blok memulai, dropdown dan tombol buang tidak", () => {
+    const blok = document.createElement("li");
+    const label = document.createElement("span");
+    const pilih = document.createElement("select");
+    pilih.setAttribute(ATRIBUT_TANPA_SERET, "");
+    blok.append(label, pilih);
+    const onActivation = vi.fn();
+    const [a] = SensorPenunjuk.activators;
+    expect(a.handler(peristiwa(label, { isPrimary: true, button: 0 }), { onActivation } as never)).toBe(true);
+    expect(a.handler(peristiwa(pilih, { isPrimary: true, button: 0 }), { onActivation } as never)).toBe(false);
+    expect(onActivation).toHaveBeenCalledTimes(1);
+  });
+
+  it("sentuhan: sama", () => {
+    const blok = document.createElement("li");
+    const buang = document.createElement("button");
+    buang.setAttribute(ATRIBUT_TANPA_SERET, "");
+    const ikon = document.createElement("span");
+    buang.append(ikon);
+    blok.append(buang);
+    const [a] = SensorSentuh.activators;
+    expect(a.handler(peristiwa(ikon, { touches: [{}] }), { onActivation: vi.fn() } as never)).toBe(false);
+    expect(a.handler(peristiwa(blok, { touches: [{}] }), { onActivation: vi.fn() } as never)).toBe(true);
   });
 });
