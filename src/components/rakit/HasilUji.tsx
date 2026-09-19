@@ -23,7 +23,7 @@ interface Props {
 }
 
 const URUTAN: Group[] = ["delisting", "watchlist", "control"];
-const ISTILAH_KELOMPOK: Record<Group, IdIstilah> = { delisting: "delisting", watchlist: "pemantauan_khusus", control: "kontrol_sehat" };
+const ISTILAH_KELOMPOK: Record<Group, IdIstilah> = { delisting: "delisting", watchlist: "berpotensi_delisting", control: "kontrol_sehat" };
 
 function angkaId(x: number | null, satuan = ""): string {
   if (x == null) return "–";
@@ -91,7 +91,7 @@ function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }
 
 const FRASA_KELOMPOK: Record<Exclude<Group, "control">, string> = {
   delisting: "saham yang dihapus dari bursa",
-  watchlist: "saham di papan pemantauan khusus",
+  watchlist: "saham berpotensi delisting",
 };
 
 /**
@@ -99,7 +99,7 @@ const FRASA_KELOMPOK: Record<Exclude<Group, "control">, string> = {
  *
  * Angkanya SAMA dengan kotak skor di bawahnya, tidak dihitung ulang: kotak
  * "Tertangkap" memakai kelompok dihapus dari bursa, "Lebih awal" memakai
- * rata-rata SELURUH saham kena (dihapus + pemantauan khusus), "Alarm palsu"
+ * rata-rata SELURUH saham kena (dihapus + berpotensi delisting), "Alarm palsu"
  * memakai kontrol sehat. Karena itu kalimat ini menyebut kedua kelompok kena
  * lebih dulu, baru rata-ratanya. Menulis "6 dari 18, rata-rata 8,4 bulan lebih
  * awal" akan menyesatkan: 8,4 bukan rata-rata keenam saham itu.

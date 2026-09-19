@@ -20,7 +20,7 @@ vi.mock("../../../src/lib/engine/sumber", async () => {
     getEventSource: vi.fn(async (opsi: { fixture?: boolean } = {}) => {
       const fx = fromFixture(universeKecil);
       const jenis = opsi.fixture ? "fixture" : lingkungan.jenis;
-      // Meniru DB nyata: emiten pemantauan khusus tanpa target_event_date (MENN, TGRA, WSKT).
+      // Meniru DB nyata: emiten berpotensi delisting tanpa target_event_date (MENN, TGRA, WSKT).
       const universe = lingkungan.tanpaTarget
         ? [...fx.universe, { symbol: "MENN", group: "watchlist" as const, targetEventDate: null }]
         : fx.universe;

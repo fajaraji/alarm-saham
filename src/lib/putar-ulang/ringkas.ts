@@ -18,7 +18,7 @@ export function fmtTanggal(d: string): string {
 
 export const LABEL_GROUP: Record<Group, string> = {
   delisting: "dihapus dari bursa (delisting efektif 10 Nov 2026)",
-  watchlist: "papan pemantauan khusus",
+  watchlist: "berpotensi delisting (disuspensi lebih dari 6 bulan)",
   control: "kontrol sehat (anggota LQ45 tanpa suspensi 2019–2026)",
 };
 

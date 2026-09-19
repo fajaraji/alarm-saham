@@ -21,7 +21,7 @@ describe("/cara-kami-menghitung", () => {
 
     expect(screen.getByTestId("stat-tertangkap")).toHaveTextContent(`${s.hits}/${s.total}`);
     expect(screen.getByTestId("stat-tertangkap")).toHaveTextContent(
-      `delisting ${s.delisting.hits}/${s.delisting.total} · pemantauan khusus ${s.watchlist.hits}/${s.watchlist.total}`,
+      `delisting ${s.delisting.hits}/${s.delisting.total} · berpotensi delisting ${s.watchlist.hits}/${s.watchlist.total}`,
     );
     expect(screen.getByTestId("stat-lebih-awal")).toHaveTextContent(`${s.leadAvg} bln`);
     expect(screen.getByTestId("stat-lebih-awal")).toHaveTextContent(`median ${s.leadMedian} bln`);

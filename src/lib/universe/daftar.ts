@@ -1,6 +1,8 @@
 // Universe uji Alarm Saham (docs/data-proof.md §4; catatan riset 7 Sep 2026).
 // - 18 emiten delisting efektif 10 Nov 2026 = studi kasus "putar ulang".
-// - 59 emiten Papan Pemantauan Khusus per 30 Jun 2026 (Peng-S-00019/BEI.PLP/06-2026)
+// - 59 emiten berpotensi delisting per 30 Jun 2026 (Peng-S-00019/BEI.PLP/06-2026):
+//   disuspensi lebih dari 6 bulan. Dulu keliru disebut "Papan Pemantauan Khusus",
+//   yang merupakan papan lain (tiket 40).
 //   = universe skor utama, bersama 30 kontrol sehat yang dipilih dari data (LQ45
 //   tanpa riwayat suspensi 2019–2026; lihat `pilihKontrol`).
 
@@ -52,7 +54,7 @@ export const EMITEN_PEMANTAUAN: readonly string[] = [
   "TGRA", "TGUK", "TOPS", "TRAM", "TRIO", "WICO", "WIKA", "WSKT", "ZBRA",
 ];
 
-/** Tanggal acuan papan pemantauan khusus: suspensi TERAKHIR ≤ tanggal ini = kejadian target. */
+/** Tanggal acuan daftar berpotensi delisting: suspensi TERAKHIR ≤ tanggal ini = kejadian target. */
 export const TANGGAL_ACUAN_PEMANTAUAN = "2026-06-30";
 /** Jumlah kontrol sehat yang dipilih. */
 export const JUMLAH_KONTROL = 30;

@@ -100,7 +100,7 @@ const DEFINISI_BLOK: Record<BlockKind, { awam: string; longgar: string; ketat: s
 
 const NAMA_KELOMPOK: Record<Group, string> = {
   delisting: "18 emiten dihapus dari bursa (efektif 10 Nov 2026)",
-  watchlist: "59 emiten Papan Pemantauan Khusus (per 30 Jun 2026)",
+  watchlist: "59 emiten berpotensi delisting (per 30 Jun 2026)",
   control: "30 kontrol sehat (LQ45 tanpa suspensi 2019–2026)",
 };
 
@@ -233,7 +233,7 @@ export default function HalamanCaraKamiMenghitung() {
             testid="stat-tertangkap"
             label="Tertangkap"
             nilai={`${s.hits}/${s.total}`}
-            sub={`delisting ${s.delisting.hits}/${s.delisting.total} · pemantauan khusus ${s.watchlist.hits}/${s.watchlist.total}`}
+            sub={`delisting ${s.delisting.hits}/${s.delisting.total} · berpotensi delisting ${s.watchlist.hits}/${s.watchlist.total}`}
           />
           <Stat
             testid="stat-lebih-awal"
@@ -366,7 +366,7 @@ export default function HalamanCaraKamiMenghitung() {
             suspensinya.
           </li>
           <li>
-            <strong>59 emiten <Istilah id="pemantauan_khusus">Papan Pemantauan Khusus</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026). Kejadian
+            <strong>59 emiten <Istilah id="berpotensi_delisting">berpotensi delisting</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026): semuanya sudah disuspensi lebih dari 6 bulan. Kejadian
             target = suspensi terakhir ≤ 30 Juni 2026 di feed. Tiga emiten (MENN, TGRA, WSKT) tidak punya kejadian di
             feed dan dilewati, bukan dihitung sebagai tertangkap.
           </li>
@@ -432,7 +432,7 @@ export default function HalamanCaraKamiMenghitung() {
           </li>
           <li>
             <strong>Survivorship dan pemilihan universe.</strong> Kelompok kena dipilih dari daftar resmi yang sudah diketahui
-            hasilnya (delisting, pemantauan khusus); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
+            hasilnya (delisting, berpotensi delisting); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
             tanda resmi sudah ada sebelum kejadian&rdquo;, bukan &ldquo;berapa peluang emiten acak akan kena&rdquo;.
           </li>
           <li>

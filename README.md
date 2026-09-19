@@ -26,7 +26,7 @@ Our user is the retail investor who has been "stuck" in a stock: bought on a tip
 The facts behind this product, with sources:
 
 - **18 companies are being delisted from the Indonesia Stock Exchange effective 10 November 2026**, with a company buyback window from 11 May to 9 November 2026. Seven because of bankruptcy (COWL, MTRA, SRIL, TOYS, SBAT, TDPM, TELE) and eleven because they had been suspended for more than 50 months (LCGP, SUGI, MABA, LMAS, SKYB, ENVY, GOLL, PLAS, TRIL, UNIT, DUCK). Source: [Bareksa, 13 April 2026](https://www.bareksa.com/berita/saham/2026-04-13/18-emiten-akan-dihapus-dari-bursa-efek-indonesia-mulai-10-november-2026-ini-daftarnya).
-- **59 companies were on the IDX Special Monitoring Board as of 30 June 2026**, the board that flags companies in specific conditions, including those at risk of forced delisting. Source: [Kontan](https://amp.kontan.co.id/news/bei-umumkan-59-emiten-berpotensi-delisting-paksa-dua-bumn-masuk-daftar). This list is our main scoring universe.
+- **59 companies were on IDX's potential forced delisting list as of 30 June 2026** (announcement Peng-S-00019/BEI.PLP/06-2026): every one of them had been suspended for more than six months. Source: [Kontan](https://amp.kontan.co.id/news/bei-umumkan-59-emiten-berpotensi-delisting-paksa-dua-bumn-masuk-daftar). This list is our main scoring universe.
 - **45,866 investors held Sritex (SRIL) shares** when the stock was declared for delisting, including one holder with more than 1% worth Rp30.56 billion. Source: [hargasaham.id](https://www.hargasaham.id/delisting-sritex-investor-terdampak-lo-kheng-hong/).
 
 **Why it is urgent.** While the exchange suspends a stock, it cannot be sold on the exchange. A warning only helps before that point.
@@ -39,7 +39,7 @@ For many of these companies the official signs were already in the same data we 
 
 An alarm is set to watch the future. The question is whether the rule behind it is any good, and waiting for the future to find out means finding out after the money is already stuck.
 
-So before you use a rule, the app runs it over companies whose outcome is already known: companies that were delisted or put under special monitoring, and healthy companies that were not. The test answers three questions:
+So before you use a rule, the app runs it over companies whose outcome is already known: companies that were delisted or put on the potential delisting list, and healthy companies that were not. The test answers three questions:
 
 1. Before those companies collapsed, would this rule have warned?
 2. How many months earlier?
@@ -149,7 +149,7 @@ Default rule "Company about to fail" = suspended (loose) OR missing reports (loo
 
 | Measure | Value |
 |---|---|
-| Caught (troubled companies) | **26/74**: delisted 6/18, special monitoring 20/56 |
+| Caught (troubled companies) | **26/74**: delisted 6/18, potential delisting 20/56 |
 | Months early (events from 2021 onward) | mean **9 months**, median 7 |
 | False alarms | **1/30** healthy controls (AADI, a limitation of our definition, explained on the methodology page) |
 | Skipped | 3 monitored companies with no target event (MENN, TGRA, WSKT) |
@@ -233,7 +233,7 @@ npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture --toda
 
 # Real universe of 107 companies (needs ./.pglite or DATABASE_URL)
 npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07
-#   → caught 26/74 (delisted 6/18, monitoring 20/56), mean 9 months, median 7, false alarms 1/30
+#   → caught 26/74 (delisted 6/18, potential delisting 20/56), mean 9 months, median 7, false alarms 1/30
 
 # The committed snapshot (docs/skor-nyata.json) is produced by
 npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07 --json

@@ -43,7 +43,7 @@ export function langkahPanduan(sumberNyata: boolean) {
     {
       judul: "Rakit alarm.",
       teks: sumberNyata
-        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh universe uji: 18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat."
+        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh universe uji: 18 saham yang dihapus dari bursa, 59 yang berpotensi delisting, 30 yang sehat."
         : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke universe uji yang kami tarik dari Sectors.",
     },
     {

@@ -54,7 +54,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           <p>
             Data yang dipakai server ini memuat {jumlah.total} emiten universe uji ({jumlah.delisting}{" "}
             <Istilah id="delisting">dihapus dari bursa</Istilah>, {jumlah.watchlist}{" "}
-            <Istilah id="pemantauan_khusus">pemantauan khusus</Istilah>, {jumlah.control}{" "}
+            <Istilah id="berpotensi_delisting">berpotensi delisting</Istilah>, {jumlah.control}{" "}
             <Istilah id="kontrol_sehat">kontrol sehat</Istilah>){contoh ? "" : " ditambah feed suspensi seluruh bursa 2018–2026"}.{" "}
             {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis. Setiap penarikan memakai{" "}
             <Istilah id="kredit_sectors">kredit</Istilah> dan diputuskan manusia.

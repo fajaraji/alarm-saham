@@ -13,7 +13,7 @@ const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variabl
 export const metadata: Metadata = {
   title: "Putar ulang · Alarm Saham",
   description:
-    "Lihat rekaman tanda resmi (suspensi, laporan hilang, ekuitas negatif) sebelum sebuah saham dihapus atau masuk pemantauan khusus.",
+    "Lihat rekaman tanda resmi (suspensi, laporan hilang, ekuitas negatif) sebelum sebuah saham dihapus dari bursa atau berpotensi delisting.",
 };
 
 export default function PutarUlangLayout({ children }: LayoutProps<"/putar-ulang">) {
