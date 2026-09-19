@@ -152,4 +152,15 @@ export function simpanAlarmLokal(alarm: AlarmTersimpan): AlarmTersimpan[] {
   return daftar;
 }
 
+/** Buang satu alarm dari salinan browser (tiket 33). */
+export function hapusAlarmLokal(id: string): AlarmTersimpan[] {
+  const sisa = daftarAlarmLokal().filter((a) => a.id !== id);
+  try {
+    storage()?.setItem(KUNCI_ALARM, JSON.stringify(sisa));
+  } catch {
+    // kuota / mode privat: abaikan, daftar di memori halaman tetap diperbarui
+  }
+  return sisa;
+}
+
 export { uuid as buatId };

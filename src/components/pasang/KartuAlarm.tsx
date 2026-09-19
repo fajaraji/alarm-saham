@@ -15,6 +15,8 @@ interface Props {
   alarms: AlarmTampil[];
   aktif: Set<string>;
   onToggle: (id: string, aktif: boolean) => void;
+  /** Minta hapus alarm buatan sendiri (tiket 33); alarm bawaan tidak punya tombolnya. */
+  onHapus?: (a: AlarmTampil) => void;
 }
 
 /** Ringkasan awam: tiap nama blok dibungkus tooltip kamus. */
@@ -52,7 +54,7 @@ const LABEL_ASAL: Record<AlarmTampil["asal"], string> = {
   server: "Buatanmu (tersimpan)",
 };
 
-export function KartuAlarm({ alarms, aktif, onToggle }: Props) {
+export function KartuAlarm({ alarms, aktif, onToggle, onHapus }: Props) {
   return (
     <ul className="flex list-none flex-col gap-2 p-0" aria-label="Alarm terpasang">
       {alarms.map((a) => {
@@ -86,6 +88,17 @@ export function KartuAlarm({ alarms, aktif, onToggle }: Props) {
               />
               {on ? "Aktif" : "Mati"}
             </label>
+            {onHapus && !a.bawaan ? (
+              <button
+                type="button"
+                onClick={() => onHapus(a)}
+                data-testid={`hapus-alarm-${a.id}`}
+                aria-label={`Hapus alarm ${a.name}`}
+                className="shrink-0 rounded-md px-1.5 py-0.5 text-[12px] font-semibold text-crit underline-offset-2 hover:underline"
+              >
+                Hapus
+              </button>
+            ) : null}
           </li>
         );
       })}

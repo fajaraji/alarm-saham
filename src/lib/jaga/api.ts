@@ -77,6 +77,11 @@ export function daftarAlarmServer(token: string) {
   return minta<{ alarms: AlarmServer[] }>("/api/alarms", { method: "GET", token });
 }
 
+/** Hapus alarm milik token ini di server (tiket 33). 404 = alarm hanya ada di browser. */
+export function hapusAlarmServer(token: string, id: string) {
+  return minta<{ dihapus: string }>(`/api/alarms?id=${encodeURIComponent(id)}`, { method: "DELETE", token });
+}
+
 export function cekPortofolioServer(
   token: string | null,
   body: { symbols: string[]; alarmIds: string[]; alarms: AlarmKlien[]; kelasB: boolean; blokB?: BlokBKind[]; today?: string },

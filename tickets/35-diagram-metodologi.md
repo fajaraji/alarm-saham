@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** ditunda (2026-09-20). Pemilik memilih mendahulukan temuan kritis audit produksi (cron, data beku, "Cek sekarang" 504, label keliru) sebelum tenggat 30 Sep; tiket ini dikerjakan bila waktu tersisa.
 
 - [ ] Diagram tampil di bagian "Apa yang sebenarnya dihitung" dan terbaca di tema terang dan gelap
 - [ ] Diagram punya judul dan deskripsi yang bisa dibaca pembaca layar

@@ -16,6 +16,7 @@ import {
   cekAdaData,
   cekPortofolioServer,
   daftarAlarmServer,
+  hapusAlarmServer,
   KODE_TANPA_DB,
   muatKotakMasukServer,
   muatPortofolioServer,
@@ -41,6 +42,7 @@ import {
   bacaKunciTautan,
   daftarAlarmLokal,
   gantiTokenPemilik,
+  hapusAlarmLokal,
   tautanPemilik,
   tokenPemilik,
   tokenPemilikAda,
@@ -121,6 +123,9 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
   // Dialog tautan rahasia (tiket 24): muncul sendiri sekali, saat portofolio
   // pertama kali tersimpan di server; setelah itu lewat tombol "Lihat tautan".
   const [dialogTautan, setDialogTautan] = useState(false);
+  // Hapus alarm (tiket 33): alarm yang menunggu konfirmasi, lalu hasilnya.
+  const [alarmDihapus, setAlarmDihapus] = useState<AlarmTampil | null>(null);
+  const [pesanAlarm, setPesanAlarm] = useState<{ teks: string; galat: boolean } | null>(null);
 
   const siap = useRef(false);
   const noCek = useRef(0);
@@ -302,6 +307,28 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
     const baru = symbols.filter((x) => x !== s);
     setSymbols(baru);
     void simpan(baru, aktif);
+  }
+
+  // ----- hapus alarm buatan sendiri (tiket 33)
+  async function hapusAlarm(a: AlarmTampil) {
+    setAlarmDihapus(null);
+    // Server dulu: bila gagal (selain "tidak ada di server"), alarm tetap utuh
+    // di mana-mana, jadi tidak ada keadaan setengah terhapus.
+    if (token && penyimpanan === "server") {
+      const r = await hapusAlarmServer(token, a.id);
+      const tidakDiServer = !r.ok && (r.galat.status === 404 || r.galat.status === 501 || r.galat.status === 503);
+      if (!r.ok && !tidakDiServer) {
+        setPesanAlarm({ teks: TEKS.hapusGagal(r.galat.pesan), galat: true });
+        return;
+      }
+    }
+    hapusAlarmLokal(a.id);
+    setAlarms((daftar) => daftar.filter((x) => x.id !== a.id));
+    const baru = new Set(aktif);
+    baru.delete(a.id);
+    setAktif(baru);
+    void simpan(symbols, baru);
+    setPesanAlarm({ teks: TEKS.hapusSelesai(a.name.replace(/ \(\d+\)$/, "")), galat: false });
   }
 
   function toggleAlarm(id: string, on: boolean) {
@@ -497,7 +524,38 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
           <h3 id="judul-alarm" className="font-display text-[15px] font-bold">
             {TEKS.alarmJudul}
           </h3>
-          <KartuAlarm alarms={alarms} aktif={aktif} onToggle={toggleAlarm} />
+          <KartuAlarm alarms={alarms} aktif={aktif} onToggle={toggleAlarm} onHapus={setAlarmDihapus} />
+          {pesanAlarm ? (
+            <p
+              role={pesanAlarm.galat ? "alert" : "status"}
+              data-testid="pesan-alarm"
+              className={`mt-2 text-[12.5px] ${pesanAlarm.galat ? "text-crit" : "text-ink-2"}`}
+            >
+              {pesanAlarm.teks}
+            </p>
+          ) : null}
+          {alarmDihapus ? (
+            <Dialog judul={TEKS.hapusJudul(alarmDihapus.name)} onTutup={() => setAlarmDihapus(null)} testId="dialog-hapus-alarm">
+              <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">{TEKS.hapusTeks}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-testid="tombol-ya-hapus-alarm"
+                  onClick={() => void hapusAlarm(alarmDihapus)}
+                  className="rounded-lg bg-crit px-4 py-2 text-[13px] font-semibold text-crit-ink"
+                >
+                  {TEKS.hapusYa}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAlarmDihapus(null)}
+                  className="rounded-lg border border-line-strong px-4 py-2 text-[13px] font-semibold hover:bg-surface-2"
+                >
+                  {TEKS.hapusBatal}
+                </button>
+              </div>
+            </Dialog>
+          ) : null}
           <p className="mt-2.5 text-[11.5px] leading-snug text-ink-3">
             Alarm baru dibuat di layar <a href="/rakit" className="underline">Rakit alarm</a>.
           </p>

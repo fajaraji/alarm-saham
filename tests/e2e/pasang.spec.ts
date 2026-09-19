@@ -81,3 +81,29 @@ test("saham di luar data kami ditandai 'tidak ada data'; hapus saham menyimpan u
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await expect(page.getByTestId("tile-ZZZZ")).toHaveCount(0);
 });
+
+test("alarm buatan sendiri bisa dihapus dari /pasang dan tidak kembali setelah muat ulang (tiket 33)", async ({ page }) => {
+  // Rakit dan simpan satu alarm lewat layar Rakit, persis seperti pengguna.
+  await buka(page, "/rakit");
+  await page.getByTestId("palet-suspensi").click();
+  await page.getByLabel("Nama alarm").fill("Alarm untuk dihapus");
+  await page.getByTestId("tombol-simpan").click();
+  await expect(page.getByTestId("dialog-tautan")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await buka(page, "/pasang");
+  await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
+  const kartu = page.getByRole("list", { name: "Alarm terpasang" }).getByRole("listitem").filter({ hasText: "Alarm untuk dihapus" });
+  await expect(kartu).toHaveCount(1);
+  // Alarm bawaan tidak punya tombol hapus.
+  await expect(page.getByTestId("hapus-alarm-00000000-0000-4000-8000-00000000a001")).toHaveCount(0);
+
+  await kartu.getByRole("button", { name: "Hapus alarm Alarm untuk dihapus" }).click();
+  await page.getByTestId("tombol-ya-hapus-alarm").click();
+  await expect(page.getByTestId("pesan-alarm")).toContainText("dihapus");
+  await expect(kartu).toHaveCount(0);
+
+  await muatUlang(page);
+  await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
+  await expect(page.getByRole("list", { name: "Alarm terpasang" })).not.toContainText("Alarm untuk dihapus");
+});
