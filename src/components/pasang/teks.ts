@@ -42,12 +42,19 @@ export const TEKS_TAUTAN = {
   tidakSah: "Tautan ini tidak memuat kunci portofolio yang utuh, jadi tidak dipakai. Coba salin ulang tautannya dari awal sampai akhir.",
   gagalSimpan: "Browser ini tidak mengizinkan penyimpanan, jadi kunci dari tautan tidak bisa dipakai.",
   batal: "Tautan tidak dipakai. Portofolio di browser ini tetap yang tadi.",
+  batalBaru: "Tautan tidak dipakai. Kamu mulai dengan portofolio sendiri.",
   gagalMuat: (pesan: string) => `Portofolio dari tautan belum bisa dimuat (${pesan}). Muat ulang halaman untuk mencoba lagi.`,
   konfirmasiJudul: "Buka portofolio dari tautan?",
   konfirmasiTeks:
     "Browser ini sudah memegang portofolio lain. Kalau diganti, portofolio yang sekarang hanya bisa dibuka lagi lewat tautannya sendiri.",
   tombolGanti: "Ganti ke portofolio dari tautan",
   tombolBatal: "Batal, tetap yang sekarang",
+  // Browser yang belum punya portofolio juga ditanya (temuan security review
+  // 2026-09-19): tautan orang lain yang dipakai diam-diam membuat pengirimnya
+  // ikut melihat dan mengubah semua yang kamu tambahkan sesudahnya.
+  konfirmasiTeksBaru: "Siapa pun yang memegang tautan ini bisa melihat dan mengubah portofolionya. Buka hanya tautan milikmu sendiri.",
+  tombolBuka: "Buka portofolio ini",
+  tombolBatalBaru: "Batal, mulai portofolio sendiri",
 } as const;
 
 // "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya

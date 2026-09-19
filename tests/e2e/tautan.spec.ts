@@ -16,7 +16,10 @@ async function tokenBrowser(page: import("@playwright/test").Page): Promise<stri
 test.describe("jalur database", () => {
   test.skip(!ADA_PGLITE, "portofolio di server butuh database");
 
-  test("tautan di browser tanpa kunci memulihkan portofolio, dan kunci hilang dari bilah alamat", async ({ page, request }) => {
+  test("tautan di browser tanpa kunci: ditanya dulu, lalu memulihkan portofolio; kunci hilang dari bilah alamat", async ({
+    page,
+    request,
+  }) => {
     const kunci = randomUUID();
     const r = await request.post("/api/portofolio", {
       headers: { "x-owner-token": kunci },
@@ -25,6 +28,10 @@ test.describe("jalur database", () => {
     expect(r.ok()).toBe(true);
 
     await buka(page, `/pasang#kunci=${kunci}`);
+    // Browser tanpa kunci pun ditanya dulu (temuan security review).
+    await expect(page.getByTestId("dialog-ganti-pemilik")).toContainText("bisa melihat dan mengubah");
+    expect(await tokenBrowser(page)).not.toBe(kunci);
+    await page.getByTestId("tombol-ganti-pemilik").click();
     await expect(page.getByTestId("tile-BBCA")).toBeVisible();
     await expect(page.getByTestId("tile-SRIL")).toBeVisible();
     await expect(page.getByTestId("pesan-tautan")).toHaveAttribute("data-jenis", "pulih");
@@ -70,6 +77,7 @@ test("kunci tidak sah ditolak dengan pesan dan tidak disimpan", async ({ page })
 test("server tanpa database mengatakan tautan tidak bisa memulihkan apa pun", async ({ page }) => {
   test.skip(ADA_PGLITE, "hanya jalur data contoh yang berjalan tanpa database");
   await buka(page, `/pasang#kunci=${randomUUID()}`);
+  await page.getByTestId("tombol-ganti-pemilik").click();
   await expect(page.getByTestId("pesan-tautan")).toHaveAttribute("data-jenis", "tanpaDb");
 });
 
@@ -113,6 +121,7 @@ test.describe("dialog tautan setelah simpan alarm", () => {
     });
     const p2 = await lain.newPage();
     await buka(p2, tautan);
+    await p2.getByTestId("tombol-ganti-pemilik").click();
     await expect(p2.getByTestId("pesan-tautan")).toHaveAttribute("data-jenis", /pulih/);
     await expect(p2.getByRole("list", { name: "Alarm terpasang" })).toContainText(nama);
     await lain.close();

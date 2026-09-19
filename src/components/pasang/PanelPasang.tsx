@@ -41,7 +41,6 @@ import {
   bacaKunciTautan,
   daftarAlarmLokal,
   gantiTokenPemilik,
-  pasangTokenPemilik,
   tautanPemilik,
   tokenPemilik,
   tokenPemilikAda,
@@ -64,7 +63,7 @@ const BLOK_B_LAYAR: BlokBKind[] = ["ritel_dominan", "jatuh_dari_puncak"];
 type Penyimpanan = "memuat" | "server" | "lokal";
 
 interface PesanTautan {
-  jenis: "pulih" | "pulihKosong" | "sama" | "tanpaDb" | "tidakSah" | "gagalSimpan" | "gagalMuat" | "batal";
+  jenis: "pulih" | "pulihKosong" | "sama" | "tanpaDb" | "tidakSah" | "gagalSimpan" | "gagalMuat" | "batal" | "batalBaru";
   teks: string;
   nada: "ok" | "warn" | "crit";
 }
@@ -113,7 +112,8 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
   // Tautan rahasia (tiket 23): pesan hasilnya, kunci yang menunggu konfirmasi
   // (browser sudah memegang kunci lain), dan putaran muat ulang setelah ganti.
   const [pesanTautanKini, setPesanTautan] = useState<PesanTautan | null>(null);
-  const [kunciTertunda, setKunciTertunda] = useState<string | null>(null);
+  // `gantiPemilik`: browser sudah memegang portofolio lain (teks dialognya beda).
+  const [kunciTertunda, setKunciTertunda] = useState<{ kunci: string; gantiPemilik: boolean } | null>(null);
   const [putaran, setPutaran] = useState(0);
   // Dibaca SEKALI per kunjungan: ref bertahan saat effect diulang (StrictMode,
   // atau muat ulang setelah ganti pemilik), padahal hash sudah dihapus.
@@ -142,11 +142,11 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
       else if (tautan.current.jenis === "sah") {
         const kunci = tautan.current.kunci;
         const kini = tokenPemilikAda();
+        // Selalu ditanya dulu, juga di browser yang belum punya portofolio:
+        // memakai kunci orang lain tanpa sadar berarti semua yang ditambahkan
+        // sesudahnya ikut terlihat dan bisa diubah pengirim tautan.
         if (kini === kunci) dariTautan = true;
-        else if (!kini) {
-          dariTautan = pasangTokenPemilik(kunci);
-          if (!dariTautan) setPesanTautan(pesanTautan("gagalSimpan"));
-        } else setKunciTertunda(kunci);
+        else setKunciTertunda({ kunci, gantiPemilik: Boolean(kini) });
       }
 
       const t = tokenPemilik();
@@ -233,7 +233,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
       bersihkanHash();
       if (k.jenis === "tidak-sah") setPesanTautan(pesanTautan("tidakSah"));
       else if (tokenPemilikAda() === k.kunci) setPesanTautan(pesanTautan("sama"));
-      else setKunciTertunda(k.kunci);
+      else setKunciTertunda({ kunci: k.kunci, gantiPemilik: true });
     }
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -264,8 +264,8 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
   }
 
   function batalGantiPemilik() {
+    setPesanTautan(pesanTautan(kunciTertunda?.gantiPemilik === false ? "batalBaru" : "batal"));
     setKunciTertunda(null);
-    setPesanTautan(pesanTautan("batal"));
   }
 
   // ----- simpan setiap kali portofolio/alarm aktif berubah (setelah muat awal)
@@ -393,15 +393,17 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
         ) : null}
         {kunciTertunda ? (
           <Dialog judul={TEKS_TAUTAN.konfirmasiJudul} onTutup={batalGantiPemilik} testId="dialog-ganti-pemilik">
-            <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">{TEKS_TAUTAN.konfirmasiTeks}</p>
+            <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">
+              {kunciTertunda.gantiPemilik ? TEKS_TAUTAN.konfirmasiTeks : TEKS_TAUTAN.konfirmasiTeksBaru}
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 data-testid="tombol-ganti-pemilik"
-                onClick={() => gantiKePemilikTautan(kunciTertunda)}
+                onClick={() => gantiKePemilikTautan(kunciTertunda.kunci)}
                 className="rounded-lg bg-accent px-4 py-2 text-[13px] font-semibold text-accent-ink"
               >
-                {TEKS_TAUTAN.tombolGanti}
+                {kunciTertunda.gantiPemilik ? TEKS_TAUTAN.tombolGanti : TEKS_TAUTAN.tombolBuka}
               </button>
               <button
                 type="button"
@@ -409,7 +411,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
                 onClick={batalGantiPemilik}
                 className="rounded-lg border border-line-strong px-4 py-2 text-[13px] font-semibold hover:bg-surface-2"
               >
-                {TEKS_TAUTAN.tombolBatal}
+                {kunciTertunda.gantiPemilik ? TEKS_TAUTAN.tombolBatal : TEKS_TAUTAN.tombolBatalBaru}
               </button>
             </div>
           </Dialog>
