@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Tes UI menolak path docs/ tests/ scripts/ src/ dan perintah npm/node di teks halaman, dan menuntut kalimat 'hasil uji yang kami simpan pada <tanggal> ... bukan hasil hitung ulang ...'. PEMBATAS_METODOLOGI e2e mengikuti kalimat baru; gerbang klaim sumber lulus di kedua jalur.
 
-- [ ] Tidak ada path berkas (docs/, tests/, scripts/, src/) maupun perintah npm/node di teks halaman
-- [ ] Pernyataan bahwa angka adalah hasil simpanan, bukan hitungan ulang server ini, tetap ada dan tes klaim sumber tetap lulus di kedua jalur
-- [ ] Angka yang tampil tetap dibaca dari snapshot yang dijaga tes
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Tidak ada path berkas (docs/, tests/, scripts/, src/) maupun perintah npm/node di teks halaman
+- [x] Pernyataan bahwa angka adalah hasil simpanan, bukan hitungan ulang server ini, tetap ada dan tes klaim sumber tetap lulus di kedua jalur
+- [x] Angka yang tampil tetap dibaca dari snapshot yang dijaga tes
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

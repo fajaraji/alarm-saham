@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Kunci di fragment #kunci= (tidak terkirim ke server), dihapus dari bilah alamat lewat history.replaceState. Tes UI dan e2e tautan.spec.ts: browser tanpa kunci, browser dengan kunci lain (Batal dan Escape tidak mengubah apa pun, Ganti memulihkan), kunci tidak sah, server tanpa database, dan tautan yang ditempel saat /pasang sudah terbuka.
 
-- [ ] Membuka tautan di browser tanpa kunci langsung memakai kunci dari tautan
-- [ ] Membuka tautan di browser dengan kunci berbeda menampilkan konfirmasi; membatalkan tidak mengubah apa pun
-- [ ] Kunci yang tidak valid ditolak dengan pesan, tidak disimpan
-- [ ] Setelah dibaca, kunci hilang dari bilah alamat
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Membuka tautan di browser tanpa kunci langsung memakai kunci dari tautan
+- [x] Membuka tautan di browser dengan kunci berbeda menampilkan konfirmasi; membatalkan tidak mengubah apa pun
+- [x] Kunci yang tidak valid ditolak dengan pesan, tidak disimpan
+- [x] Setelah dibaca, kunci hilang dari bilah alamat
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
