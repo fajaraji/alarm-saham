@@ -16,6 +16,7 @@ export const TEKS = {
   tombolUji: "Uji ke masa lalu",
   tombolKosongkan: "Kosongkan",
   tombolSimpan: "Simpan alarm ini",
+  tombolLihatTautan: "Lihat tautan rahasia",
   tombolAi: "Minta AI rakit",
   placeholderAi: "mis. aku mau alarm buat saham yang mau pailit",
   hasilJudul: "Hasil uji",

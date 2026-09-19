@@ -10,7 +10,7 @@
 // diperiksa lewat atribut mesin `data-sumber` (lihat harapkanLabelSumber).
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, AI_AKTIF, buka, harapkanLabelSumber, kumpulkanConsoleError } from "./util";
+import { ADA_PGLITE, AI_AKTIF, buka, harapkanLabelSumber, kumpulkanConsoleError, tutupDialogTautanPertama } from "./util";
 
 test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   test.setTimeout(120_000);
@@ -71,6 +71,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await page.getByTestId("kotak-kode").fill("BBCA");
   await page.getByTestId("tombol-tambah").click();
+  await tutupDialogTautanPertama(page);
   await page.getByTestId("kotak-kode").fill("SRIL");
   await page.getByTestId("kotak-kode").press("Enter");
   await expect(page.getByTestId("tile-BBCA")).toBeVisible();

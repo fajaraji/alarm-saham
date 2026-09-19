@@ -5,6 +5,9 @@ import type { Bot } from "grammy";
 
 import { dbJaga } from "../jaga/penyedia";
 import { buatBot } from "./bot";
+import { secretWebhook, tokenBot } from "./status";
+
+export { botAktif, secretWebhook, tokenBot } from "./status";
 
 export interface RuntimeBot {
   bot: Bot;
@@ -12,16 +15,6 @@ export interface RuntimeBot {
 }
 
 export type AlasanTanpaBot = "TOKEN_KOSONG" | "SECRET_KOSONG";
-
-export function tokenBot(env: NodeJS.ProcessEnv = process.env): string | undefined {
-  const t = env.TELEGRAM_BOT_TOKEN?.trim();
-  return t ? t : undefined;
-}
-
-export function secretWebhook(env: NodeJS.ProcessEnv = process.env): string | undefined {
-  const s = env.TELEGRAM_WEBHOOK_SECRET?.trim();
-  return s ? s : undefined;
-}
 
 const KUNCI = "__alarmSahamBot" as const;
 

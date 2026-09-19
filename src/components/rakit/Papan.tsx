@@ -32,6 +32,8 @@ interface Props {
   onUji: () => void;
   onKosongkan: () => void;
   onSimpan: () => void;
+  /** Buka lagi dialog tautan rahasia; `null` sebelum ada alarm yang disimpan. */
+  onTautan: (() => void) | null;
 }
 
 function Dropzone({ children, kosong }: { children: React.ReactNode; kosong: boolean }) {
@@ -178,6 +180,7 @@ export function Papan(p: Props) {
         </button>
         <button
           type="button"
+          data-testid="tombol-simpan"
           onClick={p.onSimpan}
           disabled={!p.bisaSimpan || p.sedangSimpan}
           className="rounded-lg border border-line-strong bg-surface px-3.5 py-2 font-semibold text-ink disabled:cursor-default disabled:opacity-50"
@@ -196,6 +199,19 @@ export function Papan(p: Props) {
       {p.catatanSimpan ? (
         <p role="status" data-testid="catatan-simpan" className="mt-2 text-[12.5px] text-ink-2">
           {p.catatanSimpan}
+          {p.onTautan ? (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={p.onTautan}
+                data-testid="tombol-lihat-tautan"
+                className="font-semibold text-accent underline underline-offset-2"
+              >
+                {TEKS.tombolLihatTautan}
+              </button>
+            </>
+          ) : null}
         </p>
       ) : null}
     </section>

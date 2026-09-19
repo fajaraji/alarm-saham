@@ -30,7 +30,8 @@ import {
 } from "@/lib/rakit/api";
 import { INFO_BLOK, labelBlok } from "@/lib/rakit/blok";
 import { adaBlok, keRule, PAPAN_AWAL, reducerPapan, ringkasAwam, type PapanState } from "@/lib/rakit/reducer";
-import { buatId, simpanAlarmLokal, tokenPemilik } from "@/lib/rakit/simpan";
+import { buatId, simpanAlarmLokal, tautanPemilik, tokenPemilik } from "@/lib/rakit/simpan";
+import { DialogTautan } from "@/components/ui/DialogTautan";
 
 import { deteksiTabrakan, ID_BUANG, ID_PAPAN, instruksiPembacaLayar, isBlockKind, pengumuman, type DataSeret } from "./dnd";
 import { HasilUji } from "./HasilUji";
@@ -79,6 +80,9 @@ export function PapanRakit() {
 
   const [sedangSimpan, setSedangSimpan] = useState(false);
   const [catatanSimpan, setCatatanSimpan] = useState<string | null>(null);
+  // Tautan rahasia setelah simpan (tiket 24). `tautan: null` = server tanpa database.
+  const [tautanTersimpan, setTautanTersimpan] = useState<{ tautan: string | null } | null>(null);
+  const [dialogTautan, setDialogTautan] = useState(false);
 
   // Nomor permintaan agar jawaban lama tidak menimpa yang baru.
   const noUji = useRef(0);
@@ -295,9 +299,11 @@ export function PapanRakit() {
     setSedangSimpan(false);
     setCatatanSimpan(
       diDb
-        ? `Alarm “${rule.name}” tersimpan di server dan di browser ini (tautan rahasiamu tersimpan otomatis).`
-        : `Alarm “${rule.name}” tersimpan di browser ini. Server belum punya database, jadi belum bisa dibagikan lewat tautan.`,
+        ? `Alarm “${rule.name}” tersimpan di server dan di browser ini.`
+        : `Alarm “${rule.name}” tersimpan di browser ini saja. Server belum punya database, jadi belum ada tautan untuk membukanya di perangkat lain.`,
     );
+    setTautanTersimpan({ tautan: diDb ? tautanPemilik(window.location.origin, token) : null });
+    setDialogTautan(true);
   }
 
   const ringkasan = ringkasAwam(state, labelBlok);
@@ -338,6 +344,7 @@ export function PapanRakit() {
             setGalatUji(null);
           }}
           onSimpan={() => void simpan()}
+          onTautan={tautanTersimpan ? () => setDialogTautan(true) : null}
         />
         <div className="rounded-[14px] border border-line bg-surface p-3.5">
           {ringkasan ? (
@@ -371,6 +378,13 @@ export function PapanRakit() {
           </div>
         ) : null}
       </DragOverlay>
+      {dialogTautan && tautanTersimpan ? (
+        <DialogTautan
+          tautan={tautanTersimpan.tautan}
+          onTutup={() => setDialogTautan(false)}
+          fokusKembali={() => document.querySelector<HTMLElement>("[data-testid='tombol-simpan']")}
+        />
+      ) : null}
     </DndContext>
   );
 }

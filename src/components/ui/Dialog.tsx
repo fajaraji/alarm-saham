@@ -14,22 +14,33 @@ interface Props {
   onTutup: () => void;
   children: ReactNode;
   testId?: string;
+  /**
+   * Elemen yang menerima fokus lagi setelah dialog ditutup. Perlu bila dialog
+   * dibuka sesudah pekerjaan async: tombol pemicunya sempat `disabled`
+   * ("Menyimpan…"), dan browser memindahkan fokus dari tombol yang dinonaktifkan
+   * ke body, sehingga `document.activeElement` saat dialog dibuka bukan lagi
+   * tombol itu.
+   */
+  fokusKembali?: () => HTMLElement | null;
 }
 
 const BISA_FOKUS = "a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled])";
 
-export function Dialog({ judul, onTutup, children, testId }: Props) {
+export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props) {
   const kartu = useRef<HTMLDivElement>(null);
   const idJudul = useId();
   // Penangan keydown dipasang sekali; ref ini memastikan ia memanggil
   // `onTutup` terbaru walau induk membuat fungsi baru di setiap render.
   const tutup = useRef(onTutup);
+  const kembali = useRef(fokusKembali);
   useEffect(() => {
     tutup.current = onTutup;
+    kembali.current = fokusKembali;
   });
 
   useEffect(() => {
-    const pemicu = document.activeElement;
+    const aktif = document.activeElement;
+    const pemicu = aktif instanceof HTMLElement && aktif !== document.body ? aktif : null;
     kartu.current?.focus();
     const sebelumnya = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -57,7 +68,8 @@ export function Dialog({ judul, onTutup, children, testId }: Props) {
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = sebelumnya;
-      if (pemicu instanceof HTMLElement && pemicu.isConnected) pemicu.focus();
+      const tujuan = kembali.current?.() ?? pemicu;
+      if (tujuan?.isConnected) tujuan.focus();
     };
   }, []);
 

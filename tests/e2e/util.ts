@@ -205,3 +205,24 @@ export function kumpulkanConsoleError(page: Page): { daftar: string[] } {
   page.on("pageerror", (err) => daftar.push(`[pageerror] ${err.message}`));
   return { daftar };
 }
+
+/**
+ * Jalur database: saham pertama membuat portofolio di server, dan layar Pasang
+ * lalu membuka dialog tautan rahasia (tiket 24), sekali per portofolio baru.
+ * Tutup dengan Escape sebelum menyentuh kontrol lain (dialognya modal).
+ * Jalur data contoh berjalan tanpa database, jadi dialog itu tidak muncul.
+ */
+export async function tutupDialogTautanPertama(page: Page): Promise<void> {
+  if (!ADA_PGLITE) return;
+  const dialog = page.getByTestId("dialog-tautan");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+}
+
+/**
+ * Apakah server yang diuji punya bot Telegram aktif (tiket 25). Bawaan MATI:
+ * server e2e lokal dan CI dijalankan tanpa token bot (playwright.config).
+ * Terhadap URL hidup yang botnya aktif, set E2E_TELEGRAM=aktif.
+ */
+export const TELEGRAM_AKTIF = process.env.E2E_TELEGRAM?.trim().toLowerCase() === "aktif";

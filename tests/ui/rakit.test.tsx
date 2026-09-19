@@ -322,6 +322,26 @@ describe("PapanRakit", () => {
     const lokal = JSON.parse(window.localStorage.getItem("alarm-saham.alarm")!);
     expect(lokal).toHaveLength(1);
     expect(lokal[0]).toMatchObject({ di: "lokal", rule: { blocks: [{ kind: "aksi_dilutif", threshold: "longgar" }] } });
+    // Tiket 24: tanpa database dialog berkata terus terang tidak ada tautan.
+    expect(screen.getByRole("dialog", { name: "Alarm hanya tersimpan di browser ini" })).toBeInTheDocument();
+    expect(screen.queryByTestId("kotak-tautan")).toBeNull();
+  });
+
+  it("Simpan alarm di server: dialog berisi tautan ke /pasang dengan kunci pemilik; kalimat lama tidak ada lagi", async () => {
+    rute["/api/alarms"] = () => ({ status: 201, json: { id: "11111111-1111-4111-8111-111111111111" } });
+    render(<PapanRakit />);
+    fireEvent.click(screen.getByTestId("palet-suspensi"));
+    fireEvent.click(screen.getByRole("button", { name: TEKS.tombolSimpan }));
+    const dialog = await screen.findByRole("dialog", { name: "Simpan tautan rahasiamu" });
+    const token = window.localStorage.getItem("alarm-saham.pemilik");
+    expect(screen.getByTestId("kotak-tautan")).toHaveValue(`${window.location.origin}/pasang#kunci=${token}`);
+    expect(screen.getByTestId("catatan-simpan")).not.toHaveTextContent("tersimpan otomatis");
+
+    // Ditutup, lalu dibuka lagi lewat tombol di catatan simpan.
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(dialog).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("tombol-lihat-tautan"));
+    expect(screen.getByRole("dialog", { name: "Simpan tautan rahasiamu" })).toBeInTheDocument();
   });
 });
 

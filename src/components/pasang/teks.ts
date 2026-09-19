@@ -21,7 +21,6 @@ export const TEKS = {
   alarmSub: "Bawaan + buatanmu dari layar Rakit.",
   kelasBLabel: "Sertakan data terkini (memakai kredit Sectors)",
   kelasBSub: "Broker 14 hari, harga 90 hari: 1 kredit per saham per endpoint, di-cache 24 jam. Saham tersuspensi dilewati otomatis.",
-  freeFloatLabel: "termasuk free float (snapshot seluruh bursa, 10 kredit per 24 jam)",
   pesanJudul: "Pesan penjelasan",
   pesanSub: "Untuk setiap saham: syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
   kotakJudul: "Kotak masuk",
@@ -31,6 +30,7 @@ export const TEKS = {
   sumberFixture: "data contoh (bukan data Sectors nyata)",
   tidakAdaData: "tidak ada data",
   disimpanServer: "tersimpan di server (tautan rahasia)",
+  tombolLihatTautan: "Lihat tautan",
   disimpanLokal: "tersimpan di browser ini (server tanpa database)",
 } as const;
 

@@ -1,8 +1,13 @@
-// Route POST /api/alarms: validasi input; 503 DB_TIDAK_TERSEDIA tanpa
-// DATABASE_URL (klien jatuh ke localStorage). Tidak menyentuh DB sungguhan.
+// Route POST /api/alarms: validasi input; 503 DB_TIDAK_TERSEDIA bila server
+// tanpa database (klien jatuh ke localStorage). Tidak menyentuh DB sungguhan:
+// `dbJaga()` (penentu yang sama dengan /api/portofolio: Neon, lalu PGlite
+// lokal) ditiru mengembalikan null, supaya hasil tes tidak bergantung pada ada
+// tidaknya folder .pglite di mesin yang menjalankannya.
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { POST } from "../../../src/app/api/alarms/route";
+vi.mock("../../../src/lib/jaga/penyedia", () => ({ dbJaga: async () => null }));
+
+const { GET, POST } = await import("../../../src/app/api/alarms/route");
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -23,7 +28,6 @@ describe("POST /api/alarms", () => {
   });
 
   it("400 bila token pendek, nama kosong, atau aturan tidak valid", async () => {
-    vi.stubEnv("DATABASE_URL", "");
     const kasus = [
       { owner_token: "abc", name: "x", rules: [RULE] },
       { owner_token: TOKEN, name: "  ", rules: [RULE] },
@@ -37,12 +41,19 @@ describe("POST /api/alarms", () => {
     }
   });
 
-  it("503 DB_TIDAK_TERSEDIA bila DATABASE_URL kosong (input valid)", async () => {
-    vi.stubEnv("DATABASE_URL", "");
+  it("503 DB_TIDAK_TERSEDIA bila server tanpa database (input valid)", async () => {
     const res = await POST(req({ owner_token: TOKEN, name: "Alarm uji", rules: [RULE], last_score: { hits: 2, total: 3 } }));
     expect(res.status).toBe(503);
     const json = await res.json();
     expect(json.error.kode).toBe("DB_TIDAK_TERSEDIA");
     expect(json.error.pesan).toMatch(/browser/);
+  });
+});
+
+describe("GET /api/alarms", () => {
+  it("401 tanpa token, 503 tanpa database", async () => {
+    expect((await GET(new Request("http://localhost/api/alarms"))).status).toBe(401);
+    const res = await GET(new Request("http://localhost/api/alarms", { headers: { "x-owner-token": TOKEN } }));
+    expect(res.status).toBe(503);
   });
 });

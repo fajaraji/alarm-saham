@@ -109,6 +109,11 @@ export default defineConfig({
       LLM_MODEL_RINGAN: "",
       LLM_PROVIDER: "",
       DATABASE_URL: "",
+      // Bot Telegram juga dimatikan dengan alasan yang sama (tiket 25): petunjuk
+      // /mulai di layar Pasang hanya tampil bila bot aktif, dan spec kotak
+      // masuk menguji jalur bot mati kecuali E2E_TELEGRAM=aktif.
+      TELEGRAM_BOT_TOKEN: "",
+      TELEGRAM_WEBHOOK_SECRET: "",
       ALARM_HARI_INI: HARI_INI,
       ALARM_IZINKAN_BEKU_WAKTU: "1",
       TANPA_PGLITE: TANPA_PGLITE ? "1" : "",
