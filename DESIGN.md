@@ -77,7 +77,7 @@ Pemilik dua kali menilai layar "kebanyakan teks, tidak nyaman dipandang" (2026-0
 5. **Batas panjang**: subteks hero paling banyak 20 kata; paling banyak dua kalimat per bagian sebelum lipatan; satu kalimat per temuan; label tombol menyebut tujuannya ("Langkah 2: Rakit alarm", bukan "Lanjut").
 6. **Catatan dan peringatan hanya bila berlaku** untuk yang sedang dilihat (emiten, portofolio, sumber data). Catatan umum tempatnya di halaman metodologi, bukan di setiap layar.
 7. **Istilah dijelaskan lewat tooltip kamus** (`<Istilah>`), bukan kalimat penjelas di tengah teks.
-8. **Tanpa teks internal di layar**: nama mesin (mis. `ritel_dominan`), nama alat agent, JSON, nama tabel, path berkas, perintah CLI, host atau driver database, dan pesan galat mentah. Sumber tetap disebut (PLAN Q5), tetapi di teks utama cukup nama sumbernya; endpoint lengkap hanya di rincian yang terlipat.
+8. **Tanpa teks internal di layar**: nama mesin (mis. `ritel_dominan`), nama alat agent, JSON, nama tabel, path berkas, perintah CLI, host atau driver database, dan pesan galat mentah. Sumber tetap disebut (PLAN Q5), tetapi di teks utama cukup nama sumbernya; endpoint lengkap hanya di rincian yang terlipat. Pengecualiannya halaman metodologi: di sana sumber lengkap per blok memang yang dicari pembaca.
 9. **Tanda baca dan huruf**: nol em dash di teks pengguna (R-02); tanpa huruf kapital semua dengan spasi lebar, kecuali pita KALAU/MAKA dan kode emiten (R-06); tanggal untuk pengguna ditulis "6 Sep 2026", bukan ISO.
 10. **Diukur, bukan dikira.** Perubahan teks yang besar mencatat jumlah kata di `<main>` dan jarak sampai alat utama di 375×812, sebelum dan sesudah, di pesan commit.
 

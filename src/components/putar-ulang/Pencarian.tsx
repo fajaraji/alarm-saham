@@ -50,7 +50,7 @@ export function Pencarian({ kode, cakupan, opsi }: { kode: string | null; cakupa
           </button>
         </div>
         <span className="pu-hint" data-testid="cakupan-cari" data-sumber={cakupan.contoh ? "fixture" : "db"}>
-          Mulai mengetik, lalu pilih dari saran. {kalimatCakupan(cakupan)}
+          {kalimatCakupan(cakupan)}
         </span>
       </form>
       <div className="pu-pick" data-testid="chip-kasus">

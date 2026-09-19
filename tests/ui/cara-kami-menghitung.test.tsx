@@ -9,6 +9,7 @@ import { TENGGAT_LAPORAN_HARI } from "../../src/lib/engine/evaluate";
 import { BLOCK_KINDS, LABEL_BLOK } from "../../src/lib/engine/rules";
 import { KORPUS_PENJAGA, PENJAGA_FRASA, PERINTAH_UKUR_PENJAGA } from "../../src/lib/metodologi/penjaga";
 import { KREDIT_ANGGARAN, KREDIT_TOTAL_LEDGER, PERINTAH_SNAPSHOT, ringkasSkor, SKOR_NYATA } from "../../src/lib/metodologi/skor";
+import { fmtTanggal } from "../../src/lib/putar-ulang/ringkas";
 
 describe("/cara-kami-menghitung", () => {
   it("menampilkan skor nyata dari snapshot: tertangkap, per kelompok, lebih awal, alarm palsu, dilewati", () => {
@@ -126,7 +127,7 @@ describe("/cara-kami-menghitung", () => {
     expect(teks).not.toMatch(/api_ledger|PLAN §/);
     // Pernyataan kejujuran yang membolehkan angka universe nyata di server data contoh.
     expect(teks).toMatch(
-      new RegExp(`hasil uji yang kami simpan\\s+pada ${SKOR_NYATA.today}[\\s\\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini`),
+      new RegExp(`hasil uji yang kami simpan\\s+pada ${fmtTanggal(SKOR_NYATA.today)}[\\s\\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini`),
     );
     // Rincian teknis diarahkan ke README, dan README memang memuatnya.
     expect(teks).toMatch(/README repositori/);

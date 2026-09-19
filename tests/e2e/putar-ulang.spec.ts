@@ -48,7 +48,10 @@ test.describe("/putar-ulang", () => {
     // resmi dari feed Sectors"). Gerbang lama hanya memindai <main> dan satu
     // urutan kata, jadi footer lolos dua kali.
     await harapkanKlaimSumberJujur(page, "/putar-ulang?kode=SRIL (fixture)");
-    await expect(page.getByTestId("catatan")).toContainText("data CONTOH");
+    // Pernyataan "ini data contoh, angkanya ilustratif" cukup sekali di layar:
+    // di pembuka halaman (catatan terpisah yang mengulangnya sudah dibuang).
+    await expect(page.locator(".pu-lede")).toContainText("angkanya ilustratif");
+    await expect(page.getByTestId("catatan")).toHaveCount(0);
     for (const teks of await page.getByTestId("kejadian").allTextContents()) {
       expect(teks).toMatch(/Sumber: data contoh: fixture/);
       expect(teks).not.toMatch(/Sumber: Sectors/);

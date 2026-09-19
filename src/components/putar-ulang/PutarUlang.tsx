@@ -96,7 +96,6 @@ export function PutarUlang({ emiten }: Props) {
             <b data-testid="tanggal-terpilih">{fmtTanggal(t)}</b>
             <span>{rentang.akhir}</span>
           </div>
-          <div className="pu-dragme">◀ geser ke kiri untuk mundur ke masa lalu</div>
         </div>
 
         <div className="pu-now" data-testid="lampu" data-warna={lampu.warna}>
@@ -112,7 +111,7 @@ export function PutarUlang({ emiten }: Props) {
                   <Istilah id={ISTILAH_BLOK[b.kind]}>{LABEL_BLOK[b.kind].toLowerCase()}</Istilah>
                 </span>
               ))}{" "}
-              · dinilai pada {t} · hanya data bertanggal ≤ {t}
+              · hanya data sampai tanggal itu
             </div>
             {/* Ditaruh di sini, bukan di kotak "Keterbatasan data": yang tidak bisa
                 dinilai adalah salah satu blok lampu ini, jadi keterangannya

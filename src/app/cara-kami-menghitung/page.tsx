@@ -17,6 +17,7 @@ import type { Group } from "@/lib/engine/events";
 import { BLOCK_KINDS, LABEL_BLOK, type BlockKind } from "@/lib/engine/rules";
 import { LEAD_CUTOFF_DEFAULT, LOOKBACK_YEARS_DEFAULT, SCAN_START_DEFAULT, type PerSymbolResult } from "@/lib/engine/score";
 import { KREDIT_LEDGER } from "@/lib/metodologi/kredit";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 import {
   CONTOH_LABEL_BACKSTOP,
   JUMLAH_FRASA_BACKSTOP,
@@ -193,7 +194,7 @@ export default function HalamanCaraKamiMenghitung() {
       <p className="m-0 max-w-[70ch] text-ink-2">
         Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
         ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>hasil uji yang kami simpan</b>{" "}
-        pada {SKOR_NYATA.today}, dari mesin uji yang dijalankan di atas database berisi data Sectors. Angka itu{" "}
+        pada {fmtTanggal(SKOR_NYATA.today)}, dari mesin uji yang dijalankan di atas database berisi data Sectors. Angka itu{" "}
         <b>bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini</b>. Tidak ada angka yang dibuat-buat
         untuk demo, dan tes otomatis memastikan angka di halaman ini sama dengan keluaran mesin uji.
       </p>
@@ -327,7 +328,7 @@ export default function HalamanCaraKamiMenghitung() {
             return (
               <article key={k} className="rounded-xl border border-line bg-surface p-4" data-testid={`blok-${k}`}>
                 <h3 className="m-0 font-display text-base font-bold">
-                  <Istilah id={ISTILAH_BLOK[k]}>{LABEL_BLOK[k]}</Istilah> <code className="ml-1 font-mono text-[12px] font-normal text-ink-3">{k}</code>
+                  <Istilah id={ISTILAH_BLOK[k]}>{LABEL_BLOK[k]}</Istilah>
                 </h3>
                 <p className="m-0 mt-1 text-sm text-ink-2">{d.awam}</p>
                 <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[110px_1fr]">
