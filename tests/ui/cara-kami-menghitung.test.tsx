@@ -7,8 +7,8 @@ import HalamanCaraKamiMenghitung from "../../src/app/cara-kami-menghitung/page";
 import { FooterDisclaimer } from "../../src/components/panduan/FooterDisclaimer";
 import { TENGGAT_LAPORAN_HARI } from "../../src/lib/engine/evaluate";
 import { BLOCK_KINDS, LABEL_BLOK } from "../../src/lib/engine/rules";
-import { KORPUS_PENJAGA, PENJAGA_FRASA } from "../../src/lib/metodologi/penjaga";
-import { KREDIT_ANGGARAN, KREDIT_TOTAL_LEDGER, ringkasSkor, SKOR_NYATA } from "../../src/lib/metodologi/skor";
+import { KORPUS_PENJAGA, PENJAGA_FRASA, PERINTAH_UKUR_PENJAGA } from "../../src/lib/metodologi/penjaga";
+import { KREDIT_ANGGARAN, KREDIT_TOTAL_LEDGER, PERINTAH_SNAPSHOT, ringkasSkor, SKOR_NYATA } from "../../src/lib/metodologi/skor";
 
 describe("/cara-kami-menghitung", () => {
   it("menampilkan skor nyata dari snapshot: tertangkap, per kelompok, lebih awal, alarm palsu, dilewati", () => {
@@ -107,10 +107,28 @@ describe("/cara-kami-menghitung", () => {
     const batasPenjaga = within(screen.getByTestId("batas-penjaga")).getAllByRole("listitem");
     expect(batasPenjaga).toHaveLength(PENJAGA_FRASA.batasYangDiakui.length);
     expect(document.body.textContent).toMatch(/tidak menjamin/i);
-    expect(document.body.textContent).toContain(KORPUS_PENJAGA);
+    // Tolok ukurnya disebut dengan kata-kata, bukan nama berkas (tiket 27).
+    expect(document.body.textContent).not.toContain(KORPUS_PENJAGA);
+    expect(document.body.textContent).toMatch(/kumpulan kalimat uji/);
     expect(document.body.textContent).toContain(PENJAGA_FRASA.tanggal);
     // Tidak ada klaim bahwa penjaga memblokir semua kalimat beranjuran.
     expect(document.body.textContent).not.toMatch(/memblokir semua kalimat beranjuran(?![^.]*tidak)/i);
     expect(document.body.textContent).toMatch(/tidak<\/strong> mengklaim|tidak\s+mengklaim/i);
+  });
+
+  it("tanpa path berkas repositori dan tanpa perintah baris perintah; pernyataan 'hasil simpanan' tetap ada (tiket 27)", () => {
+    render(<HalamanCaraKamiMenghitung />);
+    const teks = screen.getByTestId("metodologi").textContent ?? "";
+    expect(teks).not.toMatch(/\b(docs|tests|scripts|src)\/[\w./-]+/);
+    expect(teks).not.toMatch(/\b(npm|npx|node)\s+(run|test|--import)\b|\bnpm test\b/);
+    expect(teks).not.toContain(PERINTAH_SNAPSHOT);
+    expect(teks).not.toContain(PERINTAH_UKUR_PENJAGA);
+    expect(teks).not.toMatch(/api_ledger|PLAN §/);
+    // Pernyataan kejujuran yang membolehkan angka universe nyata di server data contoh.
+    expect(teks).toMatch(
+      new RegExp(`hasil uji yang kami simpan\\s+pada ${SKOR_NYATA.today}[\\s\\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini`),
+    );
+    // Rincian teknis diarahkan ke README, dan README memang memuatnya.
+    expect(teks).toMatch(/README repositori/);
   });
 });

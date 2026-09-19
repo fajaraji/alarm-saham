@@ -13,6 +13,7 @@ import { sensorTeks } from "../agent/guard";
 import { DISCLAIMER, INSTRUKSI_DASAR } from "../agent/instructions";
 import { AiKeyMissingError, hasAiKey, instruksiSistem, opsiProvider, pilihModel, providerDari } from "../agent/model";
 import type { HasilPortofolio, HasilSaham } from "./evaluasi";
+import { kalimatBlokB, kalimatDilewati } from "./kalimat-b";
 
 export interface Penjelasan {
   symbol: string;
@@ -67,14 +68,12 @@ export function templatePenjelasan(h: HasilSaham, today: string): string {
     kalimat.push(`Saham ini masih tersuspensi menurut data kami (sejak ${fmtTanggal(h.suspensiAktif)}), sehingga statusnya merah.`);
   }
   if (h.kelasB.status === "dijalankan") {
+    // Yang terpenuhi sudah ada di daftar syarat di atas; di sini sisanya, dalam
+    // kalimat biasa (tanpa nama mesin blok, tiket 26).
     const tidak = h.kelasB.blok.filter((b) => !b.terpenuhi);
-    if (tidak.length) {
-      kalimat.push(
-        `Data terkini yang dicek dan tidak terpenuhi: ${tidak.map((b) => `${b.kind} (${b.detail})`).join("; ")}.`,
-      );
-    }
+    if (tidak.length) kalimat.push(`Data terkini lainnya: ${tidak.map((b) => kalimatBlokB(b)).join(" ")}`);
   } else if (h.kelasB.status === "dilewati") {
-    kalimat.push(`Data terkini ${h.kelasB.keterangan}.`);
+    kalimat.push(kalimatDilewati(h.kelasB));
   }
   for (const c of h.catatan) kalimat.push(c);
   kalimat.push(DISCLAIMER);

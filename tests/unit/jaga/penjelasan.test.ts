@@ -50,10 +50,17 @@ const MERAH: HasilSaham = {
   ],
   kelasB: {
     status: "dijalankan",
-    keterangan: "1 dari 2 blok data terkini terpenuhi",
+    keterangan: "1 dari 2 syarat data terkini terpenuhi",
     blok: [
       { kind: "ritel_dominan", terpenuhi: true, detail: "…", tanggal: "2026-09-06", sumber: "x" },
-      { kind: "jatuh_dari_puncak", terpenuhi: false, detail: "penutupan 2026-09-06 = 146 vs tertinggi 90 hari 152 (2026-07-01), turun 4% (ambang >= 30%)", tanggal: "2026-09-06", sumber: "y" },
+      {
+        kind: "jatuh_dari_puncak",
+        terpenuhi: false,
+        detail: "penutupan 2026-09-06 = 146 vs tertinggi 90 hari 152 (2026-07-01), turun 4% (ambang >= 30%)",
+        ukuran: { jenis: "puncak", turun: 0.04, closeAkhir: 146, tanggalAkhir: "2026-09-06", puncak: 152, tanggalPuncak: "2026-07-01" },
+        tanggal: "2026-09-06",
+        sumber: "y",
+      },
     ],
   },
   catatan: [],
@@ -82,14 +89,17 @@ describe("templatePenjelasan", () => {
     expect(t).toContain("(3) Ritel dominan, institusi melepas");
     expect(t).toContain("Alarm yang berbunyi: “Saham mau pailit”, “Jebakan IPO/harga”.");
     expect(t).toContain("masih tersuspensi menurut data kami (sejak 18 Mei 2021)");
-    expect(t).toContain("tidak terpenuhi: jatuh_dari_puncak");
+    // Temuan data terkini yang tidak terpenuhi: kalimat biasa berikut angkanya,
+    // tanpa nama mesin blok (tiket 26).
+    expect(t).toContain("Data terkini lainnya: Harga penutupan terakhir (Rp146 pada 6 Sep 2026) 4% di bawah harga tertinggi 90 hari (Rp152 pada 1 Jul 2026).");
+    expect(t).not.toMatch(/ritel_dominan|jatuh_dari_puncak|free_float_kecil/);
     expect(t.endsWith(DISCLAIMER)).toBe(true);
   });
 
   it("hijau: tidak ada syarat, keterangan kelas B dilewati, disclaimer", () => {
     const t = templatePenjelasan(HIJAU, "2026-09-07");
     expect(t).toContain("BBCA (aman menurut alarmmu): tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
-    expect(t).toContain("Data terkini dilewati: cadangan kredit.");
+    expect(t).toContain("Data terkini tidak ditarik untuk saham ini: kredit Sectors tim tinggal cadangan.");
     expect(t.endsWith(DISCLAIMER)).toBe(true);
   });
 

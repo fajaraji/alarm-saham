@@ -9,7 +9,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { buka } from "./util";
+import { buka, tutupDialogTautanPertama } from "./util";
 
 const HALAMAN = ["/", "/putar-ulang?kode=SRIL", "/rakit", "/pasang", "/cara-kami-menghitung", "/kamus"] as const;
 const MODE = ["light", "dark"] as const;
@@ -30,6 +30,7 @@ async function isiHalaman(page: Page, url: string) {
     await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
     await page.getByTestId("kotak-kode").fill("SRIL");
     await page.getByTestId("tombol-tambah").click();
+    await tutupDialogTautanPertama(page);
     await page.getByTestId("kotak-kode").fill("ZZZZ");
     await page.getByTestId("tombol-tambah").click();
     await page.getByTestId("tombol-cek").click();
@@ -65,6 +66,17 @@ for (const mode of MODE) {
       await buka(page, "/rakit");
       await page.getByTestId("tombol-panduan").click();
       await expect(page.getByTestId("overlay-panduan")).toBeVisible();
+      const ringkas = await pelanggaranBerat(page);
+      expect(ringkas, ringkas.join("\n\n")).toEqual([]);
+    });
+
+    test("dialog tautan rahasia setelah simpan alarm: 0 pelanggaran serious/critical", async ({ page }) => {
+      // Jalur database: dialog berisi tautan + tombol Salin. Jalur data
+      // contoh: dialog yang sama berkata alarm hanya ada di browser ini.
+      await buka(page, "/rakit");
+      await page.getByTestId("palet-suspensi").click();
+      await page.getByTestId("tombol-simpan").click();
+      await expect(page.getByTestId("dialog-tautan")).toBeVisible();
       const ringkas = await pelanggaranBerat(page);
       expect(ringkas, ringkas.join("\n\n")).toEqual([]);
     });

@@ -21,7 +21,6 @@ export const TEKS = {
   alarmSub: "Bawaan + buatanmu dari layar Rakit.",
   kelasBLabel: "Sertakan data terkini (memakai kredit Sectors)",
   kelasBSub: "Broker 14 hari, harga 90 hari: 1 kredit per saham per endpoint, di-cache 24 jam. Saham tersuspensi dilewati otomatis.",
-  freeFloatLabel: "termasuk free float (snapshot seluruh bursa, 10 kredit per 24 jam)",
   pesanJudul: "Pesan penjelasan",
   pesanSub: "Untuk setiap saham: syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
   kotakJudul: "Kotak masuk",
@@ -31,7 +30,26 @@ export const TEKS = {
   sumberFixture: "data contoh (bukan data Sectors nyata)",
   tidakAdaData: "tidak ada data",
   disimpanServer: "tersimpan di server (tautan rahasia)",
+  tombolLihatTautan: "Lihat tautan",
   disimpanLokal: "tersimpan di browser ini (server tanpa database)",
+} as const;
+
+// Pesan saat halaman dibuka lewat tautan rahasia `/pasang#kunci=...` (tiket 23).
+export const TEKS_TAUTAN = {
+  pulih: "Portofolio dari tautan sudah dibuka di browser ini.",
+  pulihKosong: "Kunci dari tautan sudah dipakai, tetapi server belum menyimpan saham apa pun untuk kunci itu.",
+  sama: "Tautan ini untuk portofolio yang memang sedang terbuka di browser ini.",
+  tanpaDb:
+    "Tautan ini tidak bisa memulihkan apa pun di sini. Server ini berjalan tanpa database, jadi portofolio dan alarm hanya tersimpan di browser tempat semuanya dibuat.",
+  tidakSah: "Tautan ini tidak memuat kunci portofolio yang utuh, jadi tidak dipakai. Coba salin ulang tautannya dari awal sampai akhir.",
+  gagalSimpan: "Browser ini tidak mengizinkan penyimpanan, jadi kunci dari tautan tidak bisa dipakai.",
+  batal: "Tautan tidak dipakai. Portofolio di browser ini tetap yang tadi.",
+  gagalMuat: (pesan: string) => `Portofolio dari tautan belum bisa dimuat (${pesan}). Muat ulang halaman untuk mencoba lagi.`,
+  konfirmasiJudul: "Buka portofolio dari tautan?",
+  konfirmasiTeks:
+    "Browser ini sudah memegang portofolio lain. Kalau diganti, portofolio yang sekarang hanya bisa dibuka lagi lewat tautannya sendiri.",
+  tombolGanti: "Ganti ke portofolio dari tautan",
+  tombolBatal: "Batal, tetap yang sekarang",
 } as const;
 
 // "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya

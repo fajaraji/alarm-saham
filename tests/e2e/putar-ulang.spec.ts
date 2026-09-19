@@ -82,6 +82,33 @@ test.describe("/putar-ulang", () => {
     expect(aktifTengah).toBeLessThan(semua);
   });
 
+  test("keterangan teknis sumber data tidak pernah sampai ke layar", async ({ page }) => {
+    // Tiket 18. Label sumber dulu mencetak `sumber.keterangan` apa adanya, dan
+    // situs live menampilkan "neon (<ep>.c-4.ap-southeast-1.aws.neon.tech)".
+    // Keterangan itu memuat nama driver dan host database (jalur Neon/PGlite)
+    // atau nama variabel lingkungan (jalur data contoh). Dijalankan di kedua
+    // varian server, jadi ketiga bentuk keterangan ikut dijaga.
+    const INTERNAL = [/\bneon\b/i, /\.neon\.tech/i, /<ep>/, /pglite/i, /\bpostgres\b/i, /DATABASE_URL/];
+    for (const jalur of ["/putar-ulang", "/putar-ulang?kode=SRIL", "/putar-ulang?kode=ZZZZ"]) {
+      await buka(page, jalur);
+      const teks = await page.locator("body").innerText();
+      for (const pola of INTERNAL) expect(teks, `${jalur}: ${pola}`).not.toMatch(pola);
+    }
+  });
+
+  test("emiten tanpa angka ekuitas: tanpa kotak keterbatasan, lampu menyebut blok ekuitas tidak dinilai", async ({ page }) => {
+    // Tiket 19. BBCA (kontrol sehat) punya daftar kuartal tetapi angka
+    // ekuitasnya tidak ditarik, seperti 89 dari 107 emiten universe. Dulu
+    // kotak "Keterbatasan data" muncul di sini dengan catatan yang sama persis
+    // seperti di hampir semua emiten lain.
+    test.skip(!ADA_PGLITE, PESAN_SKIP_PGLITE);
+    await buka(page, "/putar-ulang?kode=BBCA");
+    await expect(page.getByTestId("putar-ulang")).toHaveAttribute("data-symbol", "BBCA");
+    await expect(page.getByTestId("catatan")).toHaveCount(0);
+    await expect(page.getByTestId("ekuitas-tidak-dinilai")).toContainText("Blok ekuitas negatif tidak dinilai");
+    await expect(page.locator("body")).not.toContainText("filing orang dalam untuk emiten ini");
+  });
+
   test("cari ZZZZ → pesan jujur + tombol minta ditarik hanya mencatat", async ({ page }) => {
     await buka(page, "/putar-ulang?kode=ZZZZ");
     const kosong = page.getByTestId("tidak-ada");

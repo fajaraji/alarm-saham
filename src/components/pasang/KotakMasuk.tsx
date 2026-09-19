@@ -10,6 +10,12 @@ interface Props {
   onTandaiDibaca: () => void;
   /** Id portofolio di server — kode untuk perintah /mulai di bot Telegram (tiket 12). */
   kodePortofolio?: string | null;
+  /**
+   * Server melaporkan bot Telegram aktif (tiket 25). Tanpa ini petunjuk /mulai
+   * tidak ditampilkan sama sekali: menyuruh orang menghubungi bot yang tidak
+   * akan menjawab lebih buruk daripada tidak menyebutnya.
+   */
+  telegramAktif?: boolean;
 }
 
 /** Buang kalimat disclaimer dari akhir teks; ia dirender terpisah di kartu. */
@@ -26,7 +32,7 @@ function fmtWaktu(iso: string): string {
   }
 }
 
-export function KotakMasuk({ pesan, onTandaiDibaca, kodePortofolio }: Props) {
+export function KotakMasuk({ pesan, onTandaiDibaca, kodePortofolio, telegramAktif = false }: Props) {
   const baru = pesan.filter((p) => p.baru).length;
   return (
     <section aria-labelledby="judul-kotak" className="rounded-[14px] border border-line bg-surface p-3.5" data-testid="kotak-masuk" data-baru={baru}>
@@ -45,14 +51,15 @@ export function KotakMasuk({ pesan, onTandaiDibaca, kodePortofolio }: Props) {
       <p className="mb-2.5 text-xs text-ink-3">{TEKS.kotakSub}</p>
       <p className="mb-2.5 text-[11.5px] leading-snug text-ink-3" data-testid="kotak-cron">
         Setiap pagi (±06:30 WIB) server mengecek ulang portofoliomu; bendera baru muncul di sini.
-        {kodePortofolio ? (
-          <>
+        {telegramAktif && kodePortofolio ? (
+          <span data-testid="petunjuk-telegram">
             {" "}
-            Ingin lewat Telegram? Kirim <code className="rounded bg-line/50 px-1">/mulai {kodePortofolio}</code> ke bot Alarm Saham (bila bot aktif). Kode portofolio:{" "}
-            <code data-testid="kode-portofolio" className="rounded bg-line/50 px-1">
-              {kodePortofolio}
-            </code>
-          </>
+            Ingin lewat Telegram juga? Kirim{" "}
+            <code className="rounded bg-line/50 px-1">
+              /mulai <span data-testid="kode-portofolio">{kodePortofolio}</span>
+            </code>{" "}
+            ke bot Alarm Saham.
+          </span>
         ) : null}
       </p>
       {pesan.length === 0 ? (

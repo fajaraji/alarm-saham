@@ -148,9 +148,11 @@ export const KLAIM_CAKUPAN_NYATA: RegExp[] = [
 /**
  * Kalimat pembatas halaman metodologi. Selama ia ada, /cara-kami-menghitung
  * boleh memuat angka universe nyata; kalau dihapus, gerbang ikut gagal.
+ * Sejak tiket 27 kalimatnya tanpa nama berkas ("hasil uji yang kami simpan"
+ * menggantikan "snapshot yang di-commit (docs/...)"), tetapi isinya sama.
  */
 export const PEMBATAS_METODOLOGI =
-  /snapshot yang di-commit[\s\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini/i;
+  /hasil uji yang kami simpan[\s\S]{0,400}bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini/i;
 
 /** Klaim yang WAJIB ada di jalur data nyata (footer memikul kalimat sumbernya). */
 export const KLAIM_WAJIB_JALUR_DB = /fakta resmi dari feed Sectors/i;
@@ -205,3 +207,24 @@ export function kumpulkanConsoleError(page: Page): { daftar: string[] } {
   page.on("pageerror", (err) => daftar.push(`[pageerror] ${err.message}`));
   return { daftar };
 }
+
+/**
+ * Jalur database: saham pertama membuat portofolio di server, dan layar Pasang
+ * lalu membuka dialog tautan rahasia (tiket 24), sekali per portofolio baru.
+ * Tutup dengan Escape sebelum menyentuh kontrol lain (dialognya modal).
+ * Jalur data contoh berjalan tanpa database, jadi dialog itu tidak muncul.
+ */
+export async function tutupDialogTautanPertama(page: Page): Promise<void> {
+  if (!ADA_PGLITE) return;
+  const dialog = page.getByTestId("dialog-tautan");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+}
+
+/**
+ * Apakah server yang diuji punya bot Telegram aktif (tiket 25). Bawaan MATI:
+ * server e2e lokal dan CI dijalankan tanpa token bot (playwright.config).
+ * Terhadap URL hidup yang botnya aktif, set E2E_TELEGRAM=aktif.
+ */
+export const TELEGRAM_AKTIF = process.env.E2E_TELEGRAM?.trim().toLowerCase() === "aktif";

@@ -4,7 +4,7 @@
 // terkini" (kelas B) sengaja TIDAK dijalankan agar tidak memakai kredit Sectors.
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, buka, harapkanLabelSumber, muatUlang } from "./util";
+import { ADA_PGLITE, buka, harapkanLabelSumber, muatUlang, tutupDialogTautanPertama } from "./util";
 
 test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ulang tetap ada", async ({ page }) => {
   await buka(page, "/pasang");
@@ -20,6 +20,7 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   // Tambah dua saham (huruf kecil pun diterima), lalu tolak ganda
   await page.getByTestId("kotak-kode").fill("bbca");
   await page.getByTestId("tombol-tambah").click();
+  await tutupDialogTautanPertama(page);
   await page.getByTestId("kotak-kode").fill("SRIL");
   await page.getByTestId("kotak-kode").press("Enter");
   await expect(page.getByTestId("tile-BBCA")).toBeVisible();
@@ -71,6 +72,7 @@ test("saham di luar data kami ditandai 'tidak ada data'; hapus saham menyimpan u
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await page.getByTestId("kotak-kode").fill("ZZZZ");
   await page.getByTestId("tombol-tambah").click();
+  await tutupDialogTautanPertama(page);
   await expect(page.getByTestId("tanpa-data-ZZZZ")).toBeVisible();
   await page.getByRole("button", { name: "Hapus ZZZZ" }).click();
   await expect(page.getByTestId("tile-ZZZZ")).toHaveCount(0);

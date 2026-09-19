@@ -1,5 +1,6 @@
 // POST /api/alarms  { owner_token, name, rules, last_score? }
-// → 201 { id, di: 'db', createdAt } bila DATABASE_URL ada;
+// → 201 { id, di: 'db', createdAt } bila server punya database (Neon, atau PGlite
+//   lokal; sama dengan /api/portofolio lewat dbJaga);
 //   503 DB_TIDAK_TERSEDIA bila tidak (klien menyimpan di localStorage).
 // GET  /api/alarms  (header x-owner-token) → { alarms: [{id, name, rules, createdAt}] }
 //   daftar alarm milik pemilik untuk layar "Pasang" (tiket 11); 503 tanpa DB.
@@ -8,8 +9,9 @@
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { getDb, hasDb, schema } from "@/lib/db";
+import { schema } from "@/lib/db";
 import { RuleSchema } from "@/lib/engine";
+import { dbJaga } from "@/lib/jaga/penyedia";
 import { tokenDariHeader } from "@/lib/jaga/portofolio";
 
 export const maxDuration = 30;
@@ -32,11 +34,12 @@ function galat(status: number, kode: string, pesan: string, rincian?: unknown) {
 export async function GET(req: Request): Promise<Response> {
   const token = tokenDariHeader(req);
   if (!token) return galat(401, "TOKEN_TIDAK_ADA", "Header x-owner-token wajib (16–128 karakter).");
-  if (!hasDb()) {
-    return galat(503, "DB_TIDAK_TERSEDIA", "Server belum punya database; alarm dibaca dari browser ini saja.");
-  }
   try {
-    const rows = await getDb()
+    const db = await dbJaga();
+    if (!db) {
+      return galat(503, "DB_TIDAK_TERSEDIA", "Server belum punya database; alarm dibaca dari browser ini saja.");
+    }
+    const rows = await db
       .select({
         id: schema.alarms.id,
         name: schema.alarms.name,
@@ -71,12 +74,13 @@ export async function POST(req: Request): Promise<Response> {
       parsed.error.issues.map((i) => ({ path: i.path.map(String).join(".") || "(akar)", pesan: i.message })),
     );
   }
-  if (!hasDb()) {
-    return galat(503, "DB_TIDAK_TERSEDIA", "Server belum punya database; alarm disimpan di browser ini saja.");
-  }
   try {
+    const db = await dbJaga();
+    if (!db) {
+      return galat(503, "DB_TIDAK_TERSEDIA", "Server belum punya database; alarm disimpan di browser ini saja.");
+    }
     const { owner_token, name, rules, last_score } = parsed.data;
-    const [baris] = await getDb()
+    const [baris] = await db
       .insert(schema.alarms)
       .values({ ownerToken: owner_token, name, rules, lastScore: last_score ?? null })
       .returning({ id: schema.alarms.id, createdAt: schema.alarms.createdAt });

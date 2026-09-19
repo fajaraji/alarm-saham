@@ -67,7 +67,7 @@ describe("statusDari / suspensiAktif", () => {
 });
 
 describe("cekPortofolio (fixture + penyedia kelas B buatan)", () => {
-  it("BBCA: ritel dominan + jatuh dari puncak → merah, alarm 'Jebakan IPO/harga' berbunyi; free float normal tidak terpenuhi", async () => {
+  it("BBCA: ritel dominan + jatuh dari puncak → merah, alarm 'Jebakan IPO/harga' berbunyi; free float tidak lagi ditarik", async () => {
     const p = penyedia({ ritel: true, jatuh: true, ff: 0.45 });
     const hasil = await cekPortofolio({
       symbols: ["BBCA"],
@@ -79,18 +79,32 @@ describe("cekPortofolio (fixture + penyedia kelas B buatan)", () => {
     expect(b.alasan.map((a) => a.kind)).toEqual(["ritel_dominan", "jatuh_dari_puncak"]);
     expect(b.alasan.every((a) => a.kelas === "B" && a.tanggal === "2026-09-06")).toBe(true);
     expect(b.alarmBerbunyi).toEqual([{ id: ID_ALARM_JEBAKAN, name: "Jebakan IPO/harga" }]);
-    expect(b.kelasB.keterangan).toBe("2 dari 3 blok data terkini terpenuhi");
-    expect(b.kelasB.blok.find((x) => x.kind === "free_float_kecil")?.terpenuhi).toBe(false);
+    expect(b.kelasB.keterangan).toBe("2 dari 2 syarat data terkini terpenuhi");
+    // Alarm bawaan tidak lagi memuat free float (tiket 26): snapshotnya tidak ditarik.
+    expect(b.kelasB.blok.map((x) => x.kind)).toEqual(["ritel_dominan", "jatuh_dari_puncak"]);
+    expect(p.dipanggil).not.toContain("free-float");
+    // Detail alasan kelas B = kalimat biasa berikut angkanya, bukan teks teknis.
+    expect(b.alasan[0].detail).toMatch(/nilai pembelian datang dari broker ritel/);
+    expect(b.alasan[1].detail).toMatch(/di bawah harga tertinggi 90 hari/);
     expect(hasil.sumber).toBe("fixture uji");
     expect(hasil.kreditTerpakai).toBe(0); // penyedia tanpa ledger → 0
   });
 
   it("satu blok kelas B saja → kuning; registry & free float hanya dipanggil sekali untuk banyak saham", async () => {
+    // Mesin masih mendukung free float bila diminta eksplisit lewat blokB,
+    // walau layar Pasang dan alarm bawaan tidak lagi memintanya (tiket 26).
     const p = penyedia({ ritel: false, jatuh: false, ff: 0.05 });
     const hasil = await cekPortofolio({
       symbols: ["BBCA", "TLKM"],
       alarms: [...ALARM_BAWAAN],
-      opts: { kelasB: true, today: TODAY, source: fx, universe: fx.universe, provider: p },
+      opts: {
+        kelasB: true,
+        blokB: ["ritel_dominan", "jatuh_dari_puncak", "free_float_kecil"],
+        today: TODAY,
+        source: fx,
+        universe: fx.universe,
+        provider: p,
+      },
     });
     expect(hasil.saham[0].status).toBe("kuning");
     expect(hasil.saham[0].alasan.map((a) => a.kind)).toEqual(["free_float_kecil"]);

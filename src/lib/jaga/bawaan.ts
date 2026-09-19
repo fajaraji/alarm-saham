@@ -43,7 +43,7 @@ export const ALARM_BAWAAN: readonly AlarmJaga[] = [
     name: "Jebakan IPO/harga",
     kelas: "B",
     bawaan: true,
-    blokB: ["ritel_dominan", "jatuh_dari_puncak", "free_float_kecil"],
+    blokB: ["ritel_dominan", "jatuh_dari_puncak"],
   },
 ];
 

@@ -10,7 +10,7 @@
 // diperiksa lewat atribut mesin `data-sumber` (lihat harapkanLabelSumber).
 import { expect, test } from "@playwright/test";
 
-import { ADA_PGLITE, AI_AKTIF, buka, harapkanLabelSumber, kumpulkanConsoleError } from "./util";
+import { ADA_PGLITE, AI_AKTIF, buka, harapkanLabelSumber, kumpulkanConsoleError, tutupDialogTautanPertama } from "./util";
 
 test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   test.setTimeout(120_000);
@@ -45,6 +45,10 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/\d+$/);
   await harapkanLabelSumber(page.getByTestId("label-sumber"));
   if (ADA_PGLITE) await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
+  await expect(page.getByTestId("kalimat-hasil")).toContainText("Alarmmu");
+  // Grid semua saham terlipat sejak tiket 21; dibuka lewat papan tuts.
+  await page.getByTestId("rincian-kelompok").locator("summary").focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByTestId("sel-SRIL")).toBeVisible();
   // Panel AI. Tanpa kunci: banner nonaktif setelah 503. Dengan kunci: tombol
   // "Minta diagnosis AI" siap ditekan — dan itu sekaligus bukti kuncinya
@@ -67,6 +71,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
   await page.getByTestId("kotak-kode").fill("BBCA");
   await page.getByTestId("tombol-tambah").click();
+  await tutupDialogTautanPertama(page);
   await page.getByTestId("kotak-kode").fill("SRIL");
   await page.getByTestId("kotak-kode").press("Enter");
   await expect(page.getByTestId("tile-BBCA")).toBeVisible();

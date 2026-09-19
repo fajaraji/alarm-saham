@@ -25,11 +25,16 @@ const LABEL_STATUS: Record<EmitenPutarUlang["status"], string> = {
 
 interface Props {
   emiten: EmitenPutarUlang;
-  /** Keterangan sumber data yang benar-benar dipakai server (tanpa kredensial). */
-  keteranganSumber: string;
 }
 
-export function PutarUlang({ emiten, keteranganSumber }: Props) {
+// Tidak ada prop keterangan sumber di sini. Dulu komponen ini menerima
+// `sumber.keterangan` (mis. "neon (<ep>.c-4.ap-southeast-1.aws.neon.tech)")
+// dan mencetaknya di sebelah label sumber: nama driver dan host database
+// sampai ke layar pengguna, dan terbukti tampil di situs live. Yang pengguna
+// perlu tahu hanya "data Sectors nyata" atau "data contoh", dan itu sudah
+// dibawa `emiten.sumberContoh`. Menghapus propnya (bukan hanya span-nya)
+// mencegah keterangan internal itu dioper ke sini lagi tanpa sengaja.
+export function PutarUlang({ emiten }: Props) {
   const rentang = useMemo(
     () => rentangSlider(emiten.kejadian, emiten.today, emiten.targetEventDate ? [emiten.targetEventDate] : []),
     [emiten],
@@ -63,7 +68,6 @@ export function PutarUlang({ emiten, keteranganSumber }: Props) {
             substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks). */}
         <p className={`pu-sumber ${emiten.sumberContoh ? "contoh" : "db"}`} data-testid="label-sumber" data-sumber={emiten.sumberContoh ? "fixture" : "db"}>
           {emiten.sumberContoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors nyata"}
-          <span className="pu-sumber-detail"> · {keteranganSumber}</span>
         </p>
         <h3>
           {emiten.companyName ? `${emiten.companyName} (${emiten.symbol})` : emiten.symbol}{" "}
@@ -110,6 +114,15 @@ export function PutarUlang({ emiten, keteranganSumber }: Props) {
               ))}{" "}
               · dinilai pada {t} · hanya data bertanggal ≤ {t}
             </div>
+            {/* Ditaruh di sini, bukan di kotak "Keterbatasan data": yang tidak bisa
+                dinilai adalah salah satu blok lampu ini, jadi keterangannya
+                menempel pada lampu. Di kotak itu ia muncul di hampir semua emiten
+                dan jadi hiasan yang diabaikan. */}
+            {emiten.ekuitasTidakDinilai ? (
+              <div className="d" data-testid="ekuitas-tidak-dinilai">
+                Blok ekuitas negatif tidak dinilai untuk emiten ini, karena angka ekuitasnya tidak kami tarik.
+              </div>
+            ) : null}
           </div>
         </div>
         <p className="pu-sub" style={{ marginTop: 10 }} data-testid="ringkasan" data-jumlah={ringkas.jumlah}>

@@ -29,6 +29,7 @@ import {
   type BlokBKind,
   type HasilBlokB,
 } from "./blok-b";
+import { kalimatBlokB } from "./kalimat-b";
 
 export type StatusSaham = "hijau" | "kuning" | "merah";
 
@@ -273,13 +274,13 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     } else if (!opts.provider) {
       kelasB = {
         status: "dilewati",
-        keterangan: "dilewati: server ini tidak menyediakan data terkini (butuh kunci Sectors dan database buku kredit)",
+        keterangan: "dilewati: server ini belum bisa menarik data terkini (butuh kunci Sectors dan database pencatat kredit)",
         blok: [],
       };
     } else if (suspensi) {
       kelasB = {
         status: "dilewati",
-        keterangan: `dilewati: saham tersuspensi sejak ${suspensi} (Sectors mengembalikan data broker kosong/404 dan tetap menagih kredit)`,
+        keterangan: `dilewati: saham ini sedang disuspensi sejak ${suspensi}, dan data broker saham yang disuspensi kosong padahal tetap memakai kredit`,
         blok: [],
       };
     } else {
@@ -290,7 +291,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
         keterangan:
           dilewati.length === blok.length
             ? dilewati[0].detail
-            : `${blok.filter((b) => b.terpenuhi).length} dari ${blok.length} blok data terkini terpenuhi`,
+            : `${blok.filter((b) => b.terpenuhi).length} dari ${blok.length} syarat data terkini terpenuhi`,
         blok,
       };
       for (const b of blok) {
@@ -301,7 +302,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
           kind: b.kind,
           kelas: "B",
           label: LABEL_BLOK_B[b.kind],
-          detail: b.detail,
+          detail: kalimatBlokB(b),
           tanggal: b.tanggal,
           sumber: b.sumber,
           alarm: pemilik,

@@ -10,6 +10,7 @@ import {
   MAKS_USULAN,
   pilihTerlewat,
   type RekamanRun,
+  type TraceStep,
 } from "../../../src/lib/agent/diagnosis";
 import { DISCLAIMER, INSTRUKSI_DIAGNOSIS, INSTRUKSI_RANGKUM } from "../../../src/lib/agent/instructions";
 import { fromFixture } from "../../../src/lib/engine/events";
@@ -562,4 +563,55 @@ it("ringkasan trace listMissed menyebut jumlah lebih dulu, potongannya disebut '
   const ringkas = hasil.trace[0].ringkasanHasil;
   expect(ringkas).toMatch(/^11 terlewat; 8 contoh: /);
   expect(ringkas).not.toMatch(/8 dari 11/);
+});
+
+describe("onLangkah: jejak langsung (tiket 22)", () => {
+  it("satu fase: dipanggil per langkah ber-tool, dan gabungannya IDENTIK dengan trace akhir", async () => {
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }, { toolName: "getSuspensions", input: { symbol: "tele" } }]),
+      langkahTool([{ toolName: "runAlarmOn", input: { symbol: "TELE", t: "2025-05-31", blocks: null, combine: null } }]),
+      langkahTeks(JAWABAN),
+    ]);
+    const diterima: TraceStep[][] = [];
+    const hasil = await diagnosis({
+      rule,
+      backtest,
+      source: sumber,
+      model,
+      duaFase: false,
+      simpan: async () => undefined,
+      onLangkah: (l) => diterima.push(l),
+    });
+    // Dua langkah ber-tool → dua panggilan; langkah jawaban akhir (tanpa tool) tidak dilaporkan.
+    expect(diterima.map((l) => l.map((t) => t.tool))).toEqual([["listMissed", "getSuspensions"], ["runAlarmOn"]]);
+    expect(diterima.flat()).toEqual(hasil.trace);
+  });
+
+  it("dua fase (gateway): langkah fase jelajah dilaporkan; fase perangkum tidak menambah langkah", async () => {
+    const model = modelTiruan([
+      langkahTool([{ toolName: "listMissed", input: {} }]),
+      langkahTool([{ toolName: "getReportDates", input: { symbol: "TELE" } }]),
+      langkahProsa(PROSA_FASE_1),
+      langkahTeks(JAWABAN_RAPI),
+    ]);
+    const diterima: TraceStep[][] = [];
+    const hasil = await diagnosis({
+      rule,
+      backtest,
+      source: sumber,
+      model,
+      duaFase: true,
+      simpan: async () => undefined,
+      onLangkah: (l) => diterima.push(l),
+    });
+    expect(diterima).toHaveLength(2);
+    expect(diterima.flat()).toEqual(hasil.trace);
+    expect(hasil.trace.map((t) => t.step)).toEqual([0, 1]);
+  });
+
+  it("tanpa onLangkah perilakunya tidak berubah", async () => {
+    const model = modelTiruan([langkahTool([{ toolName: "listMissed", input: {} }]), langkahTeks(JAWABAN)]);
+    const hasil = await diagnosis({ rule, backtest, source: sumber, model, duaFase: false, simpan: async () => undefined });
+    expect(hasil.trace.map((t) => t.tool)).toEqual(["listMissed"]);
+  });
 });

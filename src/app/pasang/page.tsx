@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
 import { Istilah } from "@/components/panduan/Istilah";
+import { NavigasiLangkah } from "@/components/panduan/NavigasiLangkah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { PanelPasang } from "@/components/pasang/PanelPasang";
 import { TEKS } from "@/components/pasang/teks";
 import { sumberSitus } from "@/lib/sumber-situs";
+import { botAktif } from "@/lib/telegram/status";
 
 export const metadata: Metadata = {
   title: "Pasang · Alarm Saham",
@@ -35,7 +37,7 @@ export default async function HalamanPasang() {
             nyata) tanpa memakai <Istilah id="kredit_sectors">kredit</Istilah>;
           </>
         )}{" "}
-        data terkini (broker, <Istilah id="free_float">free float</Istilah>, harga) hanya ditarik kalau kamu minta.
+        data terkini (pembeli 14 hari dan harga 90 hari) hanya ditarik kalau kamu minta.
       </p>
       <PetunjukLayar
         langkah={[
@@ -47,7 +49,10 @@ export default async function HalamanPasang() {
         ]}
       />
 
-      <PanelPasang />
+      {/* Status bot dibaca dari env di server pada setiap permintaan; hanya
+          boolean-nya yang sampai ke browser (tiket 25). */}
+      <PanelPasang telegramAktif={botAktif()} />
+      <NavigasiLangkah sekarang="/pasang" />
     </main>
   );
 }

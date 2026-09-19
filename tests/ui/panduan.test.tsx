@@ -13,6 +13,8 @@ import HalamanRakit from "../../src/app/rakit/page";
 import { FooterDisclaimer } from "../../src/components/panduan/FooterDisclaimer";
 import { HeaderNav } from "../../src/components/panduan/HeaderNav";
 import { Istilah } from "../../src/components/panduan/Istilah";
+import { ALUR_LANGKAH } from "../../src/components/panduan/langkah";
+import { NavigasiLangkah } from "../../src/components/panduan/NavigasiLangkah";
 import { DISCLAIMER, ID_ISTILAH, ISTILAH_BLOK, ISTILAH_BLOK_B, KAMUS, KUNCI_PANDUAN_SELESAI, entriKamus, type IdIstilah } from "../../src/components/panduan/kamus";
 import { LANGKAH_PANDUAN, OverlayPanduan } from "../../src/components/panduan/OverlayPanduan";
 import { PanduanProvider } from "../../src/components/panduan/PanduanContext";
@@ -301,5 +303,42 @@ describe("Header, petunjuk, dan footer", () => {
     expect(dialog).toHaveTextContent("fakta dari data resmi");
     expect(dialog).toHaveTextContent("seluruh universe uji");
     expect(dialog).toHaveTextContent("18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat");
+  });
+});
+
+describe("NavigasiLangkah (tiket 20)", () => {
+  it.each([
+    ["/putar-ulang", null, "Langkah 2: Rakit alarm", "/rakit"],
+    ["/rakit", "Langkah 1: Putar ulang", "Langkah 3: Pasang", "/pasang"],
+    ["/pasang", "Langkah 2: Rakit alarm", null, null],
+  ] as const)("%s: tombol sebelumnya/berikutnya menyebut dan menuju langkah yang benar", (sekarang, sebelum, berikut, hrefBerikut) => {
+    render(<NavigasiLangkah sekarang={sekarang} />);
+    const nav = screen.getByRole("navigation", { name: "Sebelumnya dan berikutnya" });
+    const tombolSebelum = within(nav).queryByTestId("langkah-sebelumnya");
+    const tombolBerikut = within(nav).queryByTestId("langkah-berikutnya");
+    if (sebelum) expect(tombolSebelum).toHaveTextContent(sebelum);
+    else expect(tombolSebelum).toBeNull();
+    if (berikut) {
+      expect(tombolBerikut).toHaveTextContent(berikut);
+      expect(tombolBerikut).toHaveAttribute("href", hrefBerikut);
+    } else expect(tombolBerikut).toBeNull();
+  });
+
+  it("urutan dan nama langkah sama dengan navigasi header (satu sumber)", () => {
+    // Tombol dan header membaca ALUR_LANGKAH yang sama, jadi label langkah di
+    // header harus muncul utuh di tombol langkah itu.
+    window.localStorage.setItem(KUNCI_PANDUAN_SELESAI, "1");
+    render(<Aplikasi />);
+    const header = screen.getByRole("navigation", { name: "Langkah" });
+    for (const l of ALUR_LANGKAH) {
+      expect(within(header).getByRole("link", { name: new RegExp(l.label) })).toHaveAttribute("href", l.href);
+    }
+  });
+
+  it("dipasang di ketiga halaman langkah", () => {
+    for (const berkas of ["src/app/putar-ulang/page.tsx", "src/app/rakit/page.tsx", "src/app/pasang/page.tsx"]) {
+      const isi = readFileSync(path.resolve(process.cwd(), berkas), "utf8");
+      expect(isi, berkas).toMatch(/<NavigasiLangkah sekarang="\/(putar-ulang|rakit|pasang)" \/>/);
+    }
   });
 });

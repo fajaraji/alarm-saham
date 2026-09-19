@@ -1,0 +1,13 @@
+# 24: Dialog salin tautan rahasia
+
+**What to build:** Setelah menyimpan alarm di layar rakit dan setelah portofolio tersimpan di layar pasang, muncul dialog berisi tautan dari tiket 23 dengan tombol Salin dan penjelasan singkat bahwa tautan itu satu-satunya cara membuka portofolio yang sama di perangkat lain. Kalimat lama "tautan rahasiamu tersimpan otomatis" diganti karena menjanjikan tautan yang tidak pernah ditunjukkan. Dialog bisa ditutup dengan Escape dan tombol tutup, fokus kembali ke tombol yang membukanya. Sumber: feedback gelombang 1, poin 6.
+
+**Blocked by:** 23 (Pulihkan portofolio dari tautan rahasia)
+
+**Status:** selesai. E2E jalur database: tautan dari dialog disalin ke clipboard, lalu dibuka di konteks browser baru dan alarmnya muncul. Jalur data contoh: dialog menyatakan alarm hanya di browser ini. Axe terang dan gelap lulus pada dialog; Tab tertahan di dialog, Escape dan Tutup mengembalikan fokus ke tombol Simpan. /api/alarms kini memakai dbJaga() agar PGlite ikut dihitung sebagai database.
+
+- [x] Menyimpan alarm di jalur database menampilkan dialog berisi tautan yang, bila dibuka, memulihkan portofolio (tiket 23)
+- [x] Tombol Salin menaruh tautan di clipboard dan memberi umpan balik yang terlihat
+- [x] Di server tanpa database dialog menyatakan bahwa alarm hanya tersimpan di browser ini
+- [x] Dialog lolos axe dan bisa dipakai dengan keyboard
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

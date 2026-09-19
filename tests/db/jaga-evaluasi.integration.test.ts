@@ -119,18 +119,19 @@ describe.skipIf(!adaPglite)("cekPortofolio (PGlite in-memory)", () => {
     });
     const bbca1 = pertama.saham[0];
     expect(bbca1.kelasB.status).toBe("dijalankan");
-    expect(bbca1.kelasB.blok.map((b) => b.kind).sort()).toEqual(["free_float_kecil", "jatuh_dari_puncak", "ritel_dominan"]);
+    // Alarm bawaan tanpa free float sejak tiket 26.
+    expect(bbca1.kelasB.blok.map((b) => b.kind).sort()).toEqual(["jatuh_dari_puncak", "ritel_dominan"]);
     expect(bbca1.kelasB.blok.every((b) => !b.detail.startsWith("dilewati") && !b.detail.startsWith("gagal"))).toBe(true);
-    // brokers + broker-summary + free-float + daily = 4 panggilan, 4 kredit (fixture per-request/per-100).
-    expect(panggilan).toHaveLength(4);
-    expect(pertama.kreditTerpakai).toBe(4);
-    expect(pertama.panggilanApi).toBe(4);
+    // brokers + broker-summary + daily = 3 panggilan, 3 kredit (fixture per-request).
+    expect(panggilan).toHaveLength(3);
+    expect(pertama.kreditTerpakai).toBe(3);
+    expect(pertama.panggilanApi).toBe(3);
     expect(pertama.cacheHit).toBe(0);
     const setelahPertama = await provider.ledger.totalKredit();
-    expect(setelahPertama - sebelum).toBe(4);
+    expect(setelahPertama - sebelum).toBe(3);
     // SRIL: suspensi aktif → tidak ada satu pun URL SRIL yang dipanggil.
     expect(pertama.saham[1].kelasB.status).toBe("dilewati");
-    expect(pertama.saham[1].kelasB.keterangan).toMatch(/tersuspensi sejak 2024-11-01/);
+    expect(pertama.saham[1].kelasB.keterangan).toMatch(/disuspensi sejak 2024-11-01/);
     expect(panggilan.some((p) => p.url.includes("SRIL"))).toBe(false);
 
     const kedua = await cekPortofolio({
@@ -138,10 +139,10 @@ describe.skipIf(!adaPglite)("cekPortofolio (PGlite in-memory)", () => {
       alarms: [...ALARM_BAWAAN],
       opts: { kelasB: true, today: TODAY, source, universe, provider },
     });
-    expect(panggilan).toHaveLength(4); // tidak ada fetch baru
+    expect(panggilan).toHaveLength(3); // tidak ada fetch baru
     expect(kedua.kreditTerpakai).toBe(0);
     expect(kedua.panggilanApi).toBe(0);
-    expect(kedua.cacheHit).toBe(4);
+    expect(kedua.cacheHit).toBe(3);
     expect(await provider.ledger.totalKredit()).toBe(setelahPertama);
     expect(kedua.saham[0].kelasB.blok).toEqual(bbca1.kelasB.blok);
   });

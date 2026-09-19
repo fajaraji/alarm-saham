@@ -179,10 +179,25 @@ describe("PapanRakit", () => {
     fireEvent.click(screen.getByTestId("palet-suspensi"));
     fireEvent.click(screen.getByTestId("palet-laporan_hilang"));
     fireEvent.click(screen.getByRole("button", { name: TEKS.tombolUji }));
-    await waitFor(() => expect(screen.getByTestId("skor-tertangkap")).not.toHaveTextContent("–"));
-    expect(screen.getByTestId("skor-tertangkap")).toHaveTextContent(/^\d\/3$/);
+    // Tunggu ANGKA, bukan "bukan tanda pisah": sejak audit antislop keadaan
+    // kosongnya berbunyi "belum diuji", jadi penantian lama bisa lolos sebelum
+    // hasilnya datang.
+    await waitFor(() => expect(screen.getByTestId("skor-tertangkap")).toHaveTextContent(/^\d\/3$/));
     expect(screen.getByTestId("skor-palsu")).toHaveTextContent(/^\d\/4$/);
     expect(screen.getByTestId("label-sumber")).toHaveTextContent(TEKS.sumberFixture);
+
+    // Tiket 21: kalimat jawaban memakai angka yang SAMA dengan kotak skor.
+    const [tangkap, totalDelisting] = screen.getByTestId("skor-tertangkap").textContent!.split("/");
+    const [palsu, kontrol] = screen.getByTestId("skor-palsu").textContent!.split("/");
+    const kalimat = screen.getByTestId("kalimat-hasil");
+    expect(kalimat).toHaveTextContent(`${tangkap} dari ${totalDelisting} saham yang dihapus dari bursa`);
+    expect(kalimat).toHaveTextContent(
+      palsu === "0" ? `Tidak salah bunyi pada satu pun dari ${kontrol} saham sehat` : `${palsu} dari ${kontrol} saham sehat`,
+    );
+    // Daftar tertangkap hanya saham kena yang berbunyi; grid rinci terlipat.
+    expect(within(screen.getByTestId("daftar-tertangkap")).getByTestId("tertangkap-SRIL")).toHaveTextContent("SRIL");
+    expect(screen.queryByTestId("tertangkap-BBCA")).toBeNull();
+    expect(screen.getByTestId("rincian-kelompok")).not.toHaveAttribute("open");
     expect(screen.getByTestId("kelompok-delisting")).toBeInTheDocument();
     expect(screen.getByTestId("kelompok-watchlist")).toBeInTheDocument();
     expect(screen.getByTestId("kelompok-control")).toBeInTheDocument();
@@ -307,5 +322,83 @@ describe("PapanRakit", () => {
     const lokal = JSON.parse(window.localStorage.getItem("alarm-saham.alarm")!);
     expect(lokal).toHaveLength(1);
     expect(lokal[0]).toMatchObject({ di: "lokal", rule: { blocks: [{ kind: "aksi_dilutif", threshold: "longgar" }] } });
+    // Tiket 24: tanpa database dialog berkata terus terang tidak ada tautan.
+    expect(screen.getByRole("dialog", { name: "Alarm hanya tersimpan di browser ini" })).toBeInTheDocument();
+    expect(screen.queryByTestId("kotak-tautan")).toBeNull();
+  });
+
+  it("Simpan alarm di server: dialog berisi tautan ke /pasang dengan kunci pemilik; kalimat lama tidak ada lagi", async () => {
+    rute["/api/alarms"] = () => ({ status: 201, json: { id: "11111111-1111-4111-8111-111111111111" } });
+    render(<PapanRakit />);
+    fireEvent.click(screen.getByTestId("palet-suspensi"));
+    fireEvent.click(screen.getByRole("button", { name: TEKS.tombolSimpan }));
+    const dialog = await screen.findByRole("dialog", { name: "Simpan tautan rahasiamu" });
+    const token = window.localStorage.getItem("alarm-saham.pemilik");
+    expect(screen.getByTestId("kotak-tautan")).toHaveValue(`${window.location.origin}/pasang#kunci=${token}`);
+    expect(screen.getByTestId("catatan-simpan")).not.toHaveTextContent("tersimpan otomatis");
+
+    // Ditutup, lalu dibuka lagi lewat tombol di catatan simpan.
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(dialog).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("tombol-lihat-tautan"));
+    expect(screen.getByRole("dialog", { name: "Simpan tautan rahasiamu" })).toBeInTheDocument();
+  });
+});
+
+describe("HasilUji: nol saham tertangkap (tiket 21)", () => {
+  it("kalimat jawabannya masuk akal dan tidak ada daftar kosong", async () => {
+    // Hasil uji nyata dari fixture, lalu semua bunyi dimatikan: bentuknya
+    // tetap BacktestResult sungguhan, hanya tanpa satu pun yang tertangkap.
+    const sumber = fromFixture(universeKecil);
+    const asli = await runBacktest(
+      { name: "uji", combine: "any", blocks: [{ kind: "suspensi", threshold: "longgar" }] },
+      sumber.universe,
+      sumber,
+      { today: "2026-09-07" },
+    );
+    const nol = (g: BacktestResult["perGroup"][keyof BacktestResult["perGroup"]]) => ({ ...g, hits: 0, falseAlarms: 0, leadMonthsAvg: null });
+    const hasil: BacktestResult = {
+      ...asli,
+      hits: 0,
+      falseAlarms: 0,
+      leadMonthsAvg: null,
+      perSymbol: asli.perSymbol.map((r) => ({ ...r, fired: false, firstFireDate: null, leadMonths: null, reasons: [] })),
+      perGroup: { delisting: nol(asli.perGroup.delisting), watchlist: nol(asli.perGroup.watchlist), control: nol(asli.perGroup.control) },
+    };
+    const { HasilUji } = await import("../../src/components/rakit/HasilUji");
+    render(<HasilUji hasil={{ sumber: "fixture", dilewati: [], hasil } as never} basi={false} sedangUji={false} galat={null} />);
+    const totalKena = asli.perGroup.delisting.total + asli.perGroup.watchlist.total;
+    expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`tidak berbunyi lebih dulu pada satu pun dari ${totalKena} saham kena`);
+    expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`Tidak salah bunyi pada satu pun dari ${asli.controls} saham sehat`);
+    expect(screen.queryByTestId("daftar-tertangkap")).toBeNull();
+  });
+});
+
+describe("PanelAi: langkah agent tampil langsung (tiket 22)", () => {
+  it("selagi memeriksa, setiap langkah yang sudah selesai tampil dalam kalimat biasa", async () => {
+    const { PanelAi } = await import("../../src/components/rakit/PanelAi");
+    render(
+      <PanelAi
+        aiNonaktif={false}
+        diagnosis={null}
+        sedang
+        langkahLangsung={[
+          { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "59 terlewat" },
+          { step: 1, tool: "getSuspensions", input: { symbol: "TOYS" }, ringkasanHasil: "1 suspensi: 2024-07-02" },
+        ]}
+        galat={null}
+        adaHasil
+        onMintaDiagnosis={() => {}}
+        onTambahUsulan={() => {}}
+      />,
+    );
+    const daftar = screen.getByTestId("langkah-langsung");
+    expect(within(daftar).getAllByRole("listitem")).toHaveLength(2);
+    expect(daftar).toHaveTextContent("Mencari saham yang terlewat: 59 terlewat");
+    expect(daftar).toHaveTextContent("Memeriksa suspensi TOYS: 1 suspensi: 2024-07-02");
+    // Nama alat mentah tidak ditampilkan ke pengguna selagi menunggu.
+    expect(daftar).not.toHaveTextContent("getSuspensions");
+    // Tombol diagnosis tidak ada selagi berjalan.
+    expect(screen.queryByRole("button", { name: /Minta diagnosis/ })).toBeNull();
   });
 });
