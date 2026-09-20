@@ -20,6 +20,7 @@ export interface BacktestOptions {
 export interface PerSymbolResult {
   symbol: string;
   group: Group;
+  /** Tanggal saham berhenti diperdagangkan yang diukur (lihat engine/universe-uji.ts). */
   targetEventDate: string | null;
   /** Rentang t yang dipindai (akhir bulan); null bila kosong. */
   scanFrom: string | null;

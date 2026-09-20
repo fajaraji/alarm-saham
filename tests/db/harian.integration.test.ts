@@ -68,7 +68,7 @@ describe.skipIf(!adaPglite)("jalankanPengecekanHarian (PGlite in-memory)", () =>
     expect(kotak).toHaveLength(1);
     expect(kotak[0].symbol).toBe("SRIL");
     expect(kotak[0].status).toBe("merah");
-    expect(kotak[0].judul).toContain("Saham mau pailit");
+    expect(kotak[0].judul).toContain("Waspada suspensi");
     expect(kotak[0].teks).toContain(DISCLAIMER);
     expect(kotak[0].teks).toContain("2024-11-01");
     expect(kotak[0].baru).toBe(true);
@@ -116,7 +116,7 @@ describe.skipIf(!adaPglite)("jalankanPengecekanHarian (PGlite in-memory)", () =>
     expect(k.body.chat_id).toBe("777");
     const teks = String(k.body.text);
     expect(teks).toContain("SRIL");
-    expect(teks).toContain("Saham mau pailit");
+    expect(teks).toContain("Waspada suspensi");
     expect(teks).toContain(DISCLAIMER);
     expect(teks).not.toMatch(/\b(beli|jual|rekomendasi)\b/i);
 

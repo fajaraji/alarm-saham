@@ -69,9 +69,16 @@ describe("bacaKunciTautan dan tautanPemilik", () => {
 });
 
 describe("PanelPasang dibuka lewat tautan rahasia", () => {
-  it("browser tanpa kunci langsung memakai kunci dari tautan, lalu kunci hilang dari bilah alamat", async () => {
+  it("browser tanpa kunci juga ditanya dulu, dengan peringatan; Buka memakai kunci dari tautan", async () => {
+    // Temuan security review: dulu kunci dipakai diam-diam di browser tanpa
+    // kunci, sehingga pengirim tautan ikut melihat semua yang ditambahkan sesudahnya.
     window.history.replaceState(null, "", `/pasang#kunci=${KUNCI_A}`);
     render(<PanelPasang />);
+    const dialog = await screen.findByTestId("dialog-ganti-pemilik");
+    expect(dialog).toHaveTextContent(TEKS_TAUTAN.konfirmasiTeksBaru);
+    expect(window.localStorage.getItem(KUNCI_PEMILIK)).not.toBe(KUNCI_A);
+    expect(window.location.hash).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: TEKS_TAUTAN.tombolBuka }));
     await tungguMuat();
     expect(await screen.findByTestId("tile-BBCA")).toBeInTheDocument();
     expect(screen.getByTestId("tile-SRIL")).toBeInTheDocument();
@@ -80,6 +87,17 @@ describe("PanelPasang dibuka lewat tautan rahasia", () => {
     expect(window.location.hash).toBe("");
     expect(window.location.pathname).toBe("/pasang");
     expect(screen.queryByTestId("dialog-ganti-pemilik")).toBeNull();
+  });
+
+  it("browser tanpa kunci yang membatalkan memulai portofolionya sendiri", async () => {
+    window.history.replaceState(null, "", `/pasang#kunci=${KUNCI_A}`);
+    render(<PanelPasang />);
+    await screen.findByTestId("dialog-ganti-pemilik");
+    fireEvent.click(screen.getByRole("button", { name: TEKS_TAUTAN.tombolBatalBaru }));
+    await tungguMuat();
+    expect(window.localStorage.getItem(KUNCI_PEMILIK)).not.toBe(KUNCI_A);
+    expect(screen.queryByTestId("tile-BBCA")).toBeNull();
+    expect(screen.getByTestId("pesan-tautan")).toHaveAttribute("data-jenis", "batalBaru");
   });
 
   it("browser dengan kunci lain bertanya dulu; Batal tidak mengubah apa pun", async () => {
@@ -152,6 +170,8 @@ describe("PanelPasang dibuka lewat tautan rahasia", () => {
     adaDb = false;
     window.history.replaceState(null, "", `/pasang#kunci=${KUNCI_A}`);
     render(<PanelPasang />);
+    await screen.findByTestId("dialog-ganti-pemilik");
+    fireEvent.click(screen.getByTestId("tombol-ganti-pemilik"));
     await tungguMuat();
     await waitFor(() => expect(screen.getByTestId("pesan-tautan")).toHaveTextContent(TEKS_TAUTAN.tanpaDb));
     expect(screen.queryByTestId("tile-BBCA")).toBeNull();

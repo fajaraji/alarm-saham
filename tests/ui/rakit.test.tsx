@@ -97,7 +97,7 @@ describe("PapanRakit", () => {
     expect(screen.getByTestId("palet-suspensi")).toBeEnabled();
   });
 
-  it("tombol ATAU/DAN di antara blok dan chip ambang longgar↔ketat", () => {
+  it("tombol ATAU/DAN di antara blok dan dropdown ambang longgar/ketat (tiket 30)", () => {
     render(<PapanRakit />);
     fireEvent.click(screen.getByTestId("palet-suspensi"));
     expect(screen.queryByTestId("tombol-gabung")).not.toBeInTheDocument();
@@ -110,13 +110,13 @@ describe("PapanRakit", () => {
 
     const blok = screen.getByTestId("blok-suspensi");
     expect(blok).toHaveAttribute("data-threshold", "longgar");
-    const chip = within(blok).getByRole("button", { name: /^Ambang/ });
-    expect(chip).toHaveTextContent("pernah 12 bln terakhir");
-    fireEvent.click(chip);
+    // Kedua pilihan terlihat sebelum memilih, dengan artinya.
+    const pilih = within(blok).getByRole("combobox", { name: "Ambang Saham disuspensi" });
+    expect(within(pilih).getAllByRole("option").map((o) => o.textContent)).toEqual(["pernah 12 bln terakhir", "masih berlaku > 6 bln"]);
+    expect(pilih).toHaveValue("longgar");
+    fireEvent.change(pilih, { target: { value: "ketat" } });
     expect(screen.getByTestId("blok-suspensi")).toHaveAttribute("data-threshold", "ketat");
-    expect(within(screen.getByTestId("blok-suspensi")).getByRole("button", { name: /^Ambang/ })).toHaveTextContent(
-      "masih berlaku > 6 bln",
-    );
+    expect(screen.getByTestId("ambang-suspensi")).toHaveValue("ketat");
   });
 
   it("Uji ke masa lalu pada papan kosong → pesan awam, tanpa panggilan API", () => {
@@ -192,8 +192,13 @@ describe("PapanRakit", () => {
     const kalimat = screen.getByTestId("kalimat-hasil");
     expect(kalimat).toHaveTextContent(`${tangkap} dari ${totalDelisting} saham yang dihapus dari bursa`);
     expect(kalimat).toHaveTextContent(
-      palsu === "0" ? `Tidak salah bunyi pada satu pun dari ${kontrol} saham sehat` : `${palsu} dari ${kontrol} saham sehat`,
+      palsu === "0" ? `tidak salah bunyi pada satu pun dari ${kontrol} saham sehat` : `${palsu} dari ${kontrol} saham sehat`,
     );
+    // Satu kalimat (DESIGN.md aturan 5), dan tiga angka ringkas ada di lipatan
+    // yang sama dengan grid, bukan terbuka tepat di bawah kalimat yang sudah
+    // menyebutnya (aturan 1).
+    expect(kalimat.textContent!.trim().match(/\.(\s|$)/g)).toHaveLength(1);
+    expect(screen.getByTestId("skor-tertangkap").closest("details")).toBe(screen.getByTestId("rincian-kelompok"));
     // Daftar tertangkap hanya saham kena yang berbunyi; grid rinci terlipat.
     expect(within(screen.getByTestId("daftar-tertangkap")).getByTestId("tertangkap-SRIL")).toHaveTextContent("SRIL");
     expect(screen.queryByTestId("tertangkap-BBCA")).toBeNull();
@@ -248,7 +253,13 @@ describe("PapanRakit", () => {
         usulanBlok: [{ kind: "ekuitas_negatif", threshold: "longgar", alasan: "Ekuitas TELE negatif sejak 2024." }],
         trace: [
           { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "1 emiten terlewat" },
-          { step: 1, tool: "getFinancials", input: { symbol: "TELE" }, ringkasanHasil: "ekuitas negatif" },
+          {
+            step: 1,
+            tool: "getFinancials",
+            input: { symbol: "TELE" },
+            ringkasanHasil: "16 kuartal keuangan; terakhir 2019-12-31 ekuitas -1100000000000",
+            ringkasanAwam: "Ekuitas per 31 Des 2019: minus Rp1,1 triliun.",
+          },
         ],
         langkah: 3,
         perluTinjau: false,
@@ -264,7 +275,11 @@ describe("PapanRakit", () => {
     expect(screen.getByRole("list", { name: /Emiten yang dibahas/ })).toHaveTextContent("TELE");
     const jejak = screen.getByRole("list", { name: /Jejak pemeriksaan AI/ });
     expect(within(jejak).getAllByRole("listitem")).toHaveLength(2);
-    expect(jejak).toHaveTextContent("getFinancials");
+    // Jejak akhir memakai kalimat yang sama dengan jejak langsung: tindakan +
+    // hasil dalam bahasa biasa. Nama alat, JSON input, dan ringkasan untuk
+    // model (tanggal ISO, angka mentah) tidak pernah tampil (DESIGN.md aturan 8).
+    expect(jejak).toHaveTextContent("Memeriksa ekuitas TELE. Ekuitas per 31 Des 2019: minus Rp1,1 triliun.");
+    expect(jejak).not.toHaveTextContent(/getFinancials|{"symbol"|2019-12-31|-1100000000000/);
 
     const sebelum = panggilan.filter((p) => p.url === "/api/backtest").length;
     fireEvent.click(screen.getByTestId("usulan-ekuitas_negatif"));
@@ -340,8 +355,23 @@ describe("PapanRakit", () => {
     // Ditutup, lalu dibuka lagi lewat tombol di catatan simpan.
     fireEvent.keyDown(document, { key: "Escape" });
     expect(dialog).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("tombol-lihat-tautan"));
+    const lihat = screen.getByTestId("tombol-lihat-tautan");
+    lihat.focus();
+    fireEvent.click(lihat);
     expect(screen.getByRole("dialog", { name: "Simpan tautan rahasiamu" })).toBeInTheDocument();
+    // Fokus kembali ke tombol yang membuka dialog, bukan ke tombol Simpan.
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(document.activeElement).toBe(screen.getByTestId("tombol-lihat-tautan"));
+  });
+
+  it("tanpa database tidak ada tombol 'Lihat tautan rahasia' (tidak ada tautan untuk dilihat)", async () => {
+    render(<PapanRakit />);
+    fireEvent.click(screen.getByTestId("palet-suspensi"));
+    fireEvent.click(screen.getByRole("button", { name: TEKS.tombolSimpan }));
+    await screen.findByRole("dialog", { name: "Alarm hanya tersimpan di browser ini" });
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.getByTestId("catatan-simpan")).toHaveTextContent(/tersimpan di browser ini\.$/);
+    expect(screen.queryByTestId("tombol-lihat-tautan")).toBeNull();
   });
 });
 
@@ -369,7 +399,7 @@ describe("HasilUji: nol saham tertangkap (tiket 21)", () => {
     render(<HasilUji hasil={{ sumber: "fixture", dilewati: [], hasil } as never} basi={false} sedangUji={false} galat={null} />);
     const totalKena = asli.perGroup.delisting.total + asli.perGroup.watchlist.total;
     expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`tidak berbunyi lebih dulu pada satu pun dari ${totalKena} saham kena`);
-    expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`Tidak salah bunyi pada satu pun dari ${asli.controls} saham sehat`);
+    expect(screen.getByTestId("kalimat-hasil")).toHaveTextContent(`tidak salah bunyi pada satu pun dari ${asli.controls} saham sehat`);
     expect(screen.queryByTestId("daftar-tertangkap")).toBeNull();
   });
 });
@@ -383,8 +413,15 @@ describe("PanelAi: langkah agent tampil langsung (tiket 22)", () => {
         diagnosis={null}
         sedang
         langkahLangsung={[
-          { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "59 terlewat" },
-          { step: 1, tool: "getSuspensions", input: { symbol: "TOYS" }, ringkasanHasil: "1 suspensi: 2024-07-02" },
+          { step: 0, tool: "listMissed", input: {}, ringkasanHasil: "59 terlewat", ringkasanAwam: "59 saham terlewat; 18 tertangkap." },
+          {
+            step: 1,
+            tool: "getSuspensions",
+            input: { symbol: "TOYS" },
+            ringkasanHasil: "1 suspensi: 2024-07-02",
+            ringkasanAwam: "Disuspensi 1 kali: 2 Jul 2024.",
+          },
+          { step: 2, tool: "runAlarmOn", input: { symbol: "TOYS", t: "2024-06-30" }, ringkasanHasil: "GALAT: timeout", ringkasanAwam: "Data ini gagal dibaca; AI melanjutkan tanpa data itu." },
         ]}
         galat={null}
         adaHasil
@@ -393,11 +430,12 @@ describe("PanelAi: langkah agent tampil langsung (tiket 22)", () => {
       />,
     );
     const daftar = screen.getByTestId("langkah-langsung");
-    expect(within(daftar).getAllByRole("listitem")).toHaveLength(2);
-    expect(daftar).toHaveTextContent("Mencari saham yang terlewat: 59 terlewat");
-    expect(daftar).toHaveTextContent("Memeriksa suspensi TOYS: 1 suspensi: 2024-07-02");
-    // Nama alat mentah tidak ditampilkan ke pengguna selagi menunggu.
-    expect(daftar).not.toHaveTextContent("getSuspensions");
+    expect(within(daftar).getAllByRole("listitem")).toHaveLength(3);
+    expect(daftar).toHaveTextContent("Mencari saham yang terlewat. 59 saham terlewat; 18 tertangkap.");
+    expect(daftar).toHaveTextContent("Memeriksa suspensi TOYS. Disuspensi 1 kali: 2 Jul 2024.");
+    expect(daftar).toHaveTextContent("Menguji alarm pada TOYS per 30 Jun 2024. Data ini gagal dibaca");
+    // Nama alat, tanggal ISO, dan galat mentah tidak ditampilkan ke pengguna.
+    expect(daftar).not.toHaveTextContent(/getSuspensions|runAlarmOn|2024-07-02|GALAT|timeout/);
     // Tombol diagnosis tidak ada selagi berjalan.
     expect(screen.queryByRole("button", { name: /Minta diagnosis/ })).toBeNull();
   });

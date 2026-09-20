@@ -25,6 +25,8 @@ const LABEL_STATUS: Record<EmitenPutarUlang["status"], string> = {
 
 interface Props {
   emiten: EmitenPutarUlang;
+  /** Tanggal data kelas A terakhir ditarik (YYYY-MM-DD); null pada data contoh (tiket 42). */
+  dataPer?: string | null;
 }
 
 // Tidak ada prop keterangan sumber di sini. Dulu komponen ini menerima
@@ -34,7 +36,7 @@ interface Props {
 // perlu tahu hanya "data Sectors nyata" atau "data contoh", dan itu sudah
 // dibawa `emiten.sumberContoh`. Menghapus propnya (bukan hanya span-nya)
 // mencegah keterangan internal itu dioper ke sini lagi tanpa sengaja.
-export function PutarUlang({ emiten }: Props) {
+export function PutarUlang({ emiten, dataPer }: Props) {
   const rentang = useMemo(
     () => rentangSlider(emiten.kejadian, emiten.today, emiten.targetEventDate ? [emiten.targetEventDate] : []),
     [emiten],
@@ -68,6 +70,7 @@ export function PutarUlang({ emiten }: Props) {
             substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks). */}
         <p className={`pu-sumber ${emiten.sumberContoh ? "contoh" : "db"}`} data-testid="label-sumber" data-sumber={emiten.sumberContoh ? "fixture" : "db"}>
           {emiten.sumberContoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors nyata"}
+          {dataPer ? <span data-testid="data-per"> · ditarik {fmtTanggal(dataPer)}</span> : null}
         </p>
         <h3>
           {emiten.companyName ? `${emiten.companyName} (${emiten.symbol})` : emiten.symbol}{" "}
@@ -75,7 +78,7 @@ export function PutarUlang({ emiten }: Props) {
         </h3>
         <p className="pu-sub">
           {LABEL_STATUS[emiten.status]}
-          {emiten.targetEventDate && <> · kejadian target yang kami catat: {fmtTanggal(emiten.targetEventDate)}</>}
+          {emiten.targetEventDate && <> · berhenti diperdagangkan: {fmtTanggal(emiten.targetEventDate)}</>}
         </p>
 
         <Grafik kejadian={emiten.kejadian} rentang={rentang} t={t} target={emiten.targetEventDate} />
@@ -96,7 +99,6 @@ export function PutarUlang({ emiten }: Props) {
             <b data-testid="tanggal-terpilih">{fmtTanggal(t)}</b>
             <span>{rentang.akhir}</span>
           </div>
-          <div className="pu-dragme">◀ geser ke kiri untuk mundur ke masa lalu</div>
         </div>
 
         <div className="pu-now" data-testid="lampu" data-warna={lampu.warna}>
@@ -112,7 +114,7 @@ export function PutarUlang({ emiten }: Props) {
                   <Istilah id={ISTILAH_BLOK[b.kind]}>{LABEL_BLOK[b.kind].toLowerCase()}</Istilah>
                 </span>
               ))}{" "}
-              · dinilai pada {t} · hanya data bertanggal ≤ {t}
+              · hanya data sampai tanggal itu
             </div>
             {/* Ditaruh di sini, bukan di kotak "Keterbatasan data": yang tidak bisa
                 dinilai adalah salah satu blok lampu ini, jadi keterangannya

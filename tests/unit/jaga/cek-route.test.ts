@@ -36,7 +36,7 @@ describe("POST /api/portofolio/cek (fixture, tanpa DB/kunci)", () => {
     // universe-kecil: suspensi terakhir 2024-11-01 = tanggal kejadian target (delisting) → masih aktif.
     expect(sril.suspensiAktif).toBe("2024-11-01");
     expect(sril.alasan.map((a: { kind: string }) => a.kind)).toContain("suspensi");
-    expect(sril.alarmBerbunyi.map((a: { name: string }) => a.name)).toContain("Saham mau pailit");
+    expect(sril.alarmBerbunyi.map((a: { name: string }) => a.name)).toContain("Waspada suspensi");
     expect(sril.kelasB.status).toBe("nonaktif");
     expect(bbca.status).toBe("hijau");
     const teks = json.penjelasan.find((p: { symbol: string }) => p.symbol === "SRIL").teks;
@@ -72,7 +72,7 @@ describe("POST /api/portofolio/cek (fixture, tanpa DB/kunci)", () => {
     };
     const json = await (await POST(req({ symbols: ["SRIL"], alarmIds: [lokal.id], alarms: [lokal], today: "2026-09-07" }))).json();
     const sril = json.saham[0];
-    expect(sril.alarmBerbunyi.map((a: { name: string }) => a.name)).not.toContain("Saham mau pailit");
+    expect(sril.alarmBerbunyi.map((a: { name: string }) => a.name)).not.toContain("Waspada suspensi");
     // Suspensi aktif tetap menjadi alasan (status merah) walau alarm bawaan dimatikan.
     expect(sril.status).toBe("merah");
   });

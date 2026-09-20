@@ -4,19 +4,22 @@
 // (Neon/Postgres via DATABASE_URL → PGlite lokal ./.pglite → fixture
 // universe-kecil.json). Nol panggilan API Sectors di jalur mana pun.
 //
-// Seperti scripts/backtest.ts: emiten kena TANPA target_event_date
-// (docs/universe-pull.md catatan 4: MENN, TGRA, WSKT) tidak punya kejadian
-// target untuk diukur lead-nya — mesin menolaknya — jadi dilewati di sini dan
-// dilaporkan di `dilewati` agar jumlahnya jujur di UI.
+// Emiten kena yang tanggal berhenti diperdagangkannya tidak diketahui dilewati
+// oleh `pilihUniverseUji` (engine/universe-uji.ts) dan dilaporkan di `dilewati`
+// agar jumlah di layar jujur.
+import type { Db } from "../db/client";
 import { getEventSource, type JenisSumber } from "../engine/sumber";
+import { pilihUniverseUji } from "../engine/universe-uji";
 import type { EventSource, UniverseEntry } from "../engine";
 
 export interface SumberTerpilih {
   source: EventSource;
   /** Universe yang bisa diuji (tanpa emiten kena yang tidak punya target). */
   universe: UniverseEntry[];
-  /** Simbol emiten kena yang dilewati karena tidak punya target_event_date. */
+  /** Simbol emiten kena yang dilewati karena tanggal berhentinya tidak diketahui. */
   dilewati: string[];
+  /** Koneksi Drizzle sumber ini; null untuk data contoh. */
+  db: Db | null;
   /** Keterangan aman untuk log/UI (tanpa kredensial). */
   keterangan: string;
   jenis: JenisSumber;
@@ -25,9 +28,8 @@ export interface SumberTerpilih {
 export async function pilihSumber(paksaFixture = false): Promise<SumberTerpilih> {
   const s = await getEventSource({ fixture: paksaFixture });
   const semua = await s.universe();
-  const tanpaTarget = semua.filter((u) => u.group !== "control" && !u.targetEventDate);
-  const universe = semua.filter((u) => !tanpaTarget.includes(u));
-  return { source: s.source, universe, dilewati: tanpaTarget.map((u) => u.symbol), keterangan: s.keterangan, jenis: s.jenis };
+  const { universe, dilewati } = await pilihUniverseUji(semua, s.source);
+  return { source: s.source, universe, dilewati, db: s.db, keterangan: s.keterangan, jenis: s.jenis };
 }
 
 /** true bila sumber adalah database (Neon/Postgres/PGlite) berisi data Sectors nyata. */

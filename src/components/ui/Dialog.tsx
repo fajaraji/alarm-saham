@@ -15,11 +15,12 @@ interface Props {
   children: ReactNode;
   testId?: string;
   /**
-   * Elemen yang menerima fokus lagi setelah dialog ditutup. Perlu bila dialog
-   * dibuka sesudah pekerjaan async: tombol pemicunya sempat `disabled`
-   * ("Menyimpan…"), dan browser memindahkan fokus dari tombol yang dinonaktifkan
-   * ke body, sehingga `document.activeElement` saat dialog dibuka bukan lagi
-   * tombol itu.
+   * Cadangan penerima fokus setelah dialog ditutup, dipakai HANYA bila saat
+   * dialog dibuka fokus ada di body. Itu terjadi bila dialog dibuka sesudah
+   * pekerjaan async: tombol pemicunya sempat `disabled` ("Menyimpan…"), dan
+   * browser memindahkan fokus dari tombol yang dinonaktifkan ke body. Bila
+   * dialog dibuka dari tombol yang masih memegang fokus (mis. "Lihat tautan"),
+   * fokus kembali ke tombol itu.
    */
   fokusKembali?: () => HTMLElement | null;
 }
@@ -68,14 +69,14 @@ export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = sebelumnya;
-      const tujuan = kembali.current?.() ?? pemicu;
+      const tujuan = pemicu ?? kembali.current?.() ?? null;
       if (tujuan?.isConnected) tujuan.focus();
     };
   }, []);
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(15,20,32,.55)] p-5"
+      className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) onTutup();
       }}
@@ -87,7 +88,7 @@ export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props
         aria-labelledby={idJudul}
         tabIndex={-1}
         data-testid={testId}
-        className="w-full max-w-[500px] rounded-2xl bg-surface p-6 text-ink shadow-panel outline-none"
+        className="my-auto w-full max-w-[500px] rounded-2xl bg-surface p-5 text-ink shadow-panel outline-none sm:p-6"
       >
         <h2 id={idJudul} className="m-0 mb-2 font-display text-lg font-bold tracking-tight">
           {judul}

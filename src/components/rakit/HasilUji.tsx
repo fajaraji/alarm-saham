@@ -1,9 +1,12 @@
 "use client";
-// Panel hasil uji (kanan atas): tiga angka + tiga baris kotak per kelompok
-// universe (dihapus dari bursa, pemantauan khusus, sehat) dengan tooltip per
-// emiten, dan label sumber data (Sectors nyata vs contoh).
+// Panel hasil uji (kanan atas). Urutan baca (tiket 21, DESIGN.md aturan 1 dan
+// 2): satu kalimat jawaban, saham yang tertangkap, satu baris sumber data, lalu
+// SATU lipatan berisi tiga angka ringkas dan grid semua saham per kelompok.
+// Tiga angka itu dulu tampil terbuka tepat di bawah kalimat yang menyebut
+// angka yang sama, jadi sekarang mereka tempat kedua yang terlipat.
 import type { Group } from "@/lib/engine/events";
 import type { BacktestResult, PerSymbolResult } from "@/lib/engine/score";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 import { labelBlok } from "@/lib/rakit/blok";
 import type { ResponBacktest } from "@/lib/rakit/api";
 
@@ -20,23 +23,27 @@ interface Props {
 }
 
 const URUTAN: Group[] = ["delisting", "watchlist", "control"];
-const ISTILAH_KELOMPOK: Record<Group, IdIstilah> = { delisting: "delisting", watchlist: "pemantauan_khusus", control: "kontrol_sehat" };
+const ISTILAH_KELOMPOK: Record<Group, IdIstilah> = { delisting: "delisting", watchlist: "berpotensi_delisting", control: "kontrol_sehat" };
 
 function angkaId(x: number | null, satuan = ""): string {
   if (x == null) return "–";
   return `${x.toLocaleString("id-ID", { maximumFractionDigits: 1 })}${satuan}`;
 }
 
+function tglAwam(t: string | null | undefined): string {
+  return t ? fmtTanggal(t) : "-";
+}
+
 function tooltipEmiten(r: PerSymbolResult): string {
   const alasan = r.reasons.map((x) => labelBlok(x.kind)).join(", ");
   if (r.group === "control") {
     return r.fired
-      ? `${r.symbol} · alarm palsu: berbunyi ${r.firstFireDate} (${alasan})`
+      ? `${r.symbol} · alarm palsu: berbunyi ${tglAwam(r.firstFireDate)} (${alasan})`
       : `${r.symbol} · bersih: alarm tidak pernah berbunyi`;
   }
-  if (!r.fired) return `${r.symbol} · terlewat: alarm diam sebelum ${r.targetEventDate}`;
+  if (!r.fired) return `${r.symbol} · terlewat: alarm diam sebelum ${tglAwam(r.targetEventDate)}`;
   const lead = r.leadMonths == null ? "" : ` · ${r.leadMonths} bln lebih awal${r.excludedFromLead ? " (tidak dihitung ke rata-rata)" : ""}`;
-  return `${r.symbol} · tertangkap: berbunyi ${r.firstFireDate}${lead} (${alasan})`;
+  return `${r.symbol} · tertangkap: berbunyi ${tglAwam(r.firstFireDate)}${lead} (${alasan})`;
 }
 
 // Warna sel: teks memakai token --ok-ink/--crit-ink (bukan `text-white`) karena
@@ -84,15 +91,15 @@ function BarisKelompok({ hasil, group }: { hasil: BacktestResult; group: Group }
 
 const FRASA_KELOMPOK: Record<Exclude<Group, "control">, string> = {
   delisting: "saham yang dihapus dari bursa",
-  watchlist: "saham di papan pemantauan khusus",
+  watchlist: "saham berpotensi delisting",
 };
 
 /**
- * Satu kalimat jawaban di atas angka-angka (tiket 21).
+ * Satu kalimat jawaban (tiket 21, DESIGN.md aturan 5).
  *
  * Angkanya SAMA dengan kotak skor di bawahnya, tidak dihitung ulang: kotak
  * "Tertangkap" memakai kelompok dihapus dari bursa, "Lebih awal" memakai
- * rata-rata SELURUH saham kena (dihapus + pemantauan khusus), "Alarm palsu"
+ * rata-rata SELURUH saham kena (dihapus + berpotensi delisting), "Alarm palsu"
  * memakai kontrol sehat. Karena itu kalimat ini menyebut kedua kelompok kena
  * lebih dulu, baru rata-ratanya. Menulis "6 dari 18, rata-rata 8,4 bulan lebih
  * awal" akan menyesatkan: 8,4 bukan rata-rata keenam saham itu.
@@ -102,10 +109,23 @@ function KalimatJawaban({ h }: { h: BacktestResult }) {
   const totalKena = kena.reduce((a, x) => a + x.total, 0);
   const totalTertangkap = kena.reduce((a, x) => a + x.hits, 0);
   const b = (x: string | number) => <b className="font-semibold text-ink">{x}</b>;
+  // Istilah dijelaskan lewat tooltip kamus, bukan kalimat penjelas (aturan 7).
+  const palsu =
+    h.controls > 0 ? (
+      h.falseAlarms === 0 ? (
+        <>, dan tidak salah bunyi pada satu pun dari {h.controls} saham sehat</>
+      ) : (
+        <>
+          , dan <Istilah id="alarm_palsu">salah bunyi</Istilah> pada {b(h.falseAlarms)} dari {h.controls} saham sehat
+        </>
+      )
+    ) : null;
   return (
     <p className="m-0 mb-3 text-[14px] leading-relaxed text-ink-2" data-testid="kalimat-hasil">
       {totalTertangkap === 0 ? (
-        <>Alarmmu tidak berbunyi lebih dulu pada satu pun dari {b(totalKena)} saham kena.</>
+        <>
+          Alarmmu tidak berbunyi lebih dulu pada satu pun dari {b(totalKena)} saham kena{palsu}.
+        </>
       ) : (
         <>
           Alarmmu berbunyi lebih dulu pada{" "}
@@ -115,20 +135,14 @@ function KalimatJawaban({ h }: { h: BacktestResult }) {
               {b(x.hits)} dari {x.total} {FRASA_KELOMPOK[x.g]}
             </span>
           ))}
-          .
-          {h.leadMonthsAvg != null ? <> Rata-rata {b(angkaId(h.leadMonthsAvg, " bulan"))} sebelum kejadiannya.</> : null}
+          {h.leadMonthsAvg != null ? (
+            <>
+              , rata-rata {b(angkaId(h.leadMonthsAvg, " bulan"))} <Istilah id="lebih_awal">lebih awal</Istilah>
+            </>
+          ) : null}
+          {palsu}.
         </>
       )}
-      {h.controls > 0 ? (
-        h.falseAlarms === 0 ? (
-          <> Tidak salah bunyi pada satu pun dari {h.controls} saham sehat.</>
-        ) : (
-          <>
-            {" "}
-            Salah bunyi pada {b(h.falseAlarms)} dari {h.controls} saham sehat.
-          </>
-        )
-      ) : null}
     </p>
   );
 }
@@ -167,76 +181,81 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
       <h3 id="judul-hasil" className="font-display text-[15px] font-bold">
         {TEKS.hasilJudul}
       </h3>
-      {h && sumber ? (
-        <p className="mb-2.5 text-xs text-ink-3">
-          Diuji ke {h.perSymbol.length} saham dengan{" "}
-          {/* `data-sumber` = penanda mesin untuk tes: teks "data contoh (bukan data
-              Sectors nyata)" memuat substring "data Sectors nyata", jadi assertion
-              teks saja tidak bisa membedakan kedua jalur. */}
-          <span
-            data-testid="label-sumber"
-            data-sumber={hasil?.sumber === "db" ? "db" : "fixture"}
-            className={`rounded-full px-2 py-0.5 font-semibold ${hasil?.sumber === "db" ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`}
-          >
-            {sumber}
-          </span>
-          , akhir bulan {h.scanStart} sampai {h.today}.
-          {hasil?.dilewati?.length ? (
-            <span data-testid="dilewati">
-              {" "}
-              {hasil.dilewati.length} saham dilewati ({hasil.dilewati.join(", ")}) karena tidak punya tanggal kejadian target.
-            </span>
-          ) : null}
-          {basi ? " Papan sudah berubah. Klik “Uji ke masa lalu” lagi." : ""}
-        </p>
-      ) : (
-        <p className="mb-2.5 text-xs text-ink-3">Diuji ke saham yang pernah dihapus dari bursa, yang dipantau khusus, dan yang sehat.</p>
-      )}
       {galat ? (
         <p role="alert" className="mb-2 rounded-lg border-l-[3px] border-crit bg-crit-soft px-3 py-2 text-[13px]">
           {galat}
         </p>
       ) : null}
+      {basi && h ? (
+        <p role="status" className="mb-2 text-[12.5px] font-semibold text-warn">
+          Papan sudah berubah. Klik “Uji ke masa lalu” lagi.
+        </p>
+      ) : null}
+      {!h ? (
+        <p className="mb-2.5 text-xs text-ink-3">
+          Diuji ke saham yang pernah dihapus dari bursa, yang dipantau khusus, dan yang sehat: berapa yang tertangkap, berapa
+          bulan <Istilah id="lebih_awal">lebih awal</Istilah>, dan berapa <Istilah id="alarm_palsu">alarm palsu</Istilah>.
+        </p>
+      ) : null}
 
-      <div className={basi ? "opacity-40 transition-opacity" : "transition-opacity"}>
-        {/* Urutan baca (tiket 21): jawaban dulu, lalu siapa yang tertangkap, lalu
-            angka ringkas, dan grid semua saham yang diuji terlipat di bawah. */}
-        {h ? <KalimatJawaban h={h} /> : null}
-        {h ? <DaftarTertangkap h={h} /> : null}
-        <div className="my-2.5 grid grid-cols-3 gap-2">
-          <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[11.5px] font-semibold text-ink-3">Tertangkap</div>
-            <div className="font-display text-2xl font-extrabold tabular-nums text-ok" data-testid="skor-tertangkap">
-              {h ? `${h.perGroup.delisting.hits}/${h.perGroup.delisting.total}` : <span className="font-sans text-[13px] font-semibold text-ink-3">belum diuji</span>}
-            </div>
-            <div className="text-[11px] text-ink-2">dari yang dihapus dari bursa</div>
-          </div>
-          <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[11.5px] font-semibold text-ink-3"><Istilah id="lebih_awal">Lebih awal</Istilah></div>
-            <div className="font-display text-2xl font-extrabold tabular-nums text-warn" data-testid="skor-lead">
-              {h ? angkaId(h.leadMonthsAvg, " bln") : <span className="font-sans text-[13px] font-semibold text-ink-3">belum diuji</span>}
-            </div>
-            <div className="text-[11px] text-ink-2">rata-rata sebelum kejadian</div>
-          </div>
-          <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-            <div className="text-[11.5px] font-semibold text-ink-3"><Istilah id="alarm_palsu">Alarm palsu</Istilah></div>
-            <div className="font-display text-2xl font-extrabold tabular-nums text-crit" data-testid="skor-palsu">
-              {h ? `${h.falseAlarms}/${h.controls}` : <span className="font-sans text-[13px] font-semibold text-ink-3">belum diuji</span>}
-            </div>
-            <div className="text-[11px] text-ink-2">dari <Istilah id="kontrol_sehat">saham sehat</Istilah></div>
-          </div>
-        </div>
-        {h ? (
+      {h && sumber ? (
+        <div className={basi ? "opacity-40 transition-opacity" : "transition-opacity"}>
+          <KalimatJawaban h={h} />
+          <DaftarTertangkap h={h} />
+          <p className="m-0 text-xs text-ink-3">
+            Diuji ke {h.perSymbol.length} saham dengan{" "}
+            {/* `data-sumber` = penanda mesin untuk tes: teks "data contoh (bukan data
+                Sectors nyata)" memuat substring "data Sectors nyata", jadi assertion
+                teks saja tidak bisa membedakan kedua jalur. */}
+            <span
+              data-testid="label-sumber"
+              data-sumber={hasil?.sumber === "db" ? "db" : "fixture"}
+              className={`rounded-md px-1.5 py-0.5 font-semibold ${hasil?.sumber === "db" ? "bg-ok-soft text-ok" : "bg-warn-soft text-warn"}`}
+            >
+              {sumber}
+            </span>
+            , akhir bulan {fmtTanggal(h.scanStart)} sampai {fmtTanggal(h.today)}.
+            {hasil?.dataPer ? <span data-testid="data-per"> Data ditarik {fmtTanggal(hasil.dataPer)}.</span> : null}
+            {hasil?.dilewati?.length ? (
+              <span data-testid="dilewati">
+                {" "}
+                {hasil.dilewati.length} saham dilewati ({hasil.dilewati.join(", ")}) karena tanggal berhentinya diperdagangkan tidak ada di data kami.
+              </span>
+            ) : null}
+          </p>
           <details className="mt-2" data-testid="rincian-kelompok">
             <summary className="cursor-pointer text-[12.5px] font-semibold text-accent">
-              Lihat semua {h.perSymbol.length} saham yang diuji, per kelompok
+              Lihat angka dan semua {h.perSymbol.length} saham yang diuji, per kelompok
             </summary>
+            <div className="my-2.5 grid grid-cols-3 gap-2">
+              <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
+                <div className="text-[11.5px] font-semibold text-ink-3">Tertangkap</div>
+                <div className="font-display text-2xl font-extrabold tabular-nums text-ok" data-testid="skor-tertangkap">
+                  {`${h.perGroup.delisting.hits}/${h.perGroup.delisting.total}`}
+                </div>
+                <div className="text-[11px] text-ink-2">dari yang dihapus dari bursa</div>
+              </div>
+              <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
+                <div className="text-[11.5px] font-semibold text-ink-3">Lebih awal</div>
+                <div className="font-display text-2xl font-extrabold tabular-nums text-warn" data-testid="skor-lead">
+                  {angkaId(h.leadMonthsAvg, " bln")}
+                </div>
+                <div className="text-[11px] text-ink-2">rata-rata sebelum kejadian</div>
+              </div>
+              <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
+                <div className="text-[11.5px] font-semibold text-ink-3">Alarm palsu</div>
+                <div className="font-display text-2xl font-extrabold tabular-nums text-crit" data-testid="skor-palsu">
+                  {`${h.falseAlarms}/${h.controls}`}
+                </div>
+                <div className="text-[11px] text-ink-2">dari saham sehat</div>
+              </div>
+            </div>
             {URUTAN.map((g) => (
               <BarisKelompok key={g} hasil={h} group={g} />
             ))}
           </details>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </section>
   );
 }

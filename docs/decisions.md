@@ -281,3 +281,45 @@ Yang menentukan keputusannya bukan biaya token, melainkan tampilan kegagalan: ga
 Konsekuensi yang harus diikuti tes: banner "Fitur AI belum aktif" tidak lagi muncul sendiri, karena ia adalah hasil 503 dari panggilan diagnosis. Enam tes bergantung pada perilaku lama — tiga di `tests/ui/rakit.test.tsx`, dua di `tests/e2e/aksesibilitas.spec.ts` (axe perlu memeriksa panel AI dalam keadaan terisi), satu di `tests/e2e/rakit.spec.ts` — semuanya kini menekan tombolnya lebih dulu, persis seperti pengguna. Ditambah satu tes regresi baru yang mengunci keputusan ini: *"uji ke masa lalu TIDAK memanggil diagnosis AI sampai tombolnya diklik"*, memeriksa langsung daftar panggilan fetch (`/api/backtest` 1 kali, `/api/agent/diagnosis` 0 kali sebelum klik).
 
 Gerbang sesudah perubahan: lint 0, typecheck 0, **683 tes unit** (62 berkas), build 0, e2e jalur database 53 lulus / 1 skip, e2e jalur data contoh 51 lulus / 3 skip.
+
+## Revisi tampilan yang disetujui pemilik, dan aturan kepadatan teks (2026-09-12 → 19)
+
+Dicatat supaya review berikutnya punya patokan. Sebelum ini, keputusan-keputusan berikut hanya hidup di pesan commit, sehingga code-review gelombang 1 tidak memeriksa apakah perubahan baru menambah beban baca.
+
+- **Antislop, 7 temuan** (2026-09-12, `71b4deb`, rincian di `anti-slop/audit-001-2026-09-12.md`): 87 em dash menjadi 0, huruf kapital bertracking lebar dibuang, langkah 1 beranda jadi satu titik masuk, angka di baris petunjuk dibuang, header ponsel 460 → 140px, eyebrow beranda dibuang, glif pisah di kotak skor menjadi "belum diuji".
+- **U1–U6, pangkas pengulangan teks** (2026-09-12, `eab9f7b`): petunjuk layar bisa dilipat; sub-judul yang mengulang petunjuk dibuang; kalimat yang menunjuk tombol tepat di atasnya dibuang; footer dipangkas (57 → 43 kata); daftar isi metodologi; kamus dua kolom. Terukur: kata di `<main>` /putar-ulang 135 → 87.
+- **Beranda** (2026-09-13 → 14, `c3f0743`, `b3ca87a`): dirancang ulang dengan taste-skill, lalu opsi B pilihan pemilik: kotak cari jadi hero, contoh TELE dipindah ke bagian kedua dengan penjelasan.
+- **Gelombang 1** (2026-09-19, tiket 18–27, PR #8): perbaikan dari feedback rekan tim.
+
+Pemilik kemudian menilai hasil gelombang 1 masih menambah teks di beberapa tempat, dan bahwa prinsip "jangan terlalu banyak teks" tidak tertulis di PLAN maupun DESIGN. Prinsip itu kini menjadi bagian **Kepadatan teks** di `DESIGN.md` (10 aturan), dan dipakai sebagai standar dalam code-review sejak 2026-09-19.
+
+## 2026-09-20 — Angka jujur: gerak harga bukan tanda, target = hari berhenti diperdagangkan (tiket 39)
+
+Audit hackathon menemukan dua kesalahan yang membuat klaim produk lebih besar dari yang didukung data. Keduanya diperbaiki, dan angkanya turun.
+
+**1. Suspensi gerak harga.** BEI menghentikan perdagangan sehari-dua untuk meredam lonjakan harga ("dalam rangka cooling down", "peningkatan harga kumulatif yang signifikan"). Di data kami itu **460 dari 583 baris suspensi** (272 dari 294 dalam 12 bulan terakhir), dan semuanya dulu memicu blok suspensi serta status merah di bawah alarm bernama "Saham mau pailit". Sekarang disaring di `suspensiMasalah()`, dan bila jedanya terjadi dalam 30 hari terakhir layar pasang menjelaskannya sebagai catatan, bukan tanda.
+
+**2. Kejadian target.** Dulu = tanggal catatan BEI (delisting) atau suspensi TERAKHIR ≤ 30 Jun 2026 (berpotensi delisting). Feed mengumumkan ulang suspensi yang masih berjalan ("Suspend more than 6 month", 56 baris), jadi klaim "lebih awal" dihitung ke pengumuman ulang, padahal pemegang saham sudah tidak bisa menjual sejak suspensi pertama. Sekarang target = **suspensi masalah paling awal** (`targetTerukur`), plus tabel `SUSPENSI_PUBLIK` untuk penghentian yang belum ada di feed kami (TELE 10 Jun 2020 per Ajaib/CNBC; BIMA 19 Nov 2025 per Indo Premier). Tabel itu hanya boleh memundurkan tanggal, tidak pernah membesarkan angka.
+
+**3. Yang tidak bisa diukur, dilewati.** ENVY, PTMR, TGUK tidak punya satu pun suspensi di feed, jadi ikut dilewati bersama MENN, TGRA, WSKT yang tanpa `target_event_date`. Pemilihannya satu pintu di `src/lib/engine/universe-uji.ts` (dipakai CLI, /api/backtest, dan tes snapshot).
+
+| | Sebelum | Sesudah |
+|---|---|---|
+| Tertangkap | 26/74 | **16/71** |
+| Lebih awal | rata-rata 9 bln, median 7 | median **2 bln**, rata-rata 7,56 |
+| Alarm palsu | 1/30 | 1/30 |
+| Dilewati | 3 | 6 |
+
+Sisa tangkapan hampir seluruhnya satu pola yang bisa dicek siapa pun: laporan tahunan tidak masuk 30 April, BEI menyuspensi akhir Juni (ZBRA, ALTO, SWAT, PMMP). Karena rata-rata ditarik naik tiga emiten yang berhenti melapor bertahun-tahun (FIMP 42, BIMA 33, DPNS 18), **median yang dipajang sebagai angka utama**, rata-rata jadi keterangan.
+
+Ikutannya: alarm bawaan berganti nama "Saham mau pailit" → **"Waspada suspensi"** (sebagian besar pemicunya telat lapor, bukan kepailitan); contoh beranda tidak lagi memakai TELE; data contoh `universe-kecil.json` ditambah ZBRA dengan suspensi dan daftar kuartal NYATA supaya mode contoh menunjukkan pola yang benar (1/5 tertangkap, 2 bulan lebih awal) alih-alih 0/4.
+
+## 2026-09-20 — Penyegaran data kelas A dan tanggalnya di layar (tiket 42)
+
+Data kelas A adalah snapshot `pull-universe` (tiket 07) yang berhenti 7 Sep 2026 dan tidak berubah sendiri. Dua akibatnya: saham yang disuspensi minggu ini tidak pernah muncul, dan mulai 28 Okt 2026 blok "laporan hilang" akan berbunyi palsu untuk emiten sehat yang laporan kuartal 2-nya belum kami tarik.
+
+- **Tanggal data terlihat.** `tanggalTarikData()` membaca panggilan API terakhir dari `api_ledger`, dan /putar-ulang, /rakit, serta /pasang menampilkannya. Tidak ada tanggal yang diketik tangan, dan jalur data contoh tetap kosong karena memang tidak punya buku kredit.
+- **Perintah `npm run segarkan`.** Feed suspensi ditarik dengan `end` = hari ini (cache 24 jam, bukan permanen) dan berhenti sesudah dua halaman tanpa baris baru. Daftar kuartal: baris cache permanen emiten dihapus lebih dulu, karena tanpa itu jawaban lama akan dikembalikan selamanya. Urutannya emiten paling basi lebih dulu, jadi `--maks` yang kecil tetap mengenai yang paling berisiko. Mode `--dry` mencetak rencana tanpa satu pun panggilan.
+- **Batas laju.** Sectors membalas HTTP 429 bila panggilan terlalu rapat; provider hanya mengulang 503, jadi skrip memberi jeda 1,5 detik antar emiten dan mengulang 429 dengan tunggu 5, 15, 45 detik. Run pertama berhenti di emiten ke-25 karena ini.
+- **Biaya sebenarnya, 20 Sep 2026:** 98 kredit (3 suspensi + 95 daftar kuartal; sisa menurut ledger produksi 431). Hasilnya 9 baris suspensi baru (data sebelumnya berhenti 4 Sep) dan 9 kuartal baru, termasuk BBRI, ANTM, dan ADRO yang diwanti-wanti audit sebagai bom waktu alarm palsu.
+- **Snapshot lokal tidak ikut disegarkan.** `docs/skor-nyata.json` dan `docs/kredit-ledger.json` tetap dihitung dari `./.pglite` 7 Sep, supaya keduanya bisa direproduksi persis oleh siapa pun tanpa kredit; keduanya memang berlabel tanggal. Selisihnya disebut terang-terangan di README dan halaman metodologi.

@@ -7,6 +7,8 @@ import { catatanHanyaSuspensi } from "../cakupan";
 import type { Db } from "../db/client";
 import { suspensions, symbols } from "../db/schema";
 import { hariIni, pastikanTanggal } from "../engine/dates";
+import { targetTerukur } from "../engine/evaluate";
+import { SUSPENSI_PUBLIK } from "../universe/daftar";
 import { fromDb, kosong, type EmitenEvents, type Group, type UniverseEntry } from "../engine/events";
 import type { SumberKejadian } from "../engine/sumber";
 import { turunkanKejadian, type Kejadian } from "./kejadian";
@@ -117,12 +119,9 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
     status = "lengkap";
   } else if (diUniverse) {
     status = "laporan_tidak_tersedia";
-    const diketahui404 = (EMITEN_DATES_404 as readonly string[]).includes(symbol);
-    catatan.push(
-      `Data laporan keuangan ${symbol} tidak tersedia di sumber: endpoint Sectors get_quarterly_financial_dates ${
-        diketahui404 ? "mengembalikan 404 saat penarikan tiket 07" : "tidak memberi satu pun kuartal"
-      }. Yang bisa ditampilkan hanya data suspensi dari feed BEI.`,
-    );
+    // Tanpa nama endpoint atau nomor tiket (DESIGN.md aturan 8): rinciannya ada
+    // di docs/universe-pull.md, bukan di layar pengguna.
+    catatan.push(`Laporan keuangan ${symbol} tidak tersedia di sumber, jadi yang tampil hanya data suspensi.`);
   } else if (adaData) {
     status = "hanya_suspensi";
     // Cakupan mengikuti sumber yang benar-benar dipakai (lihat src/lib/cakupan.ts):
@@ -131,11 +130,9 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
   } else {
     status = "tidak_ada";
   }
-  if (contoh && status !== "tidak_ada") {
-    catatan.push(
-      "Server ini belum terhubung ke database Sectors, jadi yang tampil adalah data CONTOH (fixture universe-kecil.json): tanggal suspensi dan daftar kuartal meniru data nyata, tetapi angka keuangan, rasio rights issue, dan filing bersifat ilustratif, bukan angka resmi.",
-    );
-  }
+  // Catatan "ini data contoh" tidak dibuat lagi: label sumber di atas rekaman,
+  // pembuka halaman, dan footer (yang menyebut angkanya ilustratif) sudah
+  // mengatakannya di layar yang sama (DESIGN.md aturan 1).
   // Lihat dokumentasi `catatan` dan `ekuitasTidakDinilai` di atas: catatan
   // filing tidak lagi dibuat, catatan ekuitas pindah ke samping lampu.
   const ekuitasTidakDinilai = status === "lengkap" && events.financials.length === 0;
@@ -145,7 +142,10 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
     status,
     companyName: baris?.companyName ?? null,
     group: baris?.group ?? null,
-    targetEventDate: baris?.targetEventDate ?? null,
+    // Tanggal yang sama dengan yang dipakai skor: suspensi pertama rangkaian (tiket 39).
+    targetEventDate: baris?.targetEventDate
+      ? targetTerukur(baris.targetEventDate, events, SUSPENSI_PUBLIK[symbol] ?? null)
+      : null,
     today,
     events,
     kejadian,

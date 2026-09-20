@@ -12,10 +12,18 @@ import { catatanTidakAdaData } from "../cakupan";
 import { CreditReserveError, NotFoundError, SectorsApiError, type DataProvider } from "../data/provider";
 import type { Broker, FreeFloatEntry } from "../data/types";
 import type { PenyimpanLedger } from "../data/ledger";
-import { hariIni, tambahBulan } from "../engine/dates";
-import { fires } from "../engine/evaluate";
+import { hariIni, tambahBulan, tambahHari } from "../engine/dates";
+import { fires, suspensiGerakHarga, suspensiMasalah } from "../engine/evaluate";
 import type { EmitenEvents, EventSource, UniverseEntry } from "../engine/events";
 import { LABEL_BLOK, type BlockKind, type Threshold } from "../engine/rules";
+import {
+  EMITEN_DELISTING,
+  EMITEN_PEMANTAUAN,
+  TANGGAL_ACUAN_PEMANTAUAN,
+  TANGGAL_EFEKTIF_DELISTING,
+  TANGGAL_SUMBER_DELISTING,
+} from "../universe/daftar";
+import { fmtTanggal } from "../putar-ulang/ringkas";
 import type { AlarmJaga } from "./bawaan";
 import {
   BLOK_B_KINDS,
@@ -31,7 +39,12 @@ import {
 } from "./blok-b";
 import { kalimatBlokB } from "./kalimat-b";
 
-export type StatusSaham = "hijau" | "kuning" | "merah";
+/**
+ * "abu" = belum bisa dinilai: saham tidak ada di data kami dan tidak ada tanda
+ * apa pun. Dulu kasus ini hijau "Aman menurut alarmmu", padahal tidak ada yang
+ * diperiksa (temuan audit 20 Sep, tiket 38).
+ */
+export type StatusSaham = "abu" | "hijau" | "kuning" | "merah";
 
 /** Endpoint Sectors di balik tiap blok kelas A (data sudah di DB kami). */
 export const SUMBER_BLOK_A: Record<BlockKind, string> = {
@@ -53,8 +66,11 @@ export function sumberBlokA(kind: BlockKind, contoh = false): string {
     : SUMBER_BLOK_A[kind];
 }
 
+/** Fakta resmi BEI tentang saham itu (daftar delisting / berpotensi delisting). */
+export const KIND_DAFTAR_BEI = "daftar_bei";
+
 export interface AlasanJaga {
-  kind: BlockKind | BlokBKind;
+  kind: BlockKind | BlokBKind | typeof KIND_DAFTAR_BEI;
   kelas: "A" | "B";
   label: string;
   threshold?: Threshold;
@@ -128,13 +144,24 @@ function adaData(e: EmitenEvents): boolean {
   );
 }
 
+/** Jeda gerak harga yang cukup baru untuk diingat pengguna, ditampilkan sebagai catatan saja. */
+const HARI_CATATAN_GERAK_HARGA = 30;
+
+/** Tanggal jeda gerak harga terbaru dalam 30 hari terakhir; null bila tidak ada. */
+export function jedaGerakHargaBaru(e: EmitenEvents, today: string): string | null {
+  const batas = tambahHari(today, -HARI_CATATAN_GERAK_HARGA);
+  const baru = e.suspensions.filter((x) => x.date <= today && x.date > batas && suspensiGerakHarga(x));
+  return baru.length ? baru[baru.length - 1].date : null;
+}
+
 /**
  * Suspensi yang masih aktif pada `today` menurut data kami (feed tidak memuat
  * tanggal pencabutan): (a) suspensi dalam 12 bulan terakhir, atau (b) emiten
  * delisting/watchlist yang suspensi terakhirnya >= tanggal kejadian target.
+ * Jeda karena gerak harga (cooling down) tidak dihitung (tiket 39).
  */
 export function suspensiAktif(e: EmitenEvents, today: string, u?: UniverseEntry): string | null {
-  const s = e.suspensions.filter((x) => x.date <= today);
+  const s = suspensiMasalah(e, today);
   if (s.length === 0) return null;
   const terakhir = s[s.length - 1].date;
   if (terakhir > tambahBulan(today, -12)) return terakhir;
@@ -144,11 +171,45 @@ export function suspensiAktif(e: EmitenEvents, today: string, u?: UniverseEntry)
   return null;
 }
 
-export function statusDari(jumlahBlok: number, suspensi: string | null): StatusSaham {
+export function statusDari(jumlahBlok: number, suspensi: string | null, adaDataEmiten = true): StatusSaham {
   if (suspensi) return "merah";
   if (jumlahBlok >= 2) return "merah";
   if (jumlahBlok === 1) return "kuning";
-  return "hijau";
+  return adaDataEmiten ? "hijau" : "abu";
+}
+
+/**
+ * Fakta resmi BEI tentang saham ini, bila ada, sebagai satu tanda (tiket 38).
+ * Feed suspensi kami tidak selalu lengkap: WSKT ada di daftar berpotensi
+ * delisting BEI (disuspensi lebih dari 6 bulan) tetapi tidak punya satu pun
+ * baris suspensi di data kami, sehingga dulu tampil "Aman menurut alarmmu".
+ * Pengumumannya sendiri adalah fakta bersumber, jadi ia dihitung sebagai tanda.
+ */
+export function alasanDaftarBei(symbol: string, today: string): AlasanJaga | null {
+  if (today >= TANGGAL_SUMBER_DELISTING && EMITEN_DELISTING.some((e) => e.symbol === symbol)) {
+    const sudah = today >= TANGGAL_EFEKTIF_DELISTING;
+    return {
+      kind: KIND_DAFTAR_BEI,
+      kelas: "A",
+      label: "Dihapus dari bursa (BEI)",
+      detail: `${sudah ? "dihapus dari bursa sejak" : "akan dihapus dari bursa efektif"} ${fmtTanggal(TANGGAL_EFEKTIF_DELISTING)}`,
+      tanggal: TANGGAL_EFEKTIF_DELISTING,
+      sumber: "Pengumuman BEI tentang penghapusan pencatatan 18 emiten",
+      alarm: [],
+    };
+  }
+  if (today >= TANGGAL_ACUAN_PEMANTAUAN && EMITEN_PEMANTAUAN.includes(symbol)) {
+    return {
+      kind: KIND_DAFTAR_BEI,
+      kelas: "A",
+      label: "Berpotensi delisting (BEI)",
+      detail: `diumumkan BEI berpotensi delisting karena sudah disuspensi lebih dari 6 bulan per ${fmtTanggal(TANGGAL_ACUAN_PEMANTAUAN)}`,
+      tanggal: TANGGAL_ACUAN_PEMANTAUAN,
+      sumber: "Pengumuman BEI Peng-S-00019/BEI.PLP/06-2026",
+      alarm: [],
+    };
+  }
+  return null;
 }
 
 interface CacheKelasB {
@@ -280,7 +341,9 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     } else if (suspensi) {
       kelasB = {
         status: "dilewati",
-        keterangan: `dilewati: saham ini sedang disuspensi sejak ${suspensi}, dan data broker saham yang disuspensi kosong padahal tetap memakai kredit`,
+        // Tanggalnya tidak diulang: kalimat suspensi di pesan yang sama sudah
+        // menyebutnya. Alasan kreditnya ada di halaman metodologi.
+        keterangan: "dilewati: saham ini disuspensi",
         blok: [],
       };
     } else {
@@ -310,6 +373,15 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
       }
     }
 
+    const resmi = alasanDaftarBei(symbol, today);
+    if (resmi) perKind.set(resmi.kind, resmi);
+
+    const jeda = suspensi ? null : jedaGerakHargaBaru(events, today);
+    if (jeda) {
+      catatan.push(
+        `Perdagangannya sempat dihentikan ${fmtTanggal(jeda)} untuk meredam lonjakan harga. Itu jeda rutin bursa, jadi tidak dihitung sebagai tanda.`,
+      );
+    }
     if (!adaData(events)) {
       // Cakupan mengikuti sumber yang benar-benar dipakai. Kalimat ini muncul di
       // panel pesan /pasang; sebelumnya ia menjanjikan universe nyata walau
@@ -319,7 +391,7 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     const alasan = [...perKind.values()];
     saham.push({
       symbol,
-      status: statusDari(alasan.length, suspensi),
+      status: statusDari(alasan.length, suspensi, adaData(events)),
       adaData: adaData(events),
       suspensiAktif: suspensi,
       alasan,

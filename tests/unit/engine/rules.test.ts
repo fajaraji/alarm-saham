@@ -6,7 +6,7 @@ import { BLOCK_KINDS, parseRule, ringkasAturan, RuleError, RuleSchema } from "..
 describe("skema aturan alarm", () => {
   it("aturan default valid dan ringkasannya terbaca", () => {
     const rule = parseRule(aturanDefault);
-    expect(rule.name).toBe("Saham mau pailit");
+    expect(rule.name).toBe("Waspada suspensi");
     expect(rule.combine).toBe("any");
     expect(rule.blocks).toHaveLength(3);
     expect(ringkasAturan(rule)).toBe(

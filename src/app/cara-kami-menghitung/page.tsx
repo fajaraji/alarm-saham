@@ -17,6 +17,7 @@ import type { Group } from "@/lib/engine/events";
 import { BLOCK_KINDS, LABEL_BLOK, type BlockKind } from "@/lib/engine/rules";
 import { LEAD_CUTOFF_DEFAULT, LOOKBACK_YEARS_DEFAULT, SCAN_START_DEFAULT, type PerSymbolResult } from "@/lib/engine/score";
 import { KREDIT_LEDGER } from "@/lib/metodologi/kredit";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 import {
   CONTOH_LABEL_BACKSTOP,
   JUMLAH_FRASA_BACKSTOP,
@@ -99,7 +100,7 @@ const DEFINISI_BLOK: Record<BlockKind, { awam: string; longgar: string; ketat: s
 
 const NAMA_KELOMPOK: Record<Group, string> = {
   delisting: "18 emiten dihapus dari bursa (efektif 10 Nov 2026)",
-  watchlist: "59 emiten Papan Pemantauan Khusus (per 30 Jun 2026)",
+  watchlist: "59 emiten berpotensi delisting (per 30 Jun 2026)",
   control: "30 kontrol sehat (LQ45 tanpa suspensi 2019–2026)",
 };
 
@@ -193,7 +194,7 @@ export default function HalamanCaraKamiMenghitung() {
       <p className="m-0 max-w-[70ch] text-ink-2">
         Halaman ini menjelaskan, dengan bahasa sehari-hari lalu bagian teknisnya, bagaimana Alarm Saham menguji sebuah alarm
         ke masa lalu dan apa saja yang belum bisa kami buktikan. Angka di halaman ini adalah <b>hasil uji yang kami simpan</b>{" "}
-        pada {SKOR_NYATA.today}, dari mesin uji yang dijalankan di atas database berisi data Sectors. Angka itu{" "}
+        pada {fmtTanggal(SKOR_NYATA.today)}, dari mesin uji yang dijalankan di atas database berisi data Sectors. Angka itu{" "}
         <b>bukan hasil hitung ulang dari sumber data yang sedang dipakai server ini</b>. Tidak ada angka yang dibuat-buat
         untuk demo, dan tes otomatis memastikan angka di halaman ini sama dengan keluaran mesin uji.
       </p>
@@ -232,13 +233,13 @@ export default function HalamanCaraKamiMenghitung() {
             testid="stat-tertangkap"
             label="Tertangkap"
             nilai={`${s.hits}/${s.total}`}
-            sub={`delisting ${s.delisting.hits}/${s.delisting.total} · pemantauan khusus ${s.watchlist.hits}/${s.watchlist.total}`}
+            sub={`delisting ${s.delisting.hits}/${s.delisting.total} · berpotensi delisting ${s.watchlist.hits}/${s.watchlist.total}`}
           />
           <Stat
             testid="stat-lebih-awal"
             label={<Istilah id="lebih_awal">Lebih awal</Istilah>}
-            nilai={`${angka(s.leadAvg)} bln`}
-            sub={`rata-rata; median ${angka(s.leadMedian)} bln (hanya kejadian ≥ ${SKOR_NYATA.leadCutoff})`}
+            nilai={`${angka(s.leadMedian)} bln`}
+            sub={`median; rata-rata ${angka(s.leadAvg)} bln, ditarik naik tiga emiten yang berhenti melapor bertahun-tahun (hanya kejadian ≥ ${SKOR_NYATA.leadCutoff})`}
           />
           <Stat
             testid="stat-alarm-palsu"
@@ -250,7 +251,7 @@ export default function HalamanCaraKamiMenghitung() {
             testid="stat-dilewati"
             label="Dilewati"
             nilai={String(s.skipped.length)}
-            sub={`${s.skipped.join(", ")}: tanpa tanggal kejadian target`}
+            sub={`${s.skipped.join(", ")}: tanggal berhenti diperdagangkan tidak diketahui`}
           />
         </div>
         <p className="mt-3 text-sm text-ink-2" data-testid="blok-pertama">
@@ -289,9 +290,10 @@ export default function HalamanCaraKamiMenghitung() {
           <div className="rounded-xl border border-line bg-surface p-4">
             <dt className="font-semibold">&ldquo;Tertangkap&rdquo; dan &ldquo;lebih awal&rdquo;</dt>
             <dd className="m-0 mt-1 text-sm text-ink-2">
-              Emiten kena dikatakan tertangkap bila alarm berbunyi <em>sebelum</em> tanggal kejadian targetnya. Lebih awal =
-              bulan utuh antara bunyi pertama dan kejadian target. Bunyi di bulan yang sama dengan kejadian tidak sempat
-              &ldquo;terdengar&rdquo; (mis. WIKA: suspensi jatuh tepat pada tanggal target).
+              Kejadian target = <strong>hari sahamnya berhenti diperdagangkan</strong>, yaitu suspensi paling awal yang bukan
+              jeda gerak harga. Sesudah hari itu pemegang saham tidak bisa menjual, jadi tanda yang datang belakangan tidak
+              menolong siapa pun. Tertangkap = alarm berbunyi sebelum hari itu; lebih awal = bulan utuh di antaranya. Bunyi
+              di bulan yang sama dengan kejadian tidak sempat &ldquo;terdengar&rdquo; (mis. WIKA).
             </dd>
           </div>
           <div className="rounded-xl border border-line bg-surface p-4">
@@ -327,7 +329,7 @@ export default function HalamanCaraKamiMenghitung() {
             return (
               <article key={k} className="rounded-xl border border-line bg-surface p-4" data-testid={`blok-${k}`}>
                 <h3 className="m-0 font-display text-base font-bold">
-                  <Istilah id={ISTILAH_BLOK[k]}>{LABEL_BLOK[k]}</Istilah> <code className="ml-1 font-mono text-[12px] font-normal text-ink-3">{k}</code>
+                  <Istilah id={ISTILAH_BLOK[k]}>{LABEL_BLOK[k]}</Istilah>
                 </h3>
                 <p className="m-0 mt-1 text-sm text-ink-2">{d.awam}</p>
                 <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[110px_1fr]">
@@ -360,14 +362,15 @@ export default function HalamanCaraKamiMenghitung() {
         <ul className="mt-2 grid gap-2 pl-5 text-sm text-ink-2">
           <li>
             <strong>18 emiten <Istilah id="delisting">dihapus dari bursa</Istilah></strong> (delisting efektif 10 November 2026; 7 karena pailit, 11 karena
-            suspensi lebih dari 50 bulan). Kejadian target = tanggal suspensi yang berujung delisting, diverifikasi ke feed
-            suspensi; 5 emiten (ENVY, LMAS, MTRA, SBAT, TELE) memakai tanggal catatan publik karena feed tidak memuat
-            suspensinya.
+            suspensi lebih dari 50 bulan). Kejadian target = suspensi paling awal di feed yang bukan jeda gerak harga. TELE
+            dan BIMA memakai tanggal pengumuman publik yang belum ada di feed kami (10 Juni 2020 dan 19 November 2025);
+            keduanya hanya memundurkan tanggal, tidak pernah membesarkan angka &ldquo;lebih awal&rdquo;.
           </li>
           <li>
-            <strong>59 emiten <Istilah id="pemantauan_khusus">Papan Pemantauan Khusus</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026). Kejadian
-            target = suspensi terakhir ≤ 30 Juni 2026 di feed. Tiga emiten (MENN, TGRA, WSKT) tidak punya kejadian di
-            feed dan dilewati, bukan dihitung sebagai tertangkap.
+            <strong>59 emiten <Istilah id="berpotensi_delisting">berpotensi delisting</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026): semuanya sudah disuspensi lebih dari 6 bulan. Kejadian
+            target = suspensi paling awal ≤ 30 Juni 2026 di feed, bukan pengumuman ulangnya. Enam emiten (ENVY, MENN, PTMR,
+            TGRA, TGUK, WSKT) dilewati karena tanggal berhenti diperdagangkannya tidak ada di data kami; mereka tidak
+            dihitung sebagai tertangkap maupun terlewat.
           </li>
           <li>
             <strong>30 <Istilah id="kontrol_sehat">kontrol sehat</Istilah></strong>: anggota LQ45 menurut screener Sectors yang tidak pernah muncul di feed
@@ -431,7 +434,7 @@ export default function HalamanCaraKamiMenghitung() {
           </li>
           <li>
             <strong>Survivorship dan pemilihan universe.</strong> Kelompok kena dipilih dari daftar resmi yang sudah diketahui
-            hasilnya (delisting, pemantauan khusus); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
+            hasilnya (delisting, berpotensi delisting); kontrol dipilih dari LQ45 hari ini. Skor ini menjawab &ldquo;apakah
             tanda resmi sudah ada sebelum kejadian&rdquo;, bukan &ldquo;berapa peluang emiten acak akan kena&rdquo;.
           </li>
           <li>
@@ -549,6 +552,12 @@ export default function HalamanCaraKamiMenghitung() {
           kredit terpakai; sisa {KREDIT_ANGGARAN - KREDIT_TOTAL_LEDGER}, dengan {KREDIT_CADANGAN_JURI} kredit cadangan untuk demo juri
           yang tidak disentuh kode (panggilan ditolak bila sisa di bawah cadangan). Uji ke masa lalu dan halaman ini tidak
           memanggil API sama sekali.
+        </p>
+        <p className="mt-2 max-w-[70ch] text-sm text-ink-2" data-testid="kredit-penyegaran">
+          Angka di atas adalah snapshot penarikan universe. Pada 20 September 2026 data di database produksi disegarkan
+          lagi dengan 98 kredit: 3 untuk feed suspensi sampai hari itu, 95 untuk daftar kuartal laporan (emiten yang
+          datanya paling lama tidak diperbarui lebih dulu). Biayanya dihitung dari buku kredit sebelum dan sesudah, bukan
+          ditaksir.
         </p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[640px] border-collapse text-[13px]">

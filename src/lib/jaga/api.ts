@@ -19,6 +19,8 @@ export const KODE_TANPA_DB = "DB_TIDAK_TERSEDIA";
 export interface ResponCek {
   today: string;
   sumber: string;
+  /** Tanggal data kelas A terakhir ditarik (YYYY-MM-DD); null pada data contoh. */
+  dataPer?: string | null;
   saham: HasilPortofolio["saham"];
   penjelasan: Penjelasan[];
   kreditTerpakai: number;
@@ -75,6 +77,11 @@ export function simpanPortofolioServer(token: string, body: { symbols: string[];
 
 export function daftarAlarmServer(token: string) {
   return minta<{ alarms: AlarmServer[] }>("/api/alarms", { method: "GET", token });
+}
+
+/** Hapus alarm milik token ini di server (tiket 33). 404 = alarm hanya ada di browser. */
+export function hapusAlarmServer(token: string, id: string) {
+  return minta<{ dihapus: string }>(`/api/alarms?id=${encodeURIComponent(id)}`, { method: "DELETE", token });
 }
 
 export function cekPortofolioServer(

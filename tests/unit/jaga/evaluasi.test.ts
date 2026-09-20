@@ -4,13 +4,14 @@
 import { describe, expect, it } from "vitest";
 
 import type { Broker, BrokerSummary, DailyBar, FreeFloatEntry } from "../../../src/lib/data/types";
-import { fromFixture } from "../../../src/lib/engine/events";
+import { fromFixture, kosong } from "../../../src/lib/engine/events";
 import universeKecil from "../../../src/lib/engine/fixtures/universe-kecil.json";
 import { ALARM_BAWAAN, ID_ALARM_JEBAKAN, ID_ALARM_PAILIT } from "../../../src/lib/jaga/bawaan";
-import { cekPortofolio, statusDari, suspensiAktif, type PenyediaKelasB } from "../../../src/lib/jaga/evaluasi";
+import { cekPortofolio, jedaGerakHargaBaru, statusDari, suspensiAktif, type PenyediaKelasB } from "../../../src/lib/jaga/evaluasi";
 
 const fx = fromFixture(universeKecil);
 const TODAY = "2026-09-07";
+const TODAY_GERAK = "2026-09-20";
 
 function penyedia(opsi: { ritel: boolean; jatuh: boolean; ff: number }): PenyediaKelasB & { dipanggil: string[] } {
   const dipanggil: string[] = [];
@@ -131,17 +132,71 @@ describe("cekPortofolio (fixture + penyedia kelas B buatan)", () => {
     const sril = hasil.saham[1];
     expect(sril.status).toBe("merah");
     expect(sril.alarmBerbunyi).toEqual([]);
-    expect(sril.alasan.map((a) => a.kind)).toEqual(["suspensi"]);
+    // SRIL ada di daftar delisting BEI: fakta resmi itu ikut sebagai tanda (tiket 38).
+    expect(sril.alasan.map((a) => a.kind)).toEqual(["suspensi", "daftar_bei"]);
   });
 
-  it("saham tanpa data → catatan jujur, hijau bila tidak ada blok", async () => {
+  it("saham tanpa data → catatan jujur, status 'belum bisa dinilai' (abu), bukan hijau (tiket 38)", async () => {
     const hasil = await cekPortofolio({
       symbols: ["ZZZZ"],
       alarms: [...ALARM_BAWAAN],
       opts: { kelasB: false, today: TODAY, source: fx, universe: fx.universe },
     });
     expect(hasil.saham[0].adaData).toBe(false);
-    expect(hasil.saham[0].status).toBe("hijau");
+    expect(hasil.saham[0].status).toBe("abu");
     expect(hasil.saham[0].catatan[0]).toMatch(/tidak ada di data kami/);
+  });
+});
+
+describe("fakta resmi BEI sebagai tanda (tiket 38)", () => {
+  it("saham di daftar berpotensi delisting tidak pernah tampil aman walau data kami kosong (kasus WSKT)", async () => {
+    const hasil = await cekPortofolio({
+      symbols: ["WSKT"],
+      alarms: [...ALARM_BAWAAN],
+      opts: { kelasB: false, today: TODAY, source: fx, universe: fx.universe },
+    });
+    const w = hasil.saham[0];
+    expect(w.status).toBe("kuning");
+    expect(w.alasan.map((a) => a.kind)).toEqual(["daftar_bei"]);
+    expect(w.alasan[0].detail).toContain("30 Jun 2026");
+    expect(w.alasan[0].sumber).toContain("Peng-S-00019/BEI.PLP/06-2026");
+  });
+
+  it("fakta resmi hanya berlaku sesudah tanggal pengumumannya (tanpa melihat masa depan)", async () => {
+    const hasil = await cekPortofolio({
+      symbols: ["WSKT"],
+      alarms: [...ALARM_BAWAAN],
+      opts: { kelasB: false, today: "2026-05-01", source: fx, universe: fx.universe },
+    });
+    expect(hasil.saham[0].alasan).toEqual([]);
+    expect(hasil.saham[0].status).toBe("abu");
+  });
+});
+
+describe("jeda lonjakan harga bukan tanda (tiket 39)", () => {
+  const COOLING = "Terjadinya peningkatan harga kumulatif yang signifikan pada saham ROCK.JK, dalam rangka cooling down sebagai bentuk perlindungan bagi investor";
+  const sumberGerak = {
+    name: "uji",
+    async events(symbol: string) {
+      return { ...kosong(symbol), suspensions: [{ date: "2026-09-01", reason: COOLING }] };
+    },
+  };
+
+  it("saham yang cuma kena jeda lonjakan harga tidak merah, dan catatannya menjelaskan kenapa", async () => {
+    const hasil = await cekPortofolio({
+      symbols: ["ROCK"],
+      alarms: [...ALARM_BAWAAN],
+      opts: { kelasB: false, today: TODAY_GERAK, source: sumberGerak, universe: [] },
+    });
+    const r = hasil.saham[0];
+    expect(r.suspensiAktif).toBeNull();
+    expect(r.status).toBe("hijau");
+    expect(r.alasan).toEqual([]);
+    expect(r.catatan.join(" ")).toMatch(/meredam lonjakan harga.*jeda rutin bursa/);
+  });
+
+  it("jeda yang sudah lewat sebulan tidak lagi diceritakan", async () => {
+    expect(jedaGerakHargaBaru({ ...kosong("ROCK"), suspensions: [{ date: "2026-09-01", reason: COOLING }] }, "2026-10-15")).toBeNull();
+    expect(jedaGerakHargaBaru({ ...kosong("ROCK"), suspensions: [{ date: "2026-09-01", reason: COOLING }] }, TODAY_GERAK)).toBe("2026-09-01");
   });
 });

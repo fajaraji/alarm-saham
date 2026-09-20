@@ -5,6 +5,7 @@ import type { Bot } from "grammy";
 
 import { dbJaga } from "../jaga/penyedia";
 import { buatBot } from "./bot";
+import { jawabanCek } from "./cek";
 import { secretWebhook, tokenBot } from "./status";
 
 export { botAktif, secretWebhook, tokenBot } from "./status";
@@ -26,7 +27,7 @@ export async function botRuntime(): Promise<RuntimeBot | AlasanTanpaBot> {
   if (!secret) return "SECRET_KOSONG";
   const g = globalThis as unknown as Record<string, { token: string; bot: Bot } | undefined>;
   if (!g[KUNCI] || g[KUNCI].token !== token) {
-    g[KUNCI] = { token, bot: buatBot(token, { db: await dbJaga() }) };
+    g[KUNCI] = { token, bot: buatBot(token, { db: await dbJaga(), cek: jawabanCek }) };
   }
   return { bot: g[KUNCI].bot, secret };
 }

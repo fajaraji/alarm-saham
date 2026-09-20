@@ -27,9 +27,11 @@ export const metadata: Metadata = {
  * kalimat itu hanya benar untuk emiten yang memang ada di daftar itu.
  *
  * SRIL tidak dipakai: seluruh barisan suspensinya bertanggal sama dengan hari
- * kejadiannya, jadi tanda yang tercatat SEBELUM kejadian benar-benar nol.
+ * kejadiannya, jadi tanda yang tercatat SEBELUM kejadian benar-benar nol. TELE
+ * dibuang (tiket 39): perdagangannya dihentikan 10 Juni 2020, jauh sebelum
+ * "tanda" ekuitas negatif 30 September 2023, dan feed kami tidak memuat itu.
  */
-const KANDIDAT_BUKTI = ["TELE", "LMAS", "SBAT", "DUCK"] as const;
+const KANDIDAT_BUKTI = ["LMAS", "SBAT", "DUCK"] as const;
 
 /** Berapa baris tanda yang ditampilkan. Lebih dari ini jadi tabel, bukan contoh. */
 const MAKS_BARIS = 4;

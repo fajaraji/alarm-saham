@@ -1,6 +1,8 @@
 // Universe uji Alarm Saham (docs/data-proof.md §4; catatan riset 7 Sep 2026).
 // - 18 emiten delisting efektif 10 Nov 2026 = studi kasus "putar ulang".
-// - 59 emiten Papan Pemantauan Khusus per 30 Jun 2026 (Peng-S-00019/BEI.PLP/06-2026)
+// - 59 emiten berpotensi delisting per 30 Jun 2026 (Peng-S-00019/BEI.PLP/06-2026):
+//   disuspensi lebih dari 6 bulan. Dulu keliru disebut "Papan Pemantauan Khusus",
+//   yang merupakan papan lain (tiket 40).
 //   = universe skor utama, bersama 30 kontrol sehat yang dipilih dari data (LQ45
 //   tanpa riwayat suspensi 2019–2026; lihat `pilihKontrol`).
 
@@ -21,6 +23,9 @@ export interface EmitenDelisting {
  * harus dibaca dari satu tempat, bukan diketik ulang di halaman.
  */
 export const TANGGAL_EFEKTIF_DELISTING = "2026-11-10";
+
+/** Tanggal sumber berita daftar delisting itu (Bareksa); pengumuman BEI paling lambat tanggal ini. */
+export const TANGGAL_SUMBER_DELISTING = "2026-04-13";
 
 export const EMITEN_DELISTING: readonly EmitenDelisting[] = [
   { symbol: "COWL", suspensiCatatan: "2020-07-13", alasan: "pailit" },
@@ -52,7 +57,7 @@ export const EMITEN_PEMANTAUAN: readonly string[] = [
   "TGRA", "TGUK", "TOPS", "TRAM", "TRIO", "WICO", "WIKA", "WSKT", "ZBRA",
 ];
 
-/** Tanggal acuan papan pemantauan khusus: suspensi TERAKHIR ≤ tanggal ini = kejadian target. */
+/** Tanggal acuan daftar berpotensi delisting: suspensi TERAKHIR ≤ tanggal ini = kejadian target. */
 export const TANGGAL_ACUAN_PEMANTAUAN = "2026-06-30";
 /** Jumlah kontrol sehat yang dipilih. */
 export const JUMLAH_KONTROL = 30;
@@ -67,4 +72,22 @@ export const DIKETAHUI_404: Readonly<Record<string, readonly string[]>> = {
   "broker-summary": ["BTEL"],
   "listing-performance": ["SRIL", "TELE", "WIKA", "INAF", "BTEL"],
   dates: ["COWL", "SUGI", "MABA", "SKYB", "KBRI", "NUSA", "RIMO", "SIMA"],
+};
+
+/**
+ * Penghentian perdagangan yang TIDAK ada di feed suspensi kami, dari pengumuman
+ * publik. Dipakai hanya untuk MEMUNDURKAN tanggal kejadian target, yaitu untuk
+ * memperkecil klaim "lebih awal", tidak pernah memperbesarnya (tiket 39).
+ *
+ * TELE: dihentikan 10 Juni 2020 sampai 6 Juni 2022, lalu dihentikan lagi 27 Juni
+ * 2022 (Ajaib "Masa Suspensi, Saham TELE Terancam Delisting Dari Bursa"; CNBC
+ * Indonesia 22 Juni 2021). Di feed kami barisnya cuma 27 Desember 2024, sehingga
+ * "tanda" ekuitas negatif 30 Sep 2023 dulu dihitung 14 bulan lebih awal padahal
+ * sahamnya sudah berhenti diperdagangkan tiga tahun sebelumnya.
+ * BIMA: dihentikan 19 November 2025 (Indo Premier, pengumuman BEI); feed kami
+ * baru memuat 9 April 2026.
+ */
+export const SUSPENSI_PUBLIK: Readonly<Record<string, string>> = {
+  TELE: "2020-06-10",
+  BIMA: "2025-11-19",
 };

@@ -84,9 +84,10 @@ for (const mode of MODE) {
     test("tooltip istilah terbuka: 0 pelanggaran serious/critical", async ({ page }) => {
       // Istilah yang dipakai di sini harus benar-benar ada di /rakit. Dulu
       // "laporan_hilang", yang hidup di baris petunjuk; sejak petunjuknya
-      // dipangkas (U1), istilah itu tinggal di palet dan kotak skor. Dipakai
-      // "lebih_awal" dari kotak skor, yang selalu dirender bahkan sebelum uji
-      // dijalankan, jadi tes ini tidak bergantung pada state apa pun.
+      // dipangkas (U1), istilah itu tinggal di palet. Dipakai "lebih_awal" dari
+      // kalimat pembuka panel hasil uji, yang dirender sebelum uji dijalankan
+      // (kotak skornya sendiri kini terlipat bersama grid), jadi tes ini tidak
+      // bergantung pada state apa pun.
       await buka(page, "/rakit");
       const pemicu = page.locator('[data-istilah="lebih_awal"]').first();
       await pemicu.click();

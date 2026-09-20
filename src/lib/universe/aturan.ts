@@ -62,7 +62,7 @@ export function pilihKontrol(
 
 // ---------- Tanggal kejadian target ----------
 
-/** Pemantauan khusus: suspensi TERAKHIR ≤ tanggal acuan; null bila tidak ada. */
+/** Berpotensi delisting: suspensi TERAKHIR ≤ tanggal acuan; null bila tidak ada. */
 export function targetPemantauan(tanggalSuspensi: readonly string[], acuan: string): string | null {
   let hasil: string | null = null;
   for (const t of tanggalSuspensi) if (t <= acuan && (hasil === null || t > hasil)) hasil = t;

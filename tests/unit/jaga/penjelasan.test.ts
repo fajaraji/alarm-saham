@@ -1,12 +1,13 @@
 // Pesan penjelasan: template deterministik (syarat + tanggal + sumber +
 // disclaimer) dan jalur AI tiruan yang disensor. Tidak boleh ada kata rekomendasi.
-import { describe, expect, it } from "vitest";
+import { MockLanguageModelV4 } from "ai/test";
+import { describe, expect, it, vi } from "vitest";
 
 import { sensorTeks } from "../../../src/lib/agent/guard";
 import { DISCLAIMER } from "../../../src/lib/agent/instructions";
 import type { HasilSaham } from "../../../src/lib/jaga/evaluasi";
-import { penjelasanSaham, templatePenjelasan } from "../../../src/lib/jaga/penjelasan";
-import { langkahTeks, modelTiruan } from "../agent/mock-model";
+import { JALUR_AI_PARALEL, penjelasanPortofolio, penjelasanSaham, templatePenjelasan } from "../../../src/lib/jaga/penjelasan";
+import { langkahProsa, langkahTeks, modelTiruan } from "../agent/mock-model";
 
 const MERAH: HasilSaham = {
   symbol: "SRIL",
@@ -22,7 +23,7 @@ const MERAH: HasilSaham = {
       detail: "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya (+5 kuartal lain)",
       tanggal: "2024-12-31",
       sumber: "Sectors /v2/company/get_quarterly_financial_dates/ (di DB kami)",
-      alarm: [{ id: "a1", name: "Saham mau pailit" }],
+      alarm: [{ id: "a1", name: "Waspada suspensi" }],
     },
     {
       kind: "insider_jual",
@@ -45,7 +46,7 @@ const MERAH: HasilSaham = {
     },
   ],
   alarmBerbunyi: [
-    { id: "a1", name: "Saham mau pailit" },
+    { id: "a1", name: "Waspada suspensi" },
     { id: "b1", name: "Jebakan IPO/harga" },
   ],
   kelasB: {
@@ -84,10 +85,12 @@ describe("templatePenjelasan", () => {
     const t = templatePenjelasan(MERAH, "2026-09-07");
     expect(t).toMatch(/^SRIL \(alarm berbunyi\): 3 syarat terpenuhi pada 7 Sep 2026/);
     expect(t).toContain("(1) Laporan keuangan hilang/berhenti");
-    expect(t).toContain("[tanggal 2024-12-31]");
-    expect(t).toContain("[sumber: Sectors /v2/company/get_quarterly_financial_dates/ (di DB kami)]");
+    // Tanggal dibaca orang dan sumber cukup namanya (DESIGN.md aturan 8 dan 9);
+    // endpoint lengkap hanya di rincian terlipat layar Pasang.
+    expect(t).toContain("(31 Des 2024, sumber: Sectors)");
+    expect(t).not.toMatch(/\/v2\/|\[tanggal|\d{4}-\d{2}-\d{2}\]/);
     expect(t).toContain("(3) Ritel dominan, institusi melepas");
-    expect(t).toContain("Alarm yang berbunyi: “Saham mau pailit”, “Jebakan IPO/harga”.");
+    expect(t).toContain("Alarm yang berbunyi: “Waspada suspensi”, “Jebakan IPO/harga”.");
     expect(t).toContain("masih tersuspensi menurut data kami (sejak 18 Mei 2021)");
     // Temuan data terkini yang tidak terpenuhi: kalimat biasa berikut angkanya,
     // tanpa nama mesin blok (tiket 26).
@@ -99,7 +102,7 @@ describe("templatePenjelasan", () => {
   it("hijau: tidak ada syarat, keterangan kelas B dilewati, disclaimer", () => {
     const t = templatePenjelasan(HIJAU, "2026-09-07");
     expect(t).toContain("BBCA (aman menurut alarmmu): tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
-    expect(t).toContain("Data terkini tidak ditarik untuk saham ini: kredit Sectors tim tinggal cadangan.");
+    expect(t).toContain("Data terkini tidak ditarik karena kredit Sectors tim tinggal cadangan.");
     expect(t.endsWith(DISCLAIMER)).toBe(true);
   });
 
@@ -187,5 +190,73 @@ describe("penjelasanSaham", () => {
     const q = await penjelasanSaham(HIJAU, { today: "2026-09-07", model: kosong });
     expect(q.olehAi).toBe(false);
     expect(q.teks).toBe(templatePenjelasan(HIJAU, "2026-09-07"));
+  });
+});
+
+// Tiket 37: "Cek sekarang" 504 untuk 6–8 saham karena rapian AI berurutan tanpa
+// batas waktu. Model tiruan di bawah menunggu sungguhan (dan menghormati
+// abortSignal seperti fetch), jadi yang diuji adalah waktu nyata, bukan tebakan.
+describe("penjelasanPortofolio: paralel dan berbatas waktu (tiket 37)", () => {
+  function portofolio(n: number) {
+    const saham = Array.from({ length: n }, (_, i) => ({ ...HIJAU, symbol: `S${String(i).padStart(3, "0")}` }));
+    return { today: "2026-09-07", sumber: "uji", saham, kreditTerpakai: 0, panggilanApi: 0, cacheHit: 0 };
+  }
+
+  function modelLambat(ms: number, pantau?: { aktif: number; puncak: number }) {
+    return new MockLanguageModelV4({
+      modelId: "mock-lambat",
+      doGenerate: async ({ abortSignal }) => {
+        if (pantau) pantau.puncak = Math.max(pantau.puncak, ++pantau.aktif);
+        try {
+          await new Promise<void>((selesai, gagal) => {
+            const t = setTimeout(selesai, ms);
+            abortSignal?.addEventListener("abort", () => {
+              clearTimeout(t);
+              gagal(abortSignal.reason);
+            });
+          });
+        } finally {
+          if (pantau) pantau.aktif--;
+        }
+        return langkahProsa("Saham ini aman menurut alarmmu pada 7 Sep 2026.");
+      },
+    });
+  }
+
+  it("8 saham dengan model yang tidak kunjung menjawab selesai cepat: semuanya kembali ke template", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const mulai = Date.now();
+    const p = await penjelasanPortofolio(portofolio(8), { model: modelLambat(60_000), batasMs: 50 });
+    expect(Date.now() - mulai).toBeLessThan(2_000);
+    expect(p).toHaveLength(8);
+    expect(p.every((x) => !x.olehAi)).toBe(true);
+    expect(p[0].teks).toBe(templatePenjelasan(portofolio(8).saham[0], "2026-09-07"));
+  });
+
+  it("paralel paling banyak JALUR_AI_PARALEL sekaligus, dan urutan hasil = urutan saham", async () => {
+    const pantau = { aktif: 0, puncak: 0 };
+    const mulai = Date.now();
+    const p = await penjelasanPortofolio(portofolio(8), { model: modelLambat(100, pantau), batasMs: 5_000 });
+    const lama = Date.now() - mulai;
+    expect(pantau.puncak).toBe(JALUR_AI_PARALEL);
+    // Berurutan butuh >= 800 ms; empat jalur sekitar 200 ms.
+    expect(lama).toBeLessThan(700);
+    expect(p.map((x) => x.symbol)).toEqual(portofolio(8).saham.map((s) => s.symbol));
+    expect(p.every((x) => x.olehAi)).toBe(true);
+  });
+
+  it("tanpa AI: template saja, tanpa menunggu apa pun", async () => {
+    const p = await penjelasanPortofolio(portofolio(3), { pakaiAi: false });
+    expect(p.map((x) => x.olehAi)).toEqual([false, false, false]);
+  });
+});
+
+describe("status 'belum bisa dinilai' (tiket 38)", () => {
+  it("saham tanpa data tidak disebut aman dan tidak diklaim 'tidak ada syarat terpenuhi'", () => {
+    const abu: HasilSaham = { ...HIJAU, symbol: "UNVR", status: "abu", adaData: false, kelasB: { status: "nonaktif", keterangan: "", blok: [] }, catatan: ["UNVR tidak ada di data kami; blok kelas A tidak bisa dinilai."] };
+    const t = templatePenjelasan(abu, "2026-09-07");
+    expect(t).toMatch(/^UNVR \(belum bisa dinilai\) pada 7 Sep 2026\./);
+    expect(t).toContain("tidak ada di data kami");
+    expect(t).not.toMatch(/aman|tidak ada satu pun syarat/i);
   });
 });

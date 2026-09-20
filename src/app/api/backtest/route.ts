@@ -1,5 +1,5 @@
 // POST /api/backtest  { rule, today?, pakaiFixture? }
-// → { sumber: 'db' | 'fixture', jenis, keterangan, dilewati, hasil: BacktestResult }
+// → { sumber: 'db' | 'fixture', jenis, keterangan, dilewati, dataPer, hasil: BacktestResult }
 //
 // Server memilih sumber lewat `getEventSource()` (satu pintu dengan CLI dan
 // /putar-ulang): Neon/Postgres bila DATABASE_URL ada → PGlite lokal ./.pglite
@@ -7,6 +7,7 @@
 import { z } from "zod";
 
 import { pilihSumber, sumberDariDb } from "@/lib/agent/sumber";
+import { tanggalTarikData } from "@/lib/data/tanggal-tarik";
 import { RuleError, RuleSchema, runBacktest } from "@/lib/engine";
 
 export const maxDuration = 60;
@@ -47,13 +48,15 @@ export async function POST(req: Request): Promise<Response> {
 
   try {
     const { rule, today, pakaiFixture } = parsed.data;
-    const { source, universe, dilewati, keterangan, jenis } = await pilihSumber(pakaiFixture);
+    const { source, universe, dilewati, db, keterangan, jenis } = await pilihSumber(pakaiFixture);
     if (universe.length === 0) {
       return galat(503, "UNIVERSE_KOSONG", `Universe kosong dari ${keterangan}; belum ada saham yang bisa diuji.`);
     }
     const hasil = await runBacktest(rule, universe, source, { today });
     const sumber: SumberBacktest = sumberDariDb(jenis) ? "db" : "fixture";
-    return Response.json({ sumber, jenis, keterangan, dilewati, hasil });
+    // Kapan data itu terakhir ditarik (tiket 42): snapshot, bukan aliran langsung.
+    const dataPer = await tanggalTarikData(db);
+    return Response.json({ sumber, jenis, keterangan, dilewati, dataPer, hasil });
   } catch (err) {
     if (err instanceof RuleError) return galat(400, "ATURAN_TIDAK_VALID", err.message, err.issues);
     console.error("[api/backtest]", err);

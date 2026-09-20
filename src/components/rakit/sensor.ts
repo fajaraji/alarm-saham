@@ -61,7 +61,7 @@
 // Sentuh sengaja dibiarkan memakai perilaku bawaan dnd-kit: klik kompatibilitas
 // sentuh datang jauh belakangan dan tidak membawa stempel `pointerup`-nya, jadi
 // aturan identitas di atas tidak berlaku di sana.
-import { PointerSensor } from "@dnd-kit/core";
+import { PointerSensor, TouchSensor } from "@dnd-kit/core";
 
 /** Satu entri pembukuan `Listeners` dnd-kit: `[nama, handler, opsi]`. */
 type EntriListener = [string, EventListener, (AddEventListenerOptions | boolean)?];
@@ -156,12 +156,39 @@ function pasangPenutupPeredam(sensor: object): void {
 }
 
 /**
- * PointerSensor yang tidak meninggalkan halaman "tuli" sesudah seret selesai.
- * Perilaku seretnya sendiri sama persis dengan bawaan dnd-kit.
+ * Atribut penanda kontrol di dalam blok yang bisa diseret (dropdown ambang,
+ * tombol buang, tiket 31). Seluruh badan blok memulai seret, kecuali kontrol
+ * bertanda ini: menekannya harus tetap membuka dropdown atau membuang blok.
+ * Keyboard tidak perlu penanda ini: KeyboardSensor dnd-kit sendiri menolak
+ * tombol yang ditekan di luar pegangan (activator node).
+ */
+export const ATRIBUT_TANPA_SERET = "data-tanpa-seret";
+
+function dariKontrol(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest(`[${ATRIBUT_TANPA_SERET}]`) !== null;
+}
+
+/**
+ * PointerSensor yang tidak meninggalkan halaman "tuli" sesudah seret selesai,
+ * dan tidak memulai seret dari kontrol bertanda `data-tanpa-seret`. Selain itu
+ * perilaku seretnya sama persis dengan bawaan dnd-kit.
  */
 export class SensorPenunjuk extends PointerSensor {
+  static activators = PointerSensor.activators.map((a) => ({
+    ...a,
+    handler: (...arg: Parameters<typeof a.handler>) => (dariKontrol(arg[0].nativeEvent.target) ? false : a.handler(...arg)),
+  }));
+
   constructor(props: ConstructorParameters<typeof PointerSensor>[0]) {
     super(props);
     pasangPenutupPeredam(this);
   }
+}
+
+/** TouchSensor bawaan, tetapi tidak memulai seret dari kontrol bertanda `data-tanpa-seret`. */
+export class SensorSentuh extends TouchSensor {
+  static activators = TouchSensor.activators.map((a) => ({
+    ...a,
+    handler: (...arg: Parameters<typeof a.handler>) => (dariKontrol(arg[0].nativeEvent.target) ? false : a.handler(...arg)),
+  }));
 }

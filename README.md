@@ -26,7 +26,7 @@ Our user is the retail investor who has been "stuck" in a stock: bought on a tip
 The facts behind this product, with sources:
 
 - **18 companies are being delisted from the Indonesia Stock Exchange effective 10 November 2026**, with a company buyback window from 11 May to 9 November 2026. Seven because of bankruptcy (COWL, MTRA, SRIL, TOYS, SBAT, TDPM, TELE) and eleven because they had been suspended for more than 50 months (LCGP, SUGI, MABA, LMAS, SKYB, ENVY, GOLL, PLAS, TRIL, UNIT, DUCK). Source: [Bareksa, 13 April 2026](https://www.bareksa.com/berita/saham/2026-04-13/18-emiten-akan-dihapus-dari-bursa-efek-indonesia-mulai-10-november-2026-ini-daftarnya).
-- **59 companies were on the IDX Special Monitoring Board as of 30 June 2026**, the board that flags companies in specific conditions, including those at risk of forced delisting. Source: [Kontan](https://amp.kontan.co.id/news/bei-umumkan-59-emiten-berpotensi-delisting-paksa-dua-bumn-masuk-daftar). This list is our main scoring universe.
+- **59 companies were on IDX's potential forced delisting list as of 30 June 2026** (announcement Peng-S-00019/BEI.PLP/06-2026): every one of them had been suspended for more than six months. Source: [Kontan](https://amp.kontan.co.id/news/bei-umumkan-59-emiten-berpotensi-delisting-paksa-dua-bumn-masuk-daftar). This list is our main scoring universe.
 - **45,866 investors held Sritex (SRIL) shares** when the stock was declared for delisting, including one holder with more than 1% worth Rp30.56 billion. Source: [hargasaham.id](https://www.hargasaham.id/delisting-sritex-investor-terdampak-lo-kheng-hong/).
 
 **Why it is urgent.** While the exchange suspends a stock, it cannot be sold on the exchange. A warning only helps before that point.
@@ -39,7 +39,7 @@ For many of these companies the official signs were already in the same data we 
 
 An alarm is set to watch the future. The question is whether the rule behind it is any good, and waiting for the future to find out means finding out after the money is already stuck.
 
-So before you use a rule, the app runs it over companies whose outcome is already known: companies that were delisted or put under special monitoring, and healthy companies that were not. The test answers three questions:
+So before you use a rule, the app runs it over companies whose outcome is already known: companies that were delisted or put on the potential delisting list, and healthy companies that were not. The test answers three questions:
 
 1. Before those companies collapsed, would this rule have warned?
 2. How many months earlier?
@@ -145,16 +145,18 @@ Each endpoint's data depth was proven on 6 companies first (`docs/data-proof.md`
 
 ### Backtest score (snapshot 2026-09-07)
 
-Default rule "Company about to fail" = suspended (loose) OR missing reports (loose) OR negative equity (loose); scanned at every month end from 2020-01-31 to 2026-09-07.
+Default rule "Suspension watch" = suspended (loose) OR missing reports (loose) OR negative equity (loose); scanned at every month end from 2020-01-31 to 2026-09-07.
+
+The target event is **the day the stock stopped trading**, that is the earliest suspension that is not a price-movement halt, because after that day a retail holder can no longer sell. Suspensions announced for a price surge ("cooling down", 460 of 583 rows in our data) are not treated as a sign of a troubled company.
 
 | Measure | Value |
 |---|---|
-| Caught (troubled companies) | **26/74**: delisted 6/18, special monitoring 20/56 |
-| Months early (events from 2021 onward) | mean **9 months**, median 7 |
+| Caught (troubled companies) | **16/71**: delisted 4/17, potential delisting 12/54 |
+| Months early (events from 2021 onward) | median **2 months**, mean 7.6 (three companies that stopped reporting for years drag the mean up: FIMP 42, BIMA 33, DPNS 18) |
 | False alarms | **1/30** healthy controls (AADI, a limitation of our definition, explained on the methodology page) |
-| Skipped | 3 monitored companies with no target event (MENN, TGRA, WSKT) |
+| Skipped | 6 troubled companies whose trading-halt date we do not know (ENVY, MENN, PTMR, TGRA, TGUK, WSKT) |
 
-Why 12 of the 18 delisted companies were missed, how controls were chosen, anti-lookahead, and every data limitation (reports since 2020 Q1, filings since 2024, 8 companies returning 404, one suspension row per symbol, free float without history, survivorship) are on **`/cara-kami-menghitung`**.
+Most catches are one repeatable pattern: the annual report is not filed by 30 April, and the exchange suspends the stock around the end of June (ZBRA, ALTO, SWAT, PMMP). Why the rest were missed, how controls were chosen, anti-lookahead, and every data limitation (reports since 2020 Q1, filings since 2024, 8 companies returning 404, one suspension row per symbol, free float without history, survivorship) are on **`/cara-kami-menghitung`**.
 
 ### Production (Vercel + Neon, 12 September 2026)
 
@@ -233,7 +235,7 @@ npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture --toda
 
 # Real universe of 107 companies (needs ./.pglite or DATABASE_URL)
 npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07
-#   → caught 26/74 (delisted 6/18, monitoring 20/56), mean 9 months, median 7, false alarms 1/30
+#   → caught 16/71 (delisted 4/17, potential delisting 12/54), median 2 months, mean 7.6, false alarms 1/30
 
 # The committed snapshot (docs/skor-nyata.json) is produced by
 npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07 --json
@@ -293,7 +295,7 @@ Set **one** of these in `.env.local`:
 
 ## Competition rules and compliance
 
-- **Sectors data is the core.** Without it there is no backtest and no portfolio check. Every call is recorded in the credit ledger: **467** of 1,000 credits used (395 universe pull + 68 data proof + 4 real class B test), **533** remaining, with 250 held in reserve that the code will not spend. These numbers are not typed by hand: `npm run kredit:snapshot -- --pglite` reads them from `api_ledger` into `docs/kredit-ledger.json`, and the methodology page, this README, and `tests/unit/docs/kredit-ledger.test.ts` all derive from that file. Running the app and its backtests costs zero credits.
+- **Sectors data is the core.** Without it there is no backtest and no portfolio check. Every call is recorded in the credit ledger: **467** of 1,000 credits used (395 universe pull + 68 data proof + 4 real class B test), **533** remaining, with 250 held in reserve that the code will not spend. These numbers are not typed by hand: `npm run kredit:snapshot -- --pglite` reads them from `api_ledger` into `docs/kredit-ledger.json`, and the methodology page, this README, and `tests/unit/docs/kredit-ledger.test.ts` all derive from that file. Running the app and its backtests costs zero credits. A refresh on 20 September 2026 spent 98 more credits against the production database (3 for the suspension feed up to that day, 95 for quarterly report dates, stalest companies first) through `npm run segarkan`, which prints the ledger before and after so the cost is measured rather than estimated.
 - **Custom agent logic:** a tool-use loop plus structured output over our own backtest engine, not a wrapped prompt.
 - **No order execution.** There is no buy or sell action anywhere in the app, and no code path that can place an order.
 - **Not investment advice.** A disclaimer sits in the footer of every screen and in the agent's system prompt. Real companies are mentioned only with official facts and source links. When the server runs on sample data, every screen says so, and no event is attributed to Sectors.

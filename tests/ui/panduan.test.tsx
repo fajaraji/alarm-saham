@@ -151,7 +151,7 @@ describe("Kamus: cakupan istilah", () => {
     "alarm_palsu",
     "lebih_awal",
     "kontrol_sehat",
-    "pemantauan_khusus",
+    "berpotensi_delisting",
   ];
 
   it("setiap istilah wajib (tiket 13) punya definisi, perumpamaan, dan tautan halaman", () => {
@@ -302,7 +302,7 @@ describe("Header, petunjuk, dan footer", () => {
     expect(dialog).toHaveAttribute("data-sumber", "db");
     expect(dialog).toHaveTextContent("fakta dari data resmi");
     expect(dialog).toHaveTextContent("seluruh universe uji");
-    expect(dialog).toHaveTextContent("18 saham yang dihapus dari bursa, 59 di pemantauan khusus, 30 yang sehat");
+    expect(dialog).toHaveTextContent("18 saham yang dihapus dari bursa, 59 yang berpotensi delisting, 30 yang sehat");
   });
 });
 

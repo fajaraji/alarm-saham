@@ -18,14 +18,18 @@ export const TEKS = {
   belumAdaSaham: "Belum ada saham. Ketik kode 4 huruf di atas, mis. BBCA atau SRIL.",
   belumDicek: "Belum dicek. Klik “Cek sekarang”.",
   alarmJudul: "Alarm aktif",
-  alarmSub: "Bawaan + buatanmu dari layar Rakit.",
-  kelasBLabel: "Sertakan data terkini (memakai kredit Sectors)",
-  kelasBSub: "Broker 14 hari, harga 90 hari: 1 kredit per saham per endpoint, di-cache 24 jam. Saham tersuspensi dilewati otomatis.",
+  hapusJudul: (nama: string) => `Hapus alarm “${nama}”?`,
+  hapusTeks: "Alarm ini hilang dari portofolio dan dari tautan rahasiamu, dan tidak bisa dikembalikan.",
+  hapusYa: "Hapus alarm",
+  hapusBatal: "Batal",
+  hapusSelesai: (nama: string) => `Alarm “${nama}” dihapus.`,
+  hapusGagal: (pesan: string) => `Alarm belum terhapus: ${pesan}`,
+  kelasBLabel: "Sertakan data terkini: pembeli 14 hari dan harga 90 hari",
+  kelasBSub: "Memakai 2 kredit Sectors per saham; hasilnya disimpan 24 jam.",
+  kelasBServer: "Data terkini belum bisa ditarik di server ini.",
   pesanJudul: "Pesan penjelasan",
-  pesanSub: "Untuk setiap saham: syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
   kotakJudul: "Kotak masuk",
-  kotakSub: "Bendera baru sejak cek sebelumnya. Tersimpan di browser ini.",
-  kotakKosong: "Belum ada bendera. Setelah cek, saham yang memburuk atau alarm yang baru berbunyi muncul di sini.",
+  kotakKosong: "Belum ada bendera.",
   sumberDb: "data Sectors nyata (DB)",
   sumberFixture: "data contoh (bukan data Sectors nyata)",
   tidakAdaData: "tidak ada data",
@@ -44,24 +48,33 @@ export const TEKS_TAUTAN = {
   tidakSah: "Tautan ini tidak memuat kunci portofolio yang utuh, jadi tidak dipakai. Coba salin ulang tautannya dari awal sampai akhir.",
   gagalSimpan: "Browser ini tidak mengizinkan penyimpanan, jadi kunci dari tautan tidak bisa dipakai.",
   batal: "Tautan tidak dipakai. Portofolio di browser ini tetap yang tadi.",
+  batalBaru: "Tautan tidak dipakai. Kamu mulai dengan portofolio sendiri.",
   gagalMuat: (pesan: string) => `Portofolio dari tautan belum bisa dimuat (${pesan}). Muat ulang halaman untuk mencoba lagi.`,
   konfirmasiJudul: "Buka portofolio dari tautan?",
   konfirmasiTeks:
     "Browser ini sudah memegang portofolio lain. Kalau diganti, portofolio yang sekarang hanya bisa dibuka lagi lewat tautannya sendiri.",
   tombolGanti: "Ganti ke portofolio dari tautan",
   tombolBatal: "Batal, tetap yang sekarang",
+  // Browser yang belum punya portofolio juga ditanya (temuan security review
+  // 2026-09-19): tautan orang lain yang dipakai diam-diam membuat pengirimnya
+  // ikut melihat dan mengubah semua yang kamu tambahkan sesudahnya.
+  konfirmasiTeksBaru: "Siapa pun yang memegang tautan ini bisa melihat dan mengubah portofolionya. Buka hanya tautan milikmu sendiri.",
+  tombolBuka: "Buka portofolio ini",
+  tombolBatalBaru: "Batal, mulai portofolio sendiri",
 } as const;
 
 // "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya
 // melaporkan apakah alarm yang KAMU rakit berbunyi. Sama dengan kalimat di
 // src/lib/jaga/penjelasan.ts.
 export const LABEL_STATUS: Record<StatusSaham, string> = {
+  abu: "Belum bisa dinilai",
   hijau: "Aman menurut alarmmu",
   kuning: "1 tanda",
   merah: "Alarm berbunyi",
 };
 
 export const KELAS_STATUS: Record<StatusSaham, string> = {
+  abu: "bg-surface-2 text-ink-2 border-line",
   hijau: "bg-ok-soft text-ok border-ok/30",
   kuning: "bg-warn-soft text-warn border-warn/30",
   merah: "bg-crit-soft text-crit border-crit/30",

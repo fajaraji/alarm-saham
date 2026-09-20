@@ -22,8 +22,10 @@ export interface ResponBacktest {
   /** Jenis sumber persis dari server (neon | postgres | pglite | fixture). */
   jenis?: "neon" | "postgres" | "pglite" | "fixture";
   keterangan: string;
-  /** Emiten kena yang dilewati karena tidak punya tanggal kejadian target (mis. MENN, TGRA, WSKT). */
+  /** Emiten kena yang dilewati karena tanggal berhentinya diperdagangkan tidak diketahui. */
   dilewati?: string[];
+  /** Tanggal data kelas A terakhir ditarik (YYYY-MM-DD); null pada data contoh. */
+  dataPer?: string | null;
   hasil: BacktestResult;
 }
 

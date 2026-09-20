@@ -1,4 +1,9 @@
-// Bot Telegram (grammY 1.46) — hanya dua perintah:
+// Bot Telegram (grammY 1.46) — tiga perintah:
+//   /cek <KODE>               → jawaban 30 detik untuk satu saham, nol kredit
+//                               Sectors (hanya kelas A yang sudah ada di
+//                               database kami). Tidak perlu punya portofolio:
+//                               inilah pintu masuk bagi orang yang baru dengar
+//                               satu kode dari grup (tiket 43).
 //   /mulai <kode-portofolio>  → tautkan chat ini ke portofolio (kode = id
 //                               portofolio yang tampil di kotak masuk /pasang)
 //   /berhenti                 → lepas tautan
@@ -18,11 +23,17 @@ export interface OpsiBot {
   botInfo?: UserFromGetMe;
   /** Fetch suntikan (tes: tiruan api.telegram.org). */
   fetch?: typeof fetch;
+  /**
+   * Penjawab /cek. Disuntikkan agar bot tidak menarik mesin evaluasi (dan
+   * database) ke dalam tesnya; runtime memasang `jawabanCek` yang sungguhan.
+   */
+  cek?: (kode: string) => Promise<string>;
 }
 
 export const TEKS_BOT = {
   bantuan:
     "Halo! Ini bot Alarm Saham.\n\n" +
+    "• /cek <KODE>: cek satu saham sekarang, mis. /cek SRIL.\n" +
     "• /mulai <kode-portofolio>: kirim bendera baru portofoliomu ke chat ini setiap pagi (±06:30 WIB).\n" +
     "• /berhenti: hentikan pengiriman.\n\n" +
     "Kode portofolio ada di bagian “Kotak masuk” halaman /pasang.",
@@ -33,6 +44,8 @@ export const TEKS_BOT = {
     `Siap. Chat ini tertaut ke portofolio dengan ${n} saham. Setiap pagi (±06:30 WIB) kami kirim hanya bendera BARU, bukan pengulangan tiap hari. Ketik /berhenti untuk berhenti.\n\n${DISCLAIMER}`,
   dilepas: "Tautan dilepas. Chat ini tidak lagi menerima pesan pagi. Ketik /mulai <kode> untuk menautkan lagi.",
   belumTertaut: "Chat ini belum tertaut ke portofolio mana pun.",
+  cekTidakAda: "Perintah /cek belum aktif di server ini.",
+  cekGagal: "Maaf, pengecekan gagal sesaat. Coba lagi sebentar lagi.",
 } as const;
 
 export function buatBot(token: string, opsi: OpsiBot): Bot {
@@ -53,6 +66,15 @@ export function buatBot(token: string, opsi: OpsiBot): Bot {
     return ctx.reply(TEKS_BOT.tertaut(p.symbols.length));
   };
 
+  bot.command("cek", async (ctx) => {
+    if (!opsi.cek) return ctx.reply(TEKS_BOT.cekTidakAda);
+    try {
+      return await ctx.reply(await opsi.cek(String(ctx.match ?? "")));
+    } catch (err) {
+      console.error("[telegram] /cek gagal:", err);
+      return ctx.reply(TEKS_BOT.cekGagal);
+    }
+  });
   bot.command("mulai", mulai);
   // /start = perintah bawaan Telegram saat pengguna membuka bot; payload deep-link ikut jadi kode.
   bot.command("start", async (ctx) => (String(ctx.match ?? "").trim() ? mulai(ctx) : ctx.reply(TEKS_BOT.bantuan)));

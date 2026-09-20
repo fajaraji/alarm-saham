@@ -21,7 +21,7 @@ import { penjelasanPortofolio, type Penjelasan } from "./penjelasan";
 import type { BenderaBaru, KirimanHarian, NamaPengirim, Pengirim } from "./pengirim";
 import { runTerakhirJaga, simpanRunJaga, type RingkasanJaga } from "./portofolio";
 
-const URUTAN: Record<StatusSaham, number> = { hijau: 0, kuning: 1, merah: 2 };
+const URUTAN: Record<StatusSaham, number> = { abu: 0, hijau: 0, kuning: 1, merah: 2 };
 
 /** Tanggal WIB (UTC+7) saat ini — cron 23:30 UTC = 06:30 WIB hari berikutnya. */
 export function tanggalWib(sekarang: Date = new Date()): string {
@@ -40,7 +40,7 @@ export function benderaBaru(sebelum: RingkasanJaga[] | null, hasil: HasilPortofo
     const l = lama.get(s.symbol);
     const alarmLama = new Set(l?.alarm ?? []);
     const alarmBaru = s.alarmBerbunyi.filter((a) => !alarmLama.has(a.name));
-    const memburuk = l ? URUTAN[s.status] > URUTAN[l.status] : s.status !== "hijau";
+    const memburuk = l ? URUTAN[s.status] > URUTAN[l.status] : URUTAN[s.status] > 0;
     if (!memburuk && alarmBaru.length === 0) continue;
     const judul = alarmBaru.length
       ? `${s.symbol}: alarm ${alarmBaru.map((a) => `“${a.name}”`).join(", ")} berbunyi`

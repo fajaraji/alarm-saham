@@ -14,6 +14,8 @@ import { BLOCK_KINDS } from "../../../src/lib/engine/rules";
 import { parseRule } from "../../../src/lib/engine/rules";
 import { runBacktest } from "../../../src/lib/engine/score";
 import { getEventSource, type SumberKejadian } from "../../../src/lib/engine/sumber";
+import { pilihUniverseUji } from "../../../src/lib/engine/universe-uji";
+import { salinPglite, type SalinanPglite } from "../pglite-salinan";
 import { ringkasSkor, SKOR_NYATA } from "../../../src/lib/metodologi/skor";
 
 const DIR_PGLITE = path.resolve(process.cwd(), ".pglite");
@@ -55,27 +57,30 @@ describe("docs/skor-nyata.json: bentuk snapshot", () => {
 
 describe.skipIf(!adaPglite)("docs/skor-nyata.json: hitung ulang dari PGlite ./.pglite", () => {
   let sumber: SumberKejadian;
+  let salinan: SalinanPglite;
   const urlAsli = process.env.DATABASE_URL;
 
   beforeAll(async () => {
     // Paksa jalur PGlite lokal (bukan Neon) agar snapshot dibandingkan dengan sumber yang sama.
+    // Yang dibuka salinannya, bukan ./.pglite sendiri: lihat tests/unit/pglite-salinan.ts.
     delete process.env.DATABASE_URL;
-    sumber = await getEventSource({ pglite: true });
+    salinan = salinPglite();
+    sumber = await getEventSource({ pglite: salinan.dir });
   }, 120_000);
 
   afterAll(async () => {
     if (urlAsli !== undefined) process.env.DATABASE_URL = urlAsli;
     await sumber?.tutup();
+    salinan?.hapus();
   });
 
   it("angka ringkasan (hits, per group, falseAlarms, leadAvg/median, dilewati) sama dengan snapshot", async () => {
     expect(sumber.jenis).toBe("pglite");
     const semua = await sumber.universe();
-    const tanpaTarget = semua.filter((u) => u.group !== "control" && !u.targetEventDate);
-    const universe = semua.filter((u) => !tanpaTarget.includes(u));
+    const { universe, dilewati } = await pilihUniverseUji(semua, sumber.source);
     const hasil = await runBacktest(parseRule(aturanDefault), universe, sumber.source, { today: SKOR_NYATA.today });
 
-    const ulang = ringkasSkor({ ...hasil, skippedNoTarget: tanpaTarget.map((u) => u.symbol) });
+    const ulang = ringkasSkor({ ...hasil, skippedNoTarget: dilewati });
     expect(ulang).toEqual(ringkasSkor(SKOR_NYATA));
 
     // Rincian per emiten juga harus identik (bukti reproduksi penuh, bukan hanya angka ringkasan).

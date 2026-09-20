@@ -18,7 +18,7 @@ export function fmtTanggal(d: string): string {
 
 export const LABEL_GROUP: Record<Group, string> = {
   delisting: "dihapus dari bursa (delisting efektif 10 Nov 2026)",
-  watchlist: "papan pemantauan khusus",
+  watchlist: "berpotensi delisting (disuspensi lebih dari 6 bulan)",
   control: "kontrol sehat (anggota LQ45 tanpa suspensi 2019–2026)",
 };
 
@@ -56,15 +56,15 @@ export function pelajaran(k: KonteksPelajaran): string[] {
       const bulan = selisihBulan(pertama.date, target);
       if (pertama.date < target) {
         baris.push(
-          `Itu ${bulan} bulan sebelum ${fmtTanggal(target)}, tanggal kejadian target yang kami catat${k.group ? ` (kelompok: ${LABEL_GROUP[k.group]})` : ""}.`,
+          `Itu ${bulan} bulan sebelum ${fmtTanggal(target)}, hari sahamnya berhenti diperdagangkan${k.group ? ` (kelompok: ${LABEL_GROUP[k.group]})` : ""}.`,
         );
       } else if (pertama.date === target) {
         baris.push(
-          `Tanggal itu sama dengan tanggal kejadian target yang kami catat (${fmtTanggal(target)}); di data ini tidak ada tanda yang lebih awal.`,
+          `Tanggal itu sama dengan hari sahamnya berhenti diperdagangkan (${fmtTanggal(target)}); di data ini tidak ada tanda yang lebih awal.`,
         );
       } else {
         baris.push(
-          `Tanggal kejadian target yang kami catat adalah ${fmtTanggal(target)}, ${-bulan} bulan lebih awal; di data ini tidak ada tanda sebelum tanggal itu.`,
+          `Sahamnya sudah berhenti diperdagangkan ${fmtTanggal(target)}, ${-bulan} bulan lebih dulu; di data ini tidak ada tanda sebelum tanggal itu.`,
         );
       }
     }

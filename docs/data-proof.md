@@ -208,6 +208,8 @@ _Ditulis 7 Sep 2026 (tiket 10). Perintah: `npm run backtest -- src/lib/engine/fi
 
 Blok yang berbunyi pertama kali pada 26 emiten tertangkap: `laporan_hilang` 17, `suspensi` 9, `ekuitas_negatif` 1 (TELE, ekuitas negatif sejak 2023-09-30, 20 bulan sebelum 2025-06-06).
 
+> **Angka di atas sudah usang sejak 20 Sep 2026 (tiket 39).** Dua kesalahan ukur ditemukan audit dan diperbaiki: (1) suspensi karena gerak harga ("cooling down", 460 dari 583 baris) dihitung sebagai tanda perusahaan bermasalah; (2) kejadian target memakai pengumuman suspensi yang LEBIH AKHIR, padahal sahamnya sudah berhenti diperdagangkan jauh sebelumnya (TELE dihentikan 10 Jun 2020, LMAS 1 Agu 2022). Sesudah diperbaiki: **16/71 tertangkap, median 2 bulan** (rata-rata 7,56 bln), alarm palsu tetap 1/30, 6 dilewati. Angka berlaku ada di `docs/skor-nyata.json` dan halaman `/cara-kami-menghitung`.
+
 ### Mengapa 12 dari 18 delisting terlewat (jujur)
 
 - **Data mulai 2020 q1, kejadian target 2018–2021.** GOLL (2019-01), PLAS (2018-12), LCGP/TRIL (2019-05), SUGI (2019-07), MABA/SKYB (2020-02), COWL (2020-07), ENVY (2020-12): rentang pindai `< target` hampir kosong, dan 8 di antaranya (COWL, KBRI, MABA, NUSA, RIMO, SIMA, SKYB, SUGI) mengembalikan 404 pada endpoint `dates` sehingga blok laporan hilang tidak pernah punya kuartal pertama.

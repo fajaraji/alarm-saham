@@ -10,6 +10,7 @@ import path from "node:path";
 
 import { formatBacktest, parseRule, RuleError, runBacktest } from "../src/lib/engine";
 import { getEventSource } from "../src/lib/engine/sumber";
+import { pilihUniverseUji } from "../src/lib/engine/universe-uji";
 
 function bantuan(): string {
   return [
@@ -65,11 +66,8 @@ async function main(): Promise<number> {
   });
   try {
     const semua = await sumber.universe();
-    // Emiten kena TANPA target_event_date (docs/universe-pull.md catatan 4: MENN,
-    // TGRA, WSKT) tidak punya "kejadian target" untuk diukur lead-nya; mesin
-    // menolaknya, jadi dilewati di sini dan dicatat agar jumlahnya jujur.
-    const tanpaTarget = semua.filter((u) => u.group !== "control" && !u.targetEventDate);
-    const universe = semua.filter((u) => !tanpaTarget.includes(u));
+    // Siapa yang ikut dihitung dan tanggal mana yang diukur: engine/universe-uji.ts.
+    const { universe, dilewati: tanpaTarget } = await pilihUniverseUji(semua, sumber.source);
     if (universe.length === 0) {
       console.error(`Universe kosong dari ${sumber.keterangan}; tidak ada yang bisa diuji.`);
       return 1;
@@ -77,14 +75,14 @@ async function main(): Promise<number> {
     const hasil = await runBacktest(rule, universe, sumber.source, { today: arg.opsi.today });
 
     if (arg.opsi.json) {
-      console.log(JSON.stringify({ ...hasil, skippedNoTarget: tanpaTarget.map((u) => u.symbol) }, null, 2));
+      console.log(JSON.stringify({ ...hasil, skippedNoTarget: tanpaTarget }, null, 2));
     } else {
       console.log(`Sumber   : ${sumber.keterangan}`);
       if (tanpaTarget.length) {
         console.log(
-          `Dilewati : ${tanpaTarget.length} emiten kena tanpa target_event_date (${tanpaTarget
-            .map((u) => u.symbol)
-            .join(", ")}) — tidak ada kejadian target untuk diukur`,
+          `Dilewati : ${tanpaTarget.length} emiten kena (${tanpaTarget.join(
+            ", ",
+          )}) — tanggal saham berhenti diperdagangkan tidak diketahui`,
         );
       }
       console.log(formatBacktest(rule, hasil));

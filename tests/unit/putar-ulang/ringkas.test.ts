@@ -44,7 +44,7 @@ describe("pelajaran", () => {
       kejadian: [k("2022-12-31", "warn")],
     });
     expect(baris[1]).toContain("tidak ada tanda sebelum tanggal itu");
-    expect(baris[1]).toContain("19 bulan lebih awal");
+    expect(baris[1]).toContain("19 bulan lebih dulu");
   });
 
   it("tanpa tanda dan tanpa kata terlarang", () => {

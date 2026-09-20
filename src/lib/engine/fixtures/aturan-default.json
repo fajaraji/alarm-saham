@@ -1,5 +1,5 @@
 {
-  "name": "Saham mau pailit",
+  "name": "Waspada suspensi",
   "combine": "any",
   "blocks": [
     { "kind": "suspensi", "threshold": "longgar" },

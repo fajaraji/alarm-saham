@@ -66,6 +66,21 @@ Satu motif, diulang secara sadar: **pita berwarna berlabel peran** (KALAU / MAKA
 - Bayangan: satu token `--shadow` dipakai pada panel saja, sebagai penanda elevasi satu tingkat di atas latar. Bukan pada tombol, badge, atau ikon (R-12).
 - Spasi: skala Tailwind bawaan; jarak antar-bagian lebih besar daripada jarak di dalam bagian.
 
+## Kepadatan teks
+
+Pemilik dua kali menilai layar "kebanyakan teks, tidak nyaman dipandang" (2026-09-12 dan 2026-09-19). Pengukurannya menunjukkan sebab pokoknya bukan kalimat yang panjang, melainkan **hal yang sama diceritakan berulang kali** di satu layar. Aturan di bawah ditarik dari revisi yang sudah disetujui (antislop 7 temuan, U1–U6, beranda opsi B; lihat `docs/decisions.md`) dan berlaku untuk setiap teks yang dilihat pengguna, termasuk teks yang dibuat mesin (pesan penjelasan, kotak masuk, Telegram, jejak AI).
+
+1. **Satu fakta tampil sekali per layar.** Bila fakta yang sama perlu hadir di dua tempat, tempat kedua terlipat (`<details>`) atau hanya merujuk ke yang pertama. Yang dipangkas adalah pengulangannya, bukan penjelasannya.
+2. **Jawaban dulu, rincian terlipat.** Yang pertama terbaca di setiap hasil adalah satu kalimat jawaban. Tabel, grid per saham, daftar panjang, dan rincian teknis berada di balik lipatan.
+3. **Petunjuk cara pakai hanya di satu tempat per layar**: baris petunjuk yang bisa dilipat (`PetunjukLayar`) dan overlay panduan. Pembuka halaman dan sub-judul tidak mengulangnya. Kalimat yang menunjuk kontrol yang terlihat tepat di atasnya dibuang.
+4. **Teks di setiap halaman (header, footer) dibayar sekali per halaman**: hanya yang wajib (disclaimer, sumber) yang boleh ada di sana.
+5. **Batas panjang**: subteks hero paling banyak 20 kata; paling banyak dua kalimat per bagian sebelum lipatan; satu kalimat per temuan; label tombol menyebut tujuannya ("Langkah 2: Rakit alarm", bukan "Lanjut").
+6. **Catatan dan peringatan hanya bila berlaku** untuk yang sedang dilihat (emiten, portofolio, sumber data). Catatan umum tempatnya di halaman metodologi, bukan di setiap layar.
+7. **Istilah dijelaskan lewat tooltip kamus** (`<Istilah>`), bukan kalimat penjelas di tengah teks.
+8. **Tanpa teks internal di layar**: nama mesin (mis. `ritel_dominan`), nama alat agent, JSON, nama tabel, path berkas, perintah CLI, host atau driver database, dan pesan galat mentah. Sumber tetap disebut (PLAN Q5), tetapi di teks utama cukup nama sumbernya; endpoint lengkap hanya di rincian yang terlipat. Pengecualiannya halaman metodologi: di sana sumber lengkap per blok memang yang dicari pembaca.
+9. **Tanda baca dan huruf**: nol em dash di teks pengguna (R-02); tanpa huruf kapital semua dengan spasi lebar, kecuali pita KALAU/MAKA dan kode emiten (R-06); tanggal untuk pengguna ditulis "6 Sep 2026", bukan ISO.
+10. **Diukur, bukan dikira.** Perubahan teks yang besar mencatat jumlah kata di `<main>` dan jarak sampai alat utama di 375×812, sebelum dan sesudah, di pesan commit.
+
 ## Yang sengaja TIDAK dipakai
 
 Dicatat supaya tidak ada yang menambahkannya nanti dengan niat baik: gradien sebagai perlakuan warna utama, glassmorphism, glow, grid atau blueprint sebagai latar, ikon sparkle/robot/lightning, badge kapsul "AI Powered", jendela terminal palsu, bento grid, dan angka tanpa sumber.

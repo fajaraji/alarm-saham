@@ -6,7 +6,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Fragment, type FormEvent } from "react";
 
-import type { BlockKind } from "@/lib/engine/rules";
+import type { BlockKind, Threshold } from "@/lib/engine/rules";
 import type { PapanState } from "@/lib/rakit/reducer";
 
 import { BlokPapan } from "./BlokPapan";
@@ -26,7 +26,7 @@ interface Props {
   onKalimat: (v: string) => void;
   onMintaAi: () => void;
   onToggleCombine: () => void;
-  onToggleAmbang: (kind: BlockKind) => void;
+  onUbahAmbang: (kind: BlockKind, threshold: Threshold) => void;
   onHapus: (kind: BlockKind) => void;
   onNama: (v: string) => void;
   onUji: () => void;
@@ -146,7 +146,7 @@ export function Papan(p: Props) {
                   </button>
                 </li>
               ) : null}
-              <BlokPapan blok={b} baruMasuk={p.blokBaru === b.kind} onToggleAmbang={p.onToggleAmbang} onHapus={p.onHapus} />
+              <BlokPapan blok={b} baruMasuk={p.blokBaru === b.kind} onUbahAmbang={p.onUbahAmbang} onHapus={p.onHapus} />
             </Fragment>
           ))}
         </SortableContext>

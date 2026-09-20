@@ -11,10 +11,12 @@ import { useEffect, useRef, useState } from "react";
 import { ALARM_BAWAAN, type AlarmKlien } from "@/lib/jaga/bawaan";
 import type { BlokBKind } from "@/lib/jaga/blok-b";
 import type { HasilPortofolio, HasilSaham } from "@/lib/jaga/evaluasi";
+import { dilewatiKarenaServer } from "@/lib/jaga/kalimat-b";
 import {
   cekAdaData,
   cekPortofolioServer,
   daftarAlarmServer,
+  hapusAlarmServer,
   KODE_TANPA_DB,
   muatKotakMasukServer,
   muatPortofolioServer,
@@ -23,6 +25,7 @@ import {
   type ResponCek,
 } from "@/lib/jaga/api";
 import { RuleSchema } from "@/lib/engine/rules";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 import {
   gabungKotakMasuk,
   hasilTerakhirLokal,
@@ -39,7 +42,7 @@ import {
   bacaKunciTautan,
   daftarAlarmLokal,
   gantiTokenPemilik,
-  pasangTokenPemilik,
+  hapusAlarmLokal,
   tautanPemilik,
   tokenPemilik,
   tokenPemilikAda,
@@ -62,7 +65,7 @@ const BLOK_B_LAYAR: BlokBKind[] = ["ritel_dominan", "jatuh_dari_puncak"];
 type Penyimpanan = "memuat" | "server" | "lokal";
 
 interface PesanTautan {
-  jenis: "pulih" | "pulihKosong" | "sama" | "tanpaDb" | "tidakSah" | "gagalSimpan" | "gagalMuat" | "batal";
+  jenis: "pulih" | "pulihKosong" | "sama" | "tanpaDb" | "tidakSah" | "gagalSimpan" | "gagalMuat" | "batal" | "batalBaru";
   teks: string;
   nada: "ok" | "warn" | "crit";
 }
@@ -111,7 +114,8 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
   // Tautan rahasia (tiket 23): pesan hasilnya, kunci yang menunggu konfirmasi
   // (browser sudah memegang kunci lain), dan putaran muat ulang setelah ganti.
   const [pesanTautanKini, setPesanTautan] = useState<PesanTautan | null>(null);
-  const [kunciTertunda, setKunciTertunda] = useState<string | null>(null);
+  // `gantiPemilik`: browser sudah memegang portofolio lain (teks dialognya beda).
+  const [kunciTertunda, setKunciTertunda] = useState<{ kunci: string; gantiPemilik: boolean } | null>(null);
   const [putaran, setPutaran] = useState(0);
   // Dibaca SEKALI per kunjungan: ref bertahan saat effect diulang (StrictMode,
   // atau muat ulang setelah ganti pemilik), padahal hash sudah dihapus.
@@ -119,6 +123,9 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
   // Dialog tautan rahasia (tiket 24): muncul sendiri sekali, saat portofolio
   // pertama kali tersimpan di server; setelah itu lewat tombol "Lihat tautan".
   const [dialogTautan, setDialogTautan] = useState(false);
+  // Hapus alarm (tiket 33): alarm yang menunggu konfirmasi, lalu hasilnya.
+  const [alarmDihapus, setAlarmDihapus] = useState<AlarmTampil | null>(null);
+  const [pesanAlarm, setPesanAlarm] = useState<{ teks: string; galat: boolean } | null>(null);
 
   const siap = useRef(false);
   const noCek = useRef(0);
@@ -140,11 +147,11 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
       else if (tautan.current.jenis === "sah") {
         const kunci = tautan.current.kunci;
         const kini = tokenPemilikAda();
+        // Selalu ditanya dulu, juga di browser yang belum punya portofolio:
+        // memakai kunci orang lain tanpa sadar berarti semua yang ditambahkan
+        // sesudahnya ikut terlihat dan bisa diubah pengirim tautan.
         if (kini === kunci) dariTautan = true;
-        else if (!kini) {
-          dariTautan = pasangTokenPemilik(kunci);
-          if (!dariTautan) setPesanTautan(pesanTautan("gagalSimpan"));
-        } else setKunciTertunda(kunci);
+        else setKunciTertunda({ kunci, gantiPemilik: Boolean(kini) });
       }
 
       const t = tokenPemilik();
@@ -231,7 +238,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
       bersihkanHash();
       if (k.jenis === "tidak-sah") setPesanTautan(pesanTautan("tidakSah"));
       else if (tokenPemilikAda() === k.kunci) setPesanTautan(pesanTautan("sama"));
-      else setKunciTertunda(k.kunci);
+      else setKunciTertunda({ kunci: k.kunci, gantiPemilik: true });
     }
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
@@ -262,8 +269,8 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
   }
 
   function batalGantiPemilik() {
+    setPesanTautan(pesanTautan(kunciTertunda?.gantiPemilik === false ? "batalBaru" : "batal"));
     setKunciTertunda(null);
-    setPesanTautan(pesanTautan("batal"));
   }
 
   // ----- simpan setiap kali portofolio/alarm aktif berubah (setelah muat awal)
@@ -300,6 +307,28 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
     const baru = symbols.filter((x) => x !== s);
     setSymbols(baru);
     void simpan(baru, aktif);
+  }
+
+  // ----- hapus alarm buatan sendiri (tiket 33)
+  async function hapusAlarm(a: AlarmTampil) {
+    setAlarmDihapus(null);
+    // Server dulu: bila gagal (selain "tidak ada di server"), alarm tetap utuh
+    // di mana-mana, jadi tidak ada keadaan setengah terhapus.
+    if (token && penyimpanan === "server") {
+      const r = await hapusAlarmServer(token, a.id);
+      const tidakDiServer = !r.ok && (r.galat.status === 404 || r.galat.status === 501 || r.galat.status === 503);
+      if (!r.ok && !tidakDiServer) {
+        setPesanAlarm({ teks: TEKS.hapusGagal(r.galat.pesan), galat: true });
+        return;
+      }
+    }
+    hapusAlarmLokal(a.id);
+    setAlarms((daftar) => daftar.filter((x) => x.id !== a.id));
+    const baru = new Set(aktif);
+    baru.delete(a.id);
+    setAktif(baru);
+    void simpan(symbols, baru);
+    setPesanAlarm({ teks: TEKS.hapusSelesai(a.name.replace(/ \(\d+\)$/, "")), galat: false });
   }
 
   function toggleAlarm(id: string, on: boolean) {
@@ -391,15 +420,17 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
         ) : null}
         {kunciTertunda ? (
           <Dialog judul={TEKS_TAUTAN.konfirmasiJudul} onTutup={batalGantiPemilik} testId="dialog-ganti-pemilik">
-            <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">{TEKS_TAUTAN.konfirmasiTeks}</p>
+            <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">
+              {kunciTertunda.gantiPemilik ? TEKS_TAUTAN.konfirmasiTeks : TEKS_TAUTAN.konfirmasiTeksBaru}
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 data-testid="tombol-ganti-pemilik"
-                onClick={() => gantiKePemilikTautan(kunciTertunda)}
+                onClick={() => gantiKePemilikTautan(kunciTertunda.kunci)}
                 className="rounded-lg bg-accent px-4 py-2 text-[13px] font-semibold text-accent-ink"
               >
-                {TEKS_TAUTAN.tombolGanti}
+                {kunciTertunda.gantiPemilik ? TEKS_TAUTAN.tombolGanti : TEKS_TAUTAN.tombolBuka}
               </button>
               <button
                 type="button"
@@ -407,7 +438,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
                 onClick={batalGantiPemilik}
                 className="rounded-lg border border-line-strong px-4 py-2 text-[13px] font-semibold hover:bg-surface-2"
               >
-                {TEKS_TAUTAN.tombolBatal}
+                {kunciTertunda.gantiPemilik ? TEKS_TAUTAN.tombolBatal : TEKS_TAUTAN.tombolBatalBaru}
               </button>
             </div>
           </Dialog>
@@ -453,6 +484,12 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
             <span className="block text-[11.5px] text-ink-3">{TEKS.kelasBSub}</span>
           </span>
         </label>
+        {hasil && hasil.saham.some((s) => dilewatiKarenaServer(s.kelasB)) ? (
+          // Alasan yang sama untuk semua saham disebut sekali di sini, bukan per saham.
+          <p data-testid="kelas-b-server" className="mb-2 ml-6 text-[12px] text-ink-2">
+            {TEKS.kelasBServer}
+          </p>
+        ) : null}
         <PetaPortofolio symbols={symbols} hasil={petaHasil} adaData={adaData} onHapus={hapus} sedangCek={sedangCek} />
         {galatCek ? (
           <p role="alert" data-testid="galat-cek" className="mt-2 rounded-lg border-l-[3px] border-crit bg-crit-soft px-3 py-2 text-[13px]">
@@ -461,7 +498,7 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
         ) : null}
         {hasil ? (
           <p className="mt-2.5 text-xs text-ink-3" data-testid="ringkasan-cek">
-            Dicek {hasil.today} dengan{" "}
+            Dicek {fmtTanggal(hasil.today)} dengan{" "}
             {/* `data-sumber` = penanda mesin untuk tes: teks label fixture memuat
                 substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks. */}
             <span
@@ -475,12 +512,17 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
             <span data-testid="kredit-terpakai">
               kredit Sectors terpakai: {hasil.kreditTerpakai} ({hasil.panggilanApi} panggilan API, {hasil.cacheHit} dari cache)
             </span>
+            {hasil.dataPer ? (
+              <span data-testid="data-per">
+                {" · "}
+                data ditarik {fmtTanggal(hasil.dataPer)}
+              </span>
+            ) : null}
           </p>
         ) : null}
 
         <h3 className="mt-5 font-display text-[15px] font-bold">{TEKS.pesanJudul}</h3>
-        <p className="mb-2.5 text-xs text-ink-3">{TEKS.pesanSub}</p>
-        <PesanPenjelasan saham={hasil?.saham ?? []} penjelasan={hasil?.penjelasan ?? []} today={hasil?.today ?? null} />
+        <PesanPenjelasan saham={hasil?.saham ?? []} penjelasan={hasil?.penjelasan ?? []} />
       </section>
 
       <div className="flex flex-col gap-4">
@@ -488,10 +530,40 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
           <h3 id="judul-alarm" className="font-display text-[15px] font-bold">
             {TEKS.alarmJudul}
           </h3>
-          <p className="mb-2.5 text-xs text-ink-3">{TEKS.alarmSub}</p>
-          <KartuAlarm alarms={alarms} aktif={aktif} onToggle={toggleAlarm} />
+          <KartuAlarm alarms={alarms} aktif={aktif} onToggle={toggleAlarm} onHapus={setAlarmDihapus} />
+          {pesanAlarm ? (
+            <p
+              role={pesanAlarm.galat ? "alert" : "status"}
+              data-testid="pesan-alarm"
+              className={`mt-2 text-[12.5px] ${pesanAlarm.galat ? "text-crit" : "text-ink-2"}`}
+            >
+              {pesanAlarm.teks}
+            </p>
+          ) : null}
+          {alarmDihapus ? (
+            <Dialog judul={TEKS.hapusJudul(alarmDihapus.name)} onTutup={() => setAlarmDihapus(null)} testId="dialog-hapus-alarm">
+              <p className="m-0 mb-4 text-[14px] leading-relaxed text-ink-2">{TEKS.hapusTeks}</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-testid="tombol-ya-hapus-alarm"
+                  onClick={() => void hapusAlarm(alarmDihapus)}
+                  className="rounded-lg bg-crit px-4 py-2 text-[13px] font-semibold text-crit-ink"
+                >
+                  {TEKS.hapusYa}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAlarmDihapus(null)}
+                  className="rounded-lg border border-line-strong px-4 py-2 text-[13px] font-semibold hover:bg-surface-2"
+                >
+                  {TEKS.hapusBatal}
+                </button>
+              </div>
+            </Dialog>
+          ) : null}
           <p className="mt-2.5 text-[11.5px] leading-snug text-ink-3">
-            Alarm baru dibuat di layar <a href="/rakit" className="underline">Rakit alarm</a>; yang tersimpan di browser ini atau di server otomatis muncul di sini.
+            Alarm baru dibuat di layar <a href="/rakit" className="underline">Rakit alarm</a>.
           </p>
         </section>
         <KotakMasuk pesan={kotak} onTandaiDibaca={tandaiDibaca} kodePortofolio={idPortofolio} telegramAktif={telegramAktif} />

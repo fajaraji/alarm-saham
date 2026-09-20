@@ -7,7 +7,7 @@ import type { BlockKind } from "@/lib/engine/rules";
 
 export const ID_ISTILAH = [
   "delisting",
-  "pemantauan_khusus",
+  "berpotensi_delisting",
   "suspensi",
   "laporan_hilang",
   "insider_jual",
@@ -53,12 +53,12 @@ export const KAMUS: readonly EntriKamus[] = [
     lihat: [PUTAR_ULANG, METODOLOGI],
   },
   {
-    id: "pemantauan_khusus",
-    istilah: "Papan pemantauan khusus",
+    id: "berpotensi_delisting",
+    istilah: "Berpotensi delisting",
     definisi:
-      "Daftar khusus dari bursa untuk saham yang sedang diawasi lebih ketat. Masih bisa diperdagangkan, tetapi dengan pembatasan.",
-    perumpamaan: "Seperti ruang karantina: belum keluar dari sekolah, tetapi dipisahkan dan diawasi lebih sering.",
-    catatan: "59 saham per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026).",
+      "Saham yang sudah disuspensi lebih dari 6 bulan. Bursa wajib mengumumkannya, karena saham seperti ini bisa dihapus dari bursa secara paksa bila perusahaannya tidak pulih.",
+    perumpamaan: "Seperti toko yang sudah lebih dari enam bulan tutup sementara: pengelola pasar mengumumkan bahwa izinnya bisa dicabut.",
+    catatan: "59 saham per 30 Juni 2026 (pengumuman BEI Peng-S-00019/BEI.PLP/06-2026).",
     lihat: [PUTAR_ULANG, METODOLOGI],
   },
   {
@@ -148,9 +148,9 @@ export const KAMUS: readonly EntriKamus[] = [
     id: "lebih_awal",
     istilah: "Lebih awal",
     definisi:
-      "Berapa bulan alarm sudah berbunyi sebelum kejadian target (suspensi yang berujung dihapus dari bursa, atau masuk pemantauan khusus).",
+      "Berapa bulan alarm sudah berbunyi sebelum hari sahamnya berhenti diperdagangkan, yaitu hari terakhir kamu masih bisa menjual.",
     perumpamaan: "Seperti alarm asap yang berbunyi beberapa menit sebelum api membesar: waktu itulah gunanya alarm.",
-    catatan: "Dihitung dalam bulan utuh; kejadian sebelum 2021 tidak ikut rata-rata karena data laporan baru mulai 2020.",
+    catatan: "Dihitung dalam bulan utuh; kejadian sebelum 2021 tidak ikut rata-rata karena data laporan baru mulai 2020. Jeda sehari-dua karena lonjakan harga tidak dihitung sebagai berhenti diperdagangkan.",
     lihat: [RAKIT, METODOLOGI],
   },
   {

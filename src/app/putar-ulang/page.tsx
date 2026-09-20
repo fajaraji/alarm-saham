@@ -14,6 +14,7 @@ import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { MintaTarik } from "@/components/putar-ulang/MintaTarik";
 import { Pencarian } from "@/components/putar-ulang/Pencarian";
 import { PutarUlang } from "@/components/putar-ulang/PutarUlang";
+import { tanggalTarikData } from "@/lib/data/tanggal-tarik";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
 
   const sumber = await getEventSource();
   const universe = await sumber.universe();
+  // Data kelas A adalah snapshot: tanggal penarikannya ikut tampil (tiket 42).
+  const dataPer = await tanggalTarikData(sumber.db);
   const contoh = sumber.jenis === "fixture";
   // Saran ketik: seluruh emiten yang benar-benar bisa dicari di server ini.
   const opsiCari = await daftarBisaDicari(sumber.db, universe);
@@ -54,21 +57,15 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           <p>
             Data yang dipakai server ini memuat {jumlah.total} emiten universe uji ({jumlah.delisting}{" "}
             <Istilah id="delisting">dihapus dari bursa</Istilah>, {jumlah.watchlist}{" "}
-            <Istilah id="pemantauan_khusus">pemantauan khusus</Istilah>, {jumlah.control}{" "}
+            <Istilah id="berpotensi_delisting">berpotensi delisting</Istilah>, {jumlah.control}{" "}
             <Istilah id="kontrol_sehat">kontrol sehat</Istilah>){contoh ? "" : " ditambah feed suspensi seluruh bursa 2018–2026"}.{" "}
             {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis. Setiap penarikan memakai{" "}
             <Istilah id="kredit_sectors">kredit</Istilah> dan diputuskan manusia.
           </p>
           <MintaTarik symbol={kode} />
-          {/* Label biasa, bukan `sumber.keterangan`: keterangan itu memuat nama
-              driver dan host database (jalur Neon) atau nama variabel lingkungan
-              (jalur data contoh), yang tidak ada gunanya bagi pengguna. */}
-          <p className="pu-hint" style={{ marginTop: 10 }}>
-            Sumber data saat ini: {contoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors"}.
-          </p>
         </div>
       ) : (
-        <PutarUlang emiten={emiten} />
+        <PutarUlang emiten={emiten} dataPer={dataPer} />
       );
   }
 

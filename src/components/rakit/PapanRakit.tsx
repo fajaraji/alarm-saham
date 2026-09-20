@@ -6,7 +6,6 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -38,7 +37,7 @@ import { HasilUji } from "./HasilUji";
 import { Palet } from "./Palet";
 import { PanelAi } from "./PanelAi";
 import { Papan } from "./Papan";
-import { SensorPenunjuk } from "./sensor";
+import { SensorPenunjuk, SensorSentuh } from "./sensor";
 import { TEKS } from "./teks";
 
 /** Jeda antar blok saat AI "memasukkan" aturan ke papan (ms). */
@@ -102,7 +101,7 @@ export function PapanRakit() {
     // SensorPenunjuk, bukan PointerSensor bawaan: sesudah seret, dnd-kit
     // meredam SEMUA klik di halaman selama 50 ms. Lihat ./sensor.ts.
     useSensor(SensorPenunjuk, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(SensorSentuh, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -300,7 +299,7 @@ export function PapanRakit() {
     setCatatanSimpan(
       diDb
         ? `Alarm “${rule.name}” tersimpan di server dan di browser ini.`
-        : `Alarm “${rule.name}” tersimpan di browser ini saja. Server belum punya database, jadi belum ada tautan untuk membukanya di perangkat lain.`,
+        : `Alarm “${rule.name}” tersimpan di browser ini.`,
     );
     setTautanTersimpan({ tautan: diDb ? tautanPemilik(window.location.origin, token) : null });
     setDialogTautan(true);
@@ -335,7 +334,7 @@ export function PapanRakit() {
           onKalimat={setKalimat}
           onMintaAi={() => void mintaRakit()}
           onToggleCombine={() => dispatch({ tipe: "toggleCombine" })}
-          onToggleAmbang={(kind) => dispatch({ tipe: "toggleAmbang", kind })}
+          onUbahAmbang={(kind, threshold) => dispatch({ tipe: "setAmbang", kind, threshold })}
           onHapus={(kind) => dispatch({ tipe: "hapus", kind })}
           onNama={(name) => dispatch({ tipe: "setNama", name })}
           onUji={() => void uji()}
@@ -344,7 +343,7 @@ export function PapanRakit() {
             setGalatUji(null);
           }}
           onSimpan={() => void simpan()}
-          onTautan={tautanTersimpan ? () => setDialogTautan(true) : null}
+          onTautan={tautanTersimpan?.tautan ? () => setDialogTautan(true) : null}
         />
         <div className="rounded-[14px] border border-line bg-surface p-3.5">
           {ringkasan ? (

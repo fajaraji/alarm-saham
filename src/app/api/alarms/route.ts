@@ -4,9 +4,12 @@
 //   503 DB_TIDAK_TERSEDIA bila tidak (klien menyimpan di localStorage).
 // GET  /api/alarms  (header x-owner-token) → { alarms: [{id, name, rules, createdAt}] }
 //   daftar alarm milik pemilik untuk layar "Pasang" (tiket 11); 503 tanpa DB.
+// DELETE /api/alarms?id=<uuid>  (header x-owner-token) → { dihapus: id }
+//   hanya alarm milik token itu (tiket 33); alarm pemilik lain → 404, bukan 403,
+//   supaya id alarm orang lain tidak bisa ditebak ada atau tidaknya.
 //
 // Tanpa login (PLAN §2): pemilik dikenali dari token acak yang dibuat browser.
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { schema } from "@/lib/db";
@@ -88,5 +91,30 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     console.error("[api/alarms]", err);
     return galat(500, "GALAT_INTERNAL", "Gagal menyimpan alarm; coba lagi sesaat.");
+  }
+}
+
+const IdSchema = z.uuid({ error: "id alarm harus UUID" });
+
+export async function DELETE(req: Request): Promise<Response> {
+  const token = tokenDariHeader(req);
+  if (!token) return galat(401, "TOKEN_TIDAK_ADA", "Header x-owner-token wajib (16–128 karakter).");
+  const id = IdSchema.safeParse(new URL(req.url).searchParams.get("id") ?? "");
+  if (!id.success) return galat(400, "ID_TIDAK_SAH", "Parameter id harus UUID alarm.");
+  try {
+    const db = await dbJaga();
+    if (!db) {
+      return galat(503, "DB_TIDAK_TERSEDIA", "Server belum punya database; alarm hanya ada di browser ini.");
+    }
+    // Pemilik ikut di WHERE: token lain tidak bisa menghapus alarm yang bukan miliknya.
+    const dihapus = await db
+      .delete(schema.alarms)
+      .where(and(eq(schema.alarms.id, id.data), eq(schema.alarms.ownerToken, token)))
+      .returning({ id: schema.alarms.id });
+    if (dihapus.length === 0) return galat(404, "ALARM_TIDAK_ADA", "Alarm itu tidak ada untuk tautan ini.");
+    return Response.json({ dihapus: dihapus[0].id });
+  } catch (err) {
+    console.error("[api/alarms DELETE]", err);
+    return galat(500, "GALAT_INTERNAL", "Gagal menghapus alarm; coba lagi sesaat.");
   }
 }

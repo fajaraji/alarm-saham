@@ -70,12 +70,12 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   // ATAU → DAN, dan ambang longgar → ketat
   await page.getByTestId("tombol-gabung").click();
   await expect(page.getByTestId("tombol-gabung")).toHaveText("DAN");
-  await page.getByTestId("blok-suspensi").getByRole("button", { name: /^Ambang/ }).click();
+  await page.getByTestId("ambang-suspensi").selectOption("ketat");
   await expect(page.getByTestId("blok-suspensi")).toHaveAttribute("data-threshold", "ketat");
 
   // Uji ke masa lalu: /api/backtest memakai getEventSource() (tiket 13) — PGlite
   // ./.pglite bila ada (DATABASE_URL kosong) → "data Sectors nyata", 107 saham;
-  // tanpa PGlite → fixture "data contoh", 8 saham.
+  // tanpa PGlite → fixture "data contoh", 9 saham.
   await page.getByRole("button", { name: "Uji ke masa lalu" }).click();
   await expect(page.getByTestId("skor-tertangkap")).not.toHaveText("–");
   await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/\d+$/);
@@ -83,11 +83,12 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   if (ADA_PGLITE) {
     await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
     await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/30$/);
-    // MENN, TGRA, WSKT tidak punya tanggal kejadian target → dilewati seperti CLI (docs/universe-pull.md catatan 4).
-    await expect(page.getByTestId("dilewati")).toContainText("3 saham dilewati");
+    // Enam emiten tidak bisa diukur: tiga tanpa tanggal kejadian target, tiga tanpa
+    // satu pun suspensi di feed (tiket 39, src/lib/engine/universe-uji.ts).
+    await expect(page.getByTestId("dilewati")).toContainText("6 saham dilewati");
   } else {
-    // Fixture: 8 emiten, 4 kontrol; tidak ada emiten tanpa tanggal kejadian target.
-    await expect(page.getByTestId("hasil-uji")).toContainText("Diuji ke 8 saham");
+    // Fixture: 9 emiten, 4 kontrol; tidak ada emiten tanpa tanggal kejadian target.
+    await expect(page.getByTestId("hasil-uji")).toContainText("Diuji ke 9 saham");
     await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/4$/);
   }
   // Tiket 21: jawaban dulu, grid semua saham terlipat. Dibuka seperti pengguna.
@@ -228,4 +229,29 @@ test("keyboard: pegang blok, panah bawah, lepas → urutan berubah", async ({ pa
     els.map((e) => e.getAttribute("data-testid")),
   );
   expect(urutan).toEqual(["blok-aksi_dilutif", "blok-suspensi"]);
+});
+
+test("blok diseret dari badannya, bukan hanya pegangan; dropdown dan tombol buang tetap bisa diklik (tiket 31)", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 1400 });
+  await buka(page, "/rakit");
+  await page.getByTestId("palet-suspensi").click();
+  await page.getByTestId("palet-laporan_hilang").click();
+  const urutan = () => page.getByTestId("papan-dropzone").locator("li[data-testid^='blok-']").evaluateAll((l) => l.map((e) => e.getAttribute("data-testid")));
+  expect(await urutan()).toEqual(["blok-suspensi", "blok-laporan_hilang"]);
+
+  // Seret laporan_hilang dari LABELNYA (bukan pegangan) ke atas suspensi.
+  const label = page.getByTestId("blok-laporan_hilang").getByText("Laporan keuangan hilang/berhenti", { exact: true });
+  await seret(page, label, page.getByTestId("blok-suspensi"));
+  await expect.poll(urutan).toEqual(["blok-laporan_hilang", "blok-suspensi"]);
+
+  // Dropdown ambang tidak memulai seret: memilih mengubah ambang, urutan tetap.
+  await page.getByTestId("ambang-suspensi").selectOption("ketat");
+  await expect(page.getByTestId("blok-suspensi")).toHaveAttribute("data-threshold", "ketat");
+  expect(await urutan()).toEqual(["blok-laporan_hilang", "blok-suspensi"]);
+
+  // Seret dari badan ke area buang membuang blok; tombol buang tetap berupa klik.
+  await seret(page, page.getByTestId("blok-suspensi").getByText("Saham disuspensi", { exact: true }), page.getByTestId("area-buang"));
+  await expect(page.getByTestId("blok-suspensi")).toHaveCount(0);
+  await page.getByRole("button", { name: "Buang blok Laporan keuangan hilang/berhenti" }).click();
+  await expect(page.getByTestId("blok-laporan_hilang")).toHaveCount(0);
 });

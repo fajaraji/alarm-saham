@@ -34,7 +34,7 @@ export const TEKS = {
 export const KELOMPOK = {
   delisting: { judul: "dihapus dari bursa", catatan: "kotak bertanda “tertangkap” = alarm berbunyi sebelum kejadian" },
   watchlist: {
-    judul: "di pemantauan khusus (peringatan dini)",
+    judul: "berpotensi delisting (disuspensi > 6 bulan)",
     catatan: "kotak bertanda “tertangkap” = alarm berbunyi sebelum kejadian",
   },
   control: { judul: "sehat", catatan: "kotak bertanda “alarm palsu” = berbunyi padahal saham sehat" },
