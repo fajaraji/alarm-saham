@@ -25,6 +25,8 @@ const LABEL_STATUS: Record<EmitenPutarUlang["status"], string> = {
 
 interface Props {
   emiten: EmitenPutarUlang;
+  /** Tanggal data kelas A terakhir ditarik (YYYY-MM-DD); null pada data contoh (tiket 42). */
+  dataPer?: string | null;
 }
 
 // Tidak ada prop keterangan sumber di sini. Dulu komponen ini menerima
@@ -34,7 +36,7 @@ interface Props {
 // perlu tahu hanya "data Sectors nyata" atau "data contoh", dan itu sudah
 // dibawa `emiten.sumberContoh`. Menghapus propnya (bukan hanya span-nya)
 // mencegah keterangan internal itu dioper ke sini lagi tanpa sengaja.
-export function PutarUlang({ emiten }: Props) {
+export function PutarUlang({ emiten, dataPer }: Props) {
   const rentang = useMemo(
     () => rentangSlider(emiten.kejadian, emiten.today, emiten.targetEventDate ? [emiten.targetEventDate] : []),
     [emiten],
@@ -68,6 +70,7 @@ export function PutarUlang({ emiten }: Props) {
             substring "data Sectors nyata", jadi tidak bisa dibedakan dari teks). */}
         <p className={`pu-sumber ${emiten.sumberContoh ? "contoh" : "db"}`} data-testid="label-sumber" data-sumber={emiten.sumberContoh ? "fixture" : "db"}>
           {emiten.sumberContoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors nyata"}
+          {dataPer ? <span data-testid="data-per"> · ditarik {fmtTanggal(dataPer)}</span> : null}
         </p>
         <h3>
           {emiten.companyName ? `${emiten.companyName} (${emiten.symbol})` : emiten.symbol}{" "}

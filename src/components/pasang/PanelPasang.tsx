@@ -512,6 +512,12 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
             <span data-testid="kredit-terpakai">
               kredit Sectors terpakai: {hasil.kreditTerpakai} ({hasil.panggilanApi} panggilan API, {hasil.cacheHit} dari cache)
             </span>
+            {hasil.dataPer ? (
+              <span data-testid="data-per">
+                {" · "}
+                data ditarik {fmtTanggal(hasil.dataPer)}
+              </span>
+            ) : null}
           </p>
         ) : null}
 

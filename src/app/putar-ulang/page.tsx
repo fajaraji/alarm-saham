@@ -14,6 +14,7 @@ import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
 import { MintaTarik } from "@/components/putar-ulang/MintaTarik";
 import { Pencarian } from "@/components/putar-ulang/Pencarian";
 import { PutarUlang } from "@/components/putar-ulang/PutarUlang";
+import { tanggalTarikData } from "@/lib/data/tanggal-tarik";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
 
   const sumber = await getEventSource();
   const universe = await sumber.universe();
+  // Data kelas A adalah snapshot: tanggal penarikannya ikut tampil (tiket 42).
+  const dataPer = await tanggalTarikData(sumber.db);
   const contoh = sumber.jenis === "fixture";
   // Saran ketik: seluruh emiten yang benar-benar bisa dicari di server ini.
   const opsiCari = await daftarBisaDicari(sumber.db, universe);
@@ -62,7 +65,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           <MintaTarik symbol={kode} />
         </div>
       ) : (
-        <PutarUlang emiten={emiten} />
+        <PutarUlang emiten={emiten} dataPer={dataPer} />
       );
   }
 

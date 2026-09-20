@@ -19,6 +19,8 @@ export const KODE_TANPA_DB = "DB_TIDAK_TERSEDIA";
 export interface ResponCek {
   today: string;
   sumber: string;
+  /** Tanggal data kelas A terakhir ditarik (YYYY-MM-DD); null pada data contoh. */
+  dataPer?: string | null;
   saham: HasilPortofolio["saham"];
   penjelasan: Penjelasan[];
   kreditTerpakai: number;

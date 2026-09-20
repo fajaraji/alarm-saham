@@ -1,5 +1,5 @@
 // POST /api/portofolio/cek  { symbols, alarmIds?, alarms?, kelasB?, blokB?, today? }
-// → { today, sumber, saham[], penjelasan[], kreditTerpakai, panggilanApi, cacheHit, kelasB, runId? }
+// → { today, sumber, dataPer, saham[], penjelasan[], kreditTerpakai, panggilanApi, cacheHit, kelasB, runId? }
 //
 // Kelas A dari DB/PGlite/fixture (nol kredit). Kelas B hanya bila `kelasB: true`
 // dan SECTORS_API_KEY ada — dengan cache 24 jam dan cadangan kredit provider.
@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, kunciPemanggilServer, pagarLaju } from "@/lib/api/pagar";
 import { alarmDariDb } from "@/lib/jaga/alarm-db";
+import { tanggalTarikData } from "@/lib/data/tanggal-tarik";
 import { ALARM_BAWAAN, alarmDariKlien, AlarmKlienSchema, BlokBSchema, type AlarmJaga } from "@/lib/jaga/bawaan";
 import { cekPortofolio } from "@/lib/jaga/evaluasi";
 import { penjelasanPortofolio } from "@/lib/jaga/penjelasan";
@@ -169,6 +170,7 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({
       today: hasil.today,
       sumber: hasil.sumber,
+      dataPer: await tanggalTarikData(db),
       saham: hasil.saham,
       penjelasan,
       kreditTerpakai: hasil.kreditTerpakai,

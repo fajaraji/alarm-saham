@@ -4,9 +4,9 @@
 
 **Blocked by:** None (penyegaran butuh persetujuan kredit dari pemilik)
 
-**Status:** ready-for-agent
+**Status:** sebagian. Tanggal penarikan data kini tampil di /putar-ulang, /rakit, dan /pasang, dibaca dari buku kredit (`tanggalTarikData`, `api_ledger`), bukan diketik tangan. Perintah penyegaran belum dibuat; pemilik sudah menyetujui anggaran kreditnya.
 
-- [ ] Tanggal data terakhir tampil di /putar-ulang, /rakit, dan /pasang, dibaca dari database (bukan diketik)
+- [x] Tanggal data terakhir tampil di /putar-ulang, /rakit, dan /pasang, dibaca dari database (bukan diketik)
 - [ ] Ada perintah penyegaran yang melaporkan kredit terpakai sebelum dan sesudah, dan menolak bila melewati cadangan
 - [ ] Penyegaran dijalankan dengan persetujuan pemilik dan hasilnya tercatat di buku kredit
 - [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

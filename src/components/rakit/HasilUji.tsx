@@ -215,6 +215,7 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
               {sumber}
             </span>
             , akhir bulan {fmtTanggal(h.scanStart)} sampai {fmtTanggal(h.today)}.
+            {hasil?.dataPer ? <span data-testid="data-per"> Data ditarik {fmtTanggal(hasil.dataPer)}.</span> : null}
             {hasil?.dilewati?.length ? (
               <span data-testid="dilewati">
                 {" "}
