@@ -25,11 +25,11 @@ export const ID_ALARM_JEBAKAN = "00000000-0000-4000-8000-00000000b001";
 export const ALARM_BAWAAN: readonly AlarmJaga[] = [
   {
     id: ID_ALARM_PAILIT,
-    name: "Saham mau pailit",
+    name: "Waspada suspensi",
     kelas: "A",
     bawaan: true,
     rule: {
-      name: "Saham mau pailit",
+      name: "Waspada suspensi",
       combine: "any",
       blocks: [
         { kind: "suspensi", threshold: "longgar" },

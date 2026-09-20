@@ -75,7 +75,7 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
 
   // Uji ke masa lalu: /api/backtest memakai getEventSource() (tiket 13) — PGlite
   // ./.pglite bila ada (DATABASE_URL kosong) → "data Sectors nyata", 107 saham;
-  // tanpa PGlite → fixture "data contoh", 8 saham.
+  // tanpa PGlite → fixture "data contoh", 9 saham.
   await page.getByRole("button", { name: "Uji ke masa lalu" }).click();
   await expect(page.getByTestId("skor-tertangkap")).not.toHaveText("–");
   await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/\d+$/);
@@ -83,11 +83,12 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   if (ADA_PGLITE) {
     await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
     await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/30$/);
-    // MENN, TGRA, WSKT tidak punya tanggal kejadian target → dilewati seperti CLI (docs/universe-pull.md catatan 4).
-    await expect(page.getByTestId("dilewati")).toContainText("3 saham dilewati");
+    // Enam emiten tidak bisa diukur: tiga tanpa tanggal kejadian target, tiga tanpa
+    // satu pun suspensi di feed (tiket 39, src/lib/engine/universe-uji.ts).
+    await expect(page.getByTestId("dilewati")).toContainText("6 saham dilewati");
   } else {
-    // Fixture: 8 emiten, 4 kontrol; tidak ada emiten tanpa tanggal kejadian target.
-    await expect(page.getByTestId("hasil-uji")).toContainText("Diuji ke 8 saham");
+    // Fixture: 9 emiten, 4 kontrol; tidak ada emiten tanpa tanggal kejadian target.
+    await expect(page.getByTestId("hasil-uji")).toContainText("Diuji ke 9 saham");
     await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/4$/);
   }
   // Tiket 21: jawaban dulu, grid semua saham terlipat. Dibuka seperti pengguna.

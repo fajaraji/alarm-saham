@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** selesai. Suspensi gerak harga (460 dari 583 baris) disaring di `suspensiMasalah()`; kejadian target diukur ke suspensi masalah PALING AWAL (`targetTerukur`) plus tabel `SUSPENSI_PUBLIK` untuk penghentian yang belum ada di feed (TELE 10 Jun 2020, BIMA 19 Nov 2025); emiten yang tanggal berhentinya tidak diketahui dilewati lewat `engine/universe-uji.ts`. Alarm bawaan kini "Waspada suspensi". Skor: 26/74 median 7 bln → **16/71 median 2 bln**, alarm palsu tetap 1/30, dilewati 3 → 6. Data contoh ditambah ZBRA (data nyata) supaya mode contoh menunjukkan pola yang benar.
 
-- [ ] Suspensi karena gerak harga tidak memicu blok suspensi, di uji ke masa lalu maupun di cek portofolio
-- [ ] Alarm bawaan tidak lagi bernama "Saham mau pailit"
-- [ ] docs/skor-nyata.json dihitung ulang; README dan halaman metodologi memakai angka baru, dan tes snapshot lulus
-- [ ] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus
+- [x] Suspensi karena gerak harga tidak memicu blok suspensi, di uji ke masa lalu maupun di cek portofolio
+- [x] Alarm bawaan tidak lagi bernama "Saham mau pailit"
+- [x] docs/skor-nyata.json dihitung ulang; README dan halaman metodologi memakai angka baru, dan tes snapshot lulus
+- [x] `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` exit 0; e2e jalur database dan jalur data contoh lulus

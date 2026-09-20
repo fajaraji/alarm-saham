@@ -292,3 +292,24 @@ Dicatat supaya review berikutnya punya patokan. Sebelum ini, keputusan-keputusan
 - **Gelombang 1** (2026-09-19, tiket 18–27, PR #8): perbaikan dari feedback rekan tim.
 
 Pemilik kemudian menilai hasil gelombang 1 masih menambah teks di beberapa tempat, dan bahwa prinsip "jangan terlalu banyak teks" tidak tertulis di PLAN maupun DESIGN. Prinsip itu kini menjadi bagian **Kepadatan teks** di `DESIGN.md` (10 aturan), dan dipakai sebagai standar dalam code-review sejak 2026-09-19.
+
+## 2026-09-20 — Angka jujur: gerak harga bukan tanda, target = hari berhenti diperdagangkan (tiket 39)
+
+Audit hackathon menemukan dua kesalahan yang membuat klaim produk lebih besar dari yang didukung data. Keduanya diperbaiki, dan angkanya turun.
+
+**1. Suspensi gerak harga.** BEI menghentikan perdagangan sehari-dua untuk meredam lonjakan harga ("dalam rangka cooling down", "peningkatan harga kumulatif yang signifikan"). Di data kami itu **460 dari 583 baris suspensi** (272 dari 294 dalam 12 bulan terakhir), dan semuanya dulu memicu blok suspensi serta status merah di bawah alarm bernama "Saham mau pailit". Sekarang disaring di `suspensiMasalah()`, dan bila jedanya terjadi dalam 30 hari terakhir layar pasang menjelaskannya sebagai catatan, bukan tanda.
+
+**2. Kejadian target.** Dulu = tanggal catatan BEI (delisting) atau suspensi TERAKHIR ≤ 30 Jun 2026 (berpotensi delisting). Feed mengumumkan ulang suspensi yang masih berjalan ("Suspend more than 6 month", 56 baris), jadi klaim "lebih awal" dihitung ke pengumuman ulang, padahal pemegang saham sudah tidak bisa menjual sejak suspensi pertama. Sekarang target = **suspensi masalah paling awal** (`targetTerukur`), plus tabel `SUSPENSI_PUBLIK` untuk penghentian yang belum ada di feed kami (TELE 10 Jun 2020 per Ajaib/CNBC; BIMA 19 Nov 2025 per Indo Premier). Tabel itu hanya boleh memundurkan tanggal, tidak pernah membesarkan angka.
+
+**3. Yang tidak bisa diukur, dilewati.** ENVY, PTMR, TGUK tidak punya satu pun suspensi di feed, jadi ikut dilewati bersama MENN, TGRA, WSKT yang tanpa `target_event_date`. Pemilihannya satu pintu di `src/lib/engine/universe-uji.ts` (dipakai CLI, /api/backtest, dan tes snapshot).
+
+| | Sebelum | Sesudah |
+|---|---|---|
+| Tertangkap | 26/74 | **16/71** |
+| Lebih awal | rata-rata 9 bln, median 7 | median **2 bln**, rata-rata 7,56 |
+| Alarm palsu | 1/30 | 1/30 |
+| Dilewati | 3 | 6 |
+
+Sisa tangkapan hampir seluruhnya satu pola yang bisa dicek siapa pun: laporan tahunan tidak masuk 30 April, BEI menyuspensi akhir Juni (ZBRA, ALTO, SWAT, PMMP). Karena rata-rata ditarik naik tiga emiten yang berhenti melapor bertahun-tahun (FIMP 42, BIMA 33, DPNS 18), **median yang dipajang sebagai angka utama**, rata-rata jadi keterangan.
+
+Ikutannya: alarm bawaan berganti nama "Saham mau pailit" → **"Waspada suspensi"** (sebagian besar pemicunya telat lapor, bukan kepailitan); contoh beranda tidak lagi memakai TELE; data contoh `universe-kecil.json` ditambah ZBRA dengan suspensi dan daftar kuartal NYATA supaya mode contoh menunjukkan pola yang benar (1/5 tertangkap, 2 bulan lebih awal) alih-alih 0/4.

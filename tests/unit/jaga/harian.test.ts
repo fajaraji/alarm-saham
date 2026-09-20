@@ -30,22 +30,22 @@ const penjelasan = (symbols: string[]) => symbols.map((symbol) => ({ symbol, tek
 
 describe("benderaBaru", () => {
   it("run pertama: semua kuning/merah jadi bendera, hijau tidak", () => {
-    const b = benderaBaru(null, hasil(saham("SRIL", "merah", ["Saham mau pailit"]), saham("BBCA", "hijau")), penjelasan(["SRIL", "BBCA"]));
+    const b = benderaBaru(null, hasil(saham("SRIL", "merah", ["Waspada suspensi"]), saham("BBCA", "hijau")), penjelasan(["SRIL", "BBCA"]));
     expect(b.map((x) => x.symbol)).toEqual(["SRIL"]);
-    expect(b[0].judul).toContain("Saham mau pailit");
+    expect(b[0].judul).toContain("Waspada suspensi");
     expect(b[0].teks).toContain(DISCLAIMER);
   });
 
   it("hasil sama dengan run terakhir → tidak ada bendera (idempoten)", () => {
-    const sebelum: RingkasanJaga[] = [{ symbol: "SRIL", status: "merah", blok: ["suspensi"], alarm: ["Saham mau pailit"] }];
-    expect(benderaBaru(sebelum, hasil(saham("SRIL", "merah", ["Saham mau pailit"])), penjelasan(["SRIL"]))).toEqual([]);
+    const sebelum: RingkasanJaga[] = [{ symbol: "SRIL", status: "merah", blok: ["suspensi"], alarm: ["Waspada suspensi"] }];
+    expect(benderaBaru(sebelum, hasil(saham("SRIL", "merah", ["Waspada suspensi"])), penjelasan(["SRIL"]))).toEqual([]);
   });
 
   it("memburuk (hijau → kuning) atau alarm baru berbunyi → bendera; membaik → tidak", () => {
     const sebelum: RingkasanJaga[] = [
       { symbol: "AAAA", status: "hijau", blok: [], alarm: [] },
       { symbol: "BBBB", status: "kuning", blok: ["laporan_hilang"], alarm: [] },
-      { symbol: "CCCC", status: "merah", blok: ["suspensi"], alarm: ["Saham mau pailit"] },
+      { symbol: "CCCC", status: "merah", blok: ["suspensi"], alarm: ["Waspada suspensi"] },
     ];
     const b = benderaBaru(
       sebelum,

@@ -75,7 +75,7 @@ export function PutarUlang({ emiten }: Props) {
         </h3>
         <p className="pu-sub">
           {LABEL_STATUS[emiten.status]}
-          {emiten.targetEventDate && <> · kejadian target yang kami catat: {fmtTanggal(emiten.targetEventDate)}</>}
+          {emiten.targetEventDate && <> · berhenti diperdagangkan: {fmtTanggal(emiten.targetEventDate)}</>}
         </p>
 
         <Grafik kejadian={emiten.kejadian} rentang={rentang} t={t} target={emiten.targetEventDate} />

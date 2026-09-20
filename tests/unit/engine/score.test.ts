@@ -18,18 +18,18 @@ function hanya(rule: Omit<Rule, "name">): Rule {
 }
 
 describe("runBacktest: aturan default pada fixture", () => {
-  it("skor snapshot: 2/4 tertangkap, lead 41 & 5 bulan, 0 alarm palsu", async () => {
+  it("skor snapshot: 3/5 tertangkap, lead 41, 8 & 5 bulan, 0 alarm palsu", async () => {
     const hasil = await runBacktest(aturan, sumber.universe, sumber, { today: TODAY });
 
     expect(hasil).toMatchObject({
-      rule: "Saham mau pailit",
+      rule: "Waspada suspensi",
       scanStart: "2020-01-31",
       today: TODAY,
       leadCutoff: "2021-01-01",
-      hits: 2,
-      total: 4,
-      leadMonthsAvg: 23,
-      leadMonthsMedian: 23,
+      hits: 3,
+      total: 5,
+      leadMonthsAvg: 18,
+      leadMonthsMedian: 8,
       falseAlarms: 0,
       controls: 4,
     });
@@ -63,6 +63,10 @@ describe("runBacktest: aturan default pada fixture", () => {
     });
     // WIKA: suspensi tepat pada target, kuartal lengkap, ekuitas positif → terlewat
     expect(per.WIKA).toMatchObject({ group: "watchlist", fired: false, reasons: [] });
+    // ZBRA (data nyata, tiket 39): laporan berhenti setelah kuartal 3 2024, blok
+    // laporan hilang berbunyi 30 Apr 2025, BEI menyuspensi 30 Jun 2025.
+    expect(per.ZBRA).toMatchObject({ group: "watchlist", fired: true, firstFireDate: "2025-04-30" });
+    expect(per.ZBRA.reasons.map((r) => r.kind)).toEqual(["laporan_hilang"]);
     for (const s of ["BBCA", "TLKM", "ASII", "UNVR"]) {
       expect(per[s], s).toMatchObject({
         group: "control",
@@ -73,7 +77,7 @@ describe("runBacktest: aturan default pada fixture", () => {
     }
 
     expect(hasil.perGroup.delisting).toMatchObject({ hits: 2, total: 3, leadMonthsAvg: 23 });
-    expect(hasil.perGroup.watchlist).toMatchObject({ hits: 0, total: 1, leadMonthsAvg: null });
+    expect(hasil.perGroup.watchlist).toMatchObject({ hits: 1, total: 2, leadMonthsAvg: 8 });
     expect(hasil.perGroup.control).toMatchObject({ falseAlarms: 0, controls: 4, hits: 0, total: 0 });
     expect(hasil.perGroup.control.perSymbol).toHaveLength(4);
   });
@@ -87,8 +91,8 @@ describe("runBacktest: aturan default pada fixture", () => {
   it("formatBacktest mencetak ringkasan dan tabel per emiten", async () => {
     const hasil = await runBacktest(aturan, sumber.universe, sumber, { today: TODAY });
     const teks = formatBacktest(aturan, hasil);
-    expect(teks).toContain("Tertangkap        : 2/4 emiten kena (delisting 2/3, watchlist 0/1)");
-    expect(teks).toContain("Lebih awal        : rata-rata 23 bln, median 23 bln");
+    expect(teks).toContain("Tertangkap        : 3/5 emiten kena (delisting 2/3, watchlist 1/2)");
+    expect(teks).toContain("Lebih awal        : rata-rata 18 bln, median 8 bln");
     expect(teks).toContain("Alarm palsu       : 0/4 kontrol sehat");
     expect(teks).toMatch(/SRIL\s+delisting\s+2024-11-01\s+2021-05-31\s+41 bln\s+TERTANGKAP/);
     expect(teks).toMatch(/GOLL\s+delisting\s+2019-01-30\s+-\s+-\s+terlewat/);
@@ -103,7 +107,7 @@ describe("runBacktest: alarm palsu pada kontrol", () => {
       sumber,
       { today: TODAY },
     );
-    expect(ketat).toMatchObject({ falseAlarms: 1, controls: 4, hits: 0, total: 4 });
+    expect(ketat).toMatchObject({ falseAlarms: 1, controls: 4, hits: 0, total: 5 });
     const unvr = ketat.perSymbol.find((r) => r.symbol === "UNVR")!;
     expect(unvr).toMatchObject({ fired: true, firstFireDate: "2025-05-31", leadMonths: null });
     expect(unvr.reasons[0].detail).toContain("1.20 poin persen");

@@ -94,7 +94,7 @@ export function Grafik({
           <g>
             <line className="target" x1={x(target)} x2={x(target)} y1={ATAS - 6} y2={tinggi - BAWAH} />
             <text x={Math.min(x(target) + 3, LEBAR - 90)} y={ATAS - 2}>
-              kejadian target {target}
+              berhenti diperdagangkan {target}
             </text>
           </g>
         )}

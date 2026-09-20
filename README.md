@@ -145,16 +145,18 @@ Each endpoint's data depth was proven on 6 companies first (`docs/data-proof.md`
 
 ### Backtest score (snapshot 2026-09-07)
 
-Default rule "Company about to fail" = suspended (loose) OR missing reports (loose) OR negative equity (loose); scanned at every month end from 2020-01-31 to 2026-09-07.
+Default rule "Suspension watch" = suspended (loose) OR missing reports (loose) OR negative equity (loose); scanned at every month end from 2020-01-31 to 2026-09-07.
+
+The target event is **the day the stock stopped trading**, that is the earliest suspension that is not a price-movement halt, because after that day a retail holder can no longer sell. Suspensions announced for a price surge ("cooling down", 460 of 583 rows in our data) are not treated as a sign of a troubled company.
 
 | Measure | Value |
 |---|---|
-| Caught (troubled companies) | **26/74**: delisted 6/18, potential delisting 20/56 |
-| Months early (events from 2021 onward) | mean **9 months**, median 7 |
+| Caught (troubled companies) | **16/71**: delisted 4/17, potential delisting 12/54 |
+| Months early (events from 2021 onward) | median **2 months**, mean 7.6 (three companies that stopped reporting for years drag the mean up: FIMP 42, BIMA 33, DPNS 18) |
 | False alarms | **1/30** healthy controls (AADI, a limitation of our definition, explained on the methodology page) |
-| Skipped | 3 monitored companies with no target event (MENN, TGRA, WSKT) |
+| Skipped | 6 troubled companies whose trading-halt date we do not know (ENVY, MENN, PTMR, TGRA, TGUK, WSKT) |
 
-Why 12 of the 18 delisted companies were missed, how controls were chosen, anti-lookahead, and every data limitation (reports since 2020 Q1, filings since 2024, 8 companies returning 404, one suspension row per symbol, free float without history, survivorship) are on **`/cara-kami-menghitung`**.
+Most catches are one repeatable pattern: the annual report is not filed by 30 April, and the exchange suspends the stock around the end of June (ZBRA, ALTO, SWAT, PMMP). Why the rest were missed, how controls were chosen, anti-lookahead, and every data limitation (reports since 2020 Q1, filings since 2024, 8 companies returning 404, one suspension row per symbol, free float without history, survivorship) are on **`/cara-kami-menghitung`**.
 
 ### Production (Vercel + Neon, 12 September 2026)
 
@@ -233,7 +235,7 @@ npm run backtest -- src/lib/engine/fixtures/aturan-default.json --fixture --toda
 
 # Real universe of 107 companies (needs ./.pglite or DATABASE_URL)
 npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07
-#   → caught 26/74 (delisted 6/18, potential delisting 20/56), mean 9 months, median 7, false alarms 1/30
+#   → caught 16/71 (delisted 4/17, potential delisting 12/54), median 2 months, mean 7.6, false alarms 1/30
 
 # The committed snapshot (docs/skor-nyata.json) is produced by
 npm run backtest -- src/lib/engine/fixtures/aturan-default.json --today=2026-09-07 --json

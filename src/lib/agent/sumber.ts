@@ -9,6 +9,7 @@
 // target untuk diukur lead-nya — mesin menolaknya — jadi dilewati di sini dan
 // dilaporkan di `dilewati` agar jumlahnya jujur di UI.
 import { getEventSource, type JenisSumber } from "../engine/sumber";
+import { pilihUniverseUji } from "../engine/universe-uji";
 import type { EventSource, UniverseEntry } from "../engine";
 
 export interface SumberTerpilih {
@@ -25,9 +26,8 @@ export interface SumberTerpilih {
 export async function pilihSumber(paksaFixture = false): Promise<SumberTerpilih> {
   const s = await getEventSource({ fixture: paksaFixture });
   const semua = await s.universe();
-  const tanpaTarget = semua.filter((u) => u.group !== "control" && !u.targetEventDate);
-  const universe = semua.filter((u) => !tanpaTarget.includes(u));
-  return { source: s.source, universe, dilewati: tanpaTarget.map((u) => u.symbol), keterangan: s.keterangan, jenis: s.jenis };
+  const { universe, dilewati } = await pilihUniverseUji(semua, s.source);
+  return { source: s.source, universe, dilewati, keterangan: s.keterangan, jenis: s.jenis };
 }
 
 /** true bila sumber adalah database (Neon/Postgres/PGlite) berisi data Sectors nyata. */

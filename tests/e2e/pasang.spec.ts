@@ -47,7 +47,7 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   // Tanggal ditulis untuk dibaca orang, bukan ISO (DESIGN.md aturan 9).
   await expect(pesan).toContainText(ADA_PGLITE ? "18 Mei 2021" : "1 Nov 2024");
   await expect(pesan).toContainText("bukan saran investasi");
-  await expect(pesan).toContainText("Saham mau pailit");
+  await expect(pesan).toContainText("Waspada suspensi");
   // Atribusi sumber di pesan penjelasan harus ikut jujur pada jalur fixture.
   await expect(pesan).toContainText(ADA_PGLITE ? "Sectors /v2/suspensions/" : "data contoh: fixture");
   if (!ADA_PGLITE) await expect(pesan).not.toContainText("Sectors /v2/");

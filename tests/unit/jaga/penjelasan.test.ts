@@ -23,7 +23,7 @@ const MERAH: HasilSaham = {
       detail: "laporan 2024 q4 (akhir 2024-12-31) belum tersedia 120 hari setelahnya (+5 kuartal lain)",
       tanggal: "2024-12-31",
       sumber: "Sectors /v2/company/get_quarterly_financial_dates/ (di DB kami)",
-      alarm: [{ id: "a1", name: "Saham mau pailit" }],
+      alarm: [{ id: "a1", name: "Waspada suspensi" }],
     },
     {
       kind: "insider_jual",
@@ -46,7 +46,7 @@ const MERAH: HasilSaham = {
     },
   ],
   alarmBerbunyi: [
-    { id: "a1", name: "Saham mau pailit" },
+    { id: "a1", name: "Waspada suspensi" },
     { id: "b1", name: "Jebakan IPO/harga" },
   ],
   kelasB: {
@@ -90,7 +90,7 @@ describe("templatePenjelasan", () => {
     expect(t).toContain("(31 Des 2024, sumber: Sectors)");
     expect(t).not.toMatch(/\/v2\/|\[tanggal|\d{4}-\d{2}-\d{2}\]/);
     expect(t).toContain("(3) Ritel dominan, institusi melepas");
-    expect(t).toContain("Alarm yang berbunyi: “Saham mau pailit”, “Jebakan IPO/harga”.");
+    expect(t).toContain("Alarm yang berbunyi: “Waspada suspensi”, “Jebakan IPO/harga”.");
     expect(t).toContain("masih tersuspensi menurut data kami (sejak 18 Mei 2021)");
     // Temuan data terkini yang tidak terpenuhi: kalimat biasa berikut angkanya,
     // tanpa nama mesin blok (tiket 26).

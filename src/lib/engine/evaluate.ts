@@ -8,7 +8,7 @@
 // yang tidak tercantum di sana ditandai "ASUMSI" dan dirangkum di
 // docs/mesin-uji.md.
 import { daftarAkhirKuartal, labelKuartal, tambahBulan, tambahHari, tambahTahun } from "./dates";
-import type { EmitenEvents } from "./events";
+import type { EmitenEvents, KejadianSuspensi } from "./events";
 import type { BlockKind, Rule, Threshold } from "./rules";
 
 export interface Reason {
@@ -49,8 +49,50 @@ function fmtRp(x: number): string {
 // ---------------------------------------------------------------------------
 // Blok 1: Saham disuspensi
 // ---------------------------------------------------------------------------
+
+/**
+ * Suspensi karena gerak harga: BEI menghentikan perdagangan sehari-dua untuk
+ * meredam lonjakan ("peningkatan harga kumulatif yang signifikan", "dalam
+ * rangka cooling down"). Itu jeda rutin bursa, bukan tanda perusahaannya
+ * bermasalah, padahal di data kami jumlahnya 460 dari 583 suspensi (272 dari
+ * 294 dalam 12 bulan sampai 7 Sep 2026). Alasan kosong tetap dihitung: tanpa
+ * alasan kita tidak bisa bilang itu jeda rutin (tiket 39).
+ */
+const POLA_GERAK_HARGA = /cooling down|harga kumulatif/i;
+
+export function suspensiGerakHarga(x: KejadianSuspensi): boolean {
+  return x.reason !== null && POLA_GERAK_HARGA.test(x.reason);
+}
+
+/** Suspensi bertanggal <= t yang BUKAN jeda gerak harga. */
+export function suspensiMasalah(e: EmitenEvents, t: string): KejadianSuspensi[] {
+  return e.suspensions.filter((x) => x.date <= t && !suspensiGerakHarga(x));
+}
+
+/**
+ * Tanggal kejadian target yang BENAR-BENAR diukur: suspensi masalah PALING AWAL
+ * yang bertanggal <= `tercatat`; bila tidak ada, tanggal catatan itu sendiri.
+ *
+ * Feed BEI mengumumkan ulang suspensi yang masih berjalan ("Suspend more than
+ * 6 month", 56 baris di data kami), dan tanggal catatan delisting jatuh
+ * bertahun-tahun sesudah sahamnya berhenti diperdagangkan. Mengukur ke tanggal
+ * terakhir membuat "tanda lebih awal" terlihat panjang padahal pemegang saham
+ * sudah tidak bisa menjual sejak suspensi pertama. LMAS contohnya: dicatat
+ * 20 Des 2023, padahal sudah disuspensi 1 Agu 2022 — klaimnya turun dari 19
+ * bulan menjadi 3 bulan. Tanda hanya berguna bila muncul SEBELUM saham berhenti
+ * diperdagangkan, jadi itu yang diukur (tiket 39).
+ *
+ * `suspensiTambahan` = penghentian perdagangan dari pengumuman publik yang
+ * tidak ada di feed kami (lihat SUSPENSI_PUBLIK di universe/daftar.ts).
+ */
+export function targetTerukur(tercatat: string, e: EmitenEvents, suspensiTambahan?: string | null): string {
+  const s = suspensiMasalah(e, tercatat).map((x) => x.date);
+  if (suspensiTambahan && suspensiTambahan <= tercatat) s.push(suspensiTambahan);
+  return s.length ? s.reduce((a, b) => (b < a ? b : a)) : tercatat;
+}
+
 const suspensi: Evaluator = (e, t, ambang) => {
-  const s = e.suspensions.filter((x) => x.date <= t);
+  const s = suspensiMasalah(e, t);
   if (ambang === "longgar") {
     // Pernah disuspensi dalam 12 bulan sebelum t (inklusif).
     const batas = tambahBulan(t, -12);

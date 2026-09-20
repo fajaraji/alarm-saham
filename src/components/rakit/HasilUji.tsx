@@ -218,7 +218,7 @@ export function HasilUji({ hasil, basi, sedangUji, galat }: Props) {
             {hasil?.dilewati?.length ? (
               <span data-testid="dilewati">
                 {" "}
-                {hasil.dilewati.length} saham dilewati ({hasil.dilewati.join(", ")}) karena tidak punya tanggal kejadian target.
+                {hasil.dilewati.length} saham dilewati ({hasil.dilewati.join(", ")}) karena tanggal berhentinya diperdagangkan tidak ada di data kami.
               </span>
             ) : null}
           </p>

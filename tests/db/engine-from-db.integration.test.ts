@@ -135,6 +135,6 @@ describe.skipIf(!adaPglite)("fromDb (PGlite) identik dengan fromFixture", () => 
       expect(b, rule.name).toEqual(a);
     }
     const h = await runBacktest(parseRule(aturanDefault), universe, dariDb, { today: TODAY });
-    expect(h).toMatchObject({ hits: 2, total: 4, leadMonthsAvg: 23, falseAlarms: 0, controls: 4 });
+    expect(h).toMatchObject({ hits: 3, total: 5, leadMonthsAvg: 18, falseAlarms: 0, controls: 4 });
   });
 });

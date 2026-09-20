@@ -7,6 +7,8 @@ import { catatanHanyaSuspensi } from "../cakupan";
 import type { Db } from "../db/client";
 import { suspensions, symbols } from "../db/schema";
 import { hariIni, pastikanTanggal } from "../engine/dates";
+import { targetTerukur } from "../engine/evaluate";
+import { SUSPENSI_PUBLIK } from "../universe/daftar";
 import { fromDb, kosong, type EmitenEvents, type Group, type UniverseEntry } from "../engine/events";
 import type { SumberKejadian } from "../engine/sumber";
 import { turunkanKejadian, type Kejadian } from "./kejadian";
@@ -140,7 +142,10 @@ export function susunEmiten(b: BahanEmiten): EmitenPutarUlang {
     status,
     companyName: baris?.companyName ?? null,
     group: baris?.group ?? null,
-    targetEventDate: baris?.targetEventDate ?? null,
+    // Tanggal yang sama dengan yang dipakai skor: suspensi pertama rangkaian (tiket 39).
+    targetEventDate: baris?.targetEventDate
+      ? targetTerukur(baris.targetEventDate, events, SUSPENSI_PUBLIK[symbol] ?? null)
+      : null,
     today,
     events,
     kejadian,

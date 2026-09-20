@@ -238,8 +238,8 @@ export default function HalamanCaraKamiMenghitung() {
           <Stat
             testid="stat-lebih-awal"
             label={<Istilah id="lebih_awal">Lebih awal</Istilah>}
-            nilai={`${angka(s.leadAvg)} bln`}
-            sub={`rata-rata; median ${angka(s.leadMedian)} bln (hanya kejadian ≥ ${SKOR_NYATA.leadCutoff})`}
+            nilai={`${angka(s.leadMedian)} bln`}
+            sub={`median; rata-rata ${angka(s.leadAvg)} bln, ditarik naik tiga emiten yang berhenti melapor bertahun-tahun (hanya kejadian ≥ ${SKOR_NYATA.leadCutoff})`}
           />
           <Stat
             testid="stat-alarm-palsu"
@@ -251,7 +251,7 @@ export default function HalamanCaraKamiMenghitung() {
             testid="stat-dilewati"
             label="Dilewati"
             nilai={String(s.skipped.length)}
-            sub={`${s.skipped.join(", ")}: tanpa tanggal kejadian target`}
+            sub={`${s.skipped.join(", ")}: tanggal berhenti diperdagangkan tidak diketahui`}
           />
         </div>
         <p className="mt-3 text-sm text-ink-2" data-testid="blok-pertama">
@@ -290,9 +290,10 @@ export default function HalamanCaraKamiMenghitung() {
           <div className="rounded-xl border border-line bg-surface p-4">
             <dt className="font-semibold">&ldquo;Tertangkap&rdquo; dan &ldquo;lebih awal&rdquo;</dt>
             <dd className="m-0 mt-1 text-sm text-ink-2">
-              Emiten kena dikatakan tertangkap bila alarm berbunyi <em>sebelum</em> tanggal kejadian targetnya. Lebih awal =
-              bulan utuh antara bunyi pertama dan kejadian target. Bunyi di bulan yang sama dengan kejadian tidak sempat
-              &ldquo;terdengar&rdquo; (mis. WIKA: suspensi jatuh tepat pada tanggal target).
+              Kejadian target = <strong>hari sahamnya berhenti diperdagangkan</strong>, yaitu suspensi paling awal yang bukan
+              jeda gerak harga. Sesudah hari itu pemegang saham tidak bisa menjual, jadi tanda yang datang belakangan tidak
+              menolong siapa pun. Tertangkap = alarm berbunyi sebelum hari itu; lebih awal = bulan utuh di antaranya. Bunyi
+              di bulan yang sama dengan kejadian tidak sempat &ldquo;terdengar&rdquo; (mis. WIKA).
             </dd>
           </div>
           <div className="rounded-xl border border-line bg-surface p-4">
@@ -361,14 +362,15 @@ export default function HalamanCaraKamiMenghitung() {
         <ul className="mt-2 grid gap-2 pl-5 text-sm text-ink-2">
           <li>
             <strong>18 emiten <Istilah id="delisting">dihapus dari bursa</Istilah></strong> (delisting efektif 10 November 2026; 7 karena pailit, 11 karena
-            suspensi lebih dari 50 bulan). Kejadian target = tanggal suspensi yang berujung delisting, diverifikasi ke feed
-            suspensi; 5 emiten (ENVY, LMAS, MTRA, SBAT, TELE) memakai tanggal catatan publik karena feed tidak memuat
-            suspensinya.
+            suspensi lebih dari 50 bulan). Kejadian target = suspensi paling awal di feed yang bukan jeda gerak harga. TELE
+            dan BIMA memakai tanggal pengumuman publik yang belum ada di feed kami (10 Juni 2020 dan 19 November 2025);
+            keduanya hanya memundurkan tanggal, tidak pernah membesarkan angka &ldquo;lebih awal&rdquo;.
           </li>
           <li>
             <strong>59 emiten <Istilah id="berpotensi_delisting">berpotensi delisting</Istilah></strong> per 30 Juni 2026 (Peng-S-00019/BEI.PLP/06-2026): semuanya sudah disuspensi lebih dari 6 bulan. Kejadian
-            target = suspensi terakhir ≤ 30 Juni 2026 di feed. Tiga emiten (MENN, TGRA, WSKT) tidak punya kejadian di
-            feed dan dilewati, bukan dihitung sebagai tertangkap.
+            target = suspensi paling awal ≤ 30 Juni 2026 di feed, bukan pengumuman ulangnya. Enam emiten (ENVY, MENN, PTMR,
+            TGRA, TGUK, WSKT) dilewati karena tanggal berhenti diperdagangkannya tidak ada di data kami; mereka tidak
+            dihitung sebagai tertangkap maupun terlewat.
           </li>
           <li>
             <strong>30 <Istilah id="kontrol_sehat">kontrol sehat</Istilah></strong>: anggota LQ45 menurut screener Sectors yang tidak pernah muncul di feed

@@ -12,8 +12,8 @@ import { catatanTidakAdaData } from "../cakupan";
 import { CreditReserveError, NotFoundError, SectorsApiError, type DataProvider } from "../data/provider";
 import type { Broker, FreeFloatEntry } from "../data/types";
 import type { PenyimpanLedger } from "../data/ledger";
-import { hariIni, tambahBulan } from "../engine/dates";
-import { fires } from "../engine/evaluate";
+import { hariIni, tambahBulan, tambahHari } from "../engine/dates";
+import { fires, suspensiGerakHarga, suspensiMasalah } from "../engine/evaluate";
 import type { EmitenEvents, EventSource, UniverseEntry } from "../engine/events";
 import { LABEL_BLOK, type BlockKind, type Threshold } from "../engine/rules";
 import {
@@ -144,13 +144,24 @@ function adaData(e: EmitenEvents): boolean {
   );
 }
 
+/** Jeda gerak harga yang cukup baru untuk diingat pengguna, ditampilkan sebagai catatan saja. */
+const HARI_CATATAN_GERAK_HARGA = 30;
+
+/** Tanggal jeda gerak harga terbaru dalam 30 hari terakhir; null bila tidak ada. */
+export function jedaGerakHargaBaru(e: EmitenEvents, today: string): string | null {
+  const batas = tambahHari(today, -HARI_CATATAN_GERAK_HARGA);
+  const baru = e.suspensions.filter((x) => x.date <= today && x.date > batas && suspensiGerakHarga(x));
+  return baru.length ? baru[baru.length - 1].date : null;
+}
+
 /**
  * Suspensi yang masih aktif pada `today` menurut data kami (feed tidak memuat
  * tanggal pencabutan): (a) suspensi dalam 12 bulan terakhir, atau (b) emiten
  * delisting/watchlist yang suspensi terakhirnya >= tanggal kejadian target.
+ * Jeda karena gerak harga (cooling down) tidak dihitung (tiket 39).
  */
 export function suspensiAktif(e: EmitenEvents, today: string, u?: UniverseEntry): string | null {
-  const s = e.suspensions.filter((x) => x.date <= today);
+  const s = suspensiMasalah(e, today);
   if (s.length === 0) return null;
   const terakhir = s[s.length - 1].date;
   if (terakhir > tambahBulan(today, -12)) return terakhir;
@@ -365,6 +376,12 @@ export async function cekPortofolio({ symbols, alarms, opts }: InputCek): Promis
     const resmi = alasanDaftarBei(symbol, today);
     if (resmi) perKind.set(resmi.kind, resmi);
 
+    const jeda = suspensi ? null : jedaGerakHargaBaru(events, today);
+    if (jeda) {
+      catatan.push(
+        `Perdagangannya sempat dihentikan ${fmtTanggal(jeda)} untuk meredam lonjakan harga. Itu jeda rutin bursa, jadi tidak dihitung sebagai tanda.`,
+      );
+    }
     if (!adaData(events)) {
       // Cakupan mengikuti sumber yang benar-benar dipakai. Kalimat ini muncul di
       // panel pesan /pasang; sebelumnya ia menjanjikan universe nyata walau

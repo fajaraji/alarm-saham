@@ -72,15 +72,17 @@ describe("POST /api/backtest", () => {
     expect(json.keterangan).toMatch(/fixture/);
     const h = json.hasil;
     expect(h.today).toBe("2026-01-31");
-    expect(h.perSymbol).toHaveLength(8);
+    expect(h.perSymbol).toHaveLength(9);
     expect(h.perGroup.delisting.total).toBe(3);
-    expect(h.perGroup.watchlist.total).toBe(1);
+    expect(h.perGroup.watchlist.total).toBe(2);
     expect(h.controls).toBe(4);
-    // Aturan default (suspensi ATAU laporan hilang ATAU ekuitas negatif) menangkap SRIL & TELE.
+    // Diukur ke hari saham berhenti diperdagangkan (tiket 39): SRIL dan TELE
+    // justru terlewat karena tandanya baru muncul setelah suspensi, dan yang
+    // tertangkap adalah ZBRA (laporan berhenti dulu, suspensi dua bulan kemudian).
     const per = Object.fromEntries(h.perSymbol.map((r) => [r.symbol, r]));
-    expect(per.SRIL.fired).toBe(true);
-    expect(per.TELE.fired).toBe(true);
-    expect(h.hits).toBeGreaterThanOrEqual(2);
+    expect(per.ZBRA.fired).toBe(true);
+    expect(per.SRIL.fired).toBe(false);
+    expect(h.hits).toBeGreaterThanOrEqual(1);
     expect(h.falseAlarms).toBeLessThanOrEqual(h.controls);
     // Deterministik: dua panggilan identik → hasil identik.
     const ulang = await (await POST(req({ rule: aturanDefault, today: "2026-01-31" }))).json();
@@ -107,7 +109,7 @@ describe("POST /api/backtest", () => {
     const json = (await res.json()) as { dilewati: string[]; hasil: BacktestResult };
     expect(json.dilewati).toEqual(["MENN"]);
     expect(json.hasil.perSymbol.map((r) => r.symbol)).not.toContain("MENN");
-    expect(json.hasil.perSymbol).toHaveLength(8);
+    expect(json.hasil.perSymbol).toHaveLength(9);
   });
 
   it("Neon tersedia: sumber = 'db', jenis 'neon'", async () => {

@@ -95,7 +95,7 @@ describe.skipIf(!adaPglite)("cekPortofolio (PGlite in-memory)", () => {
     expect(sril.suspensiAktif).toBe("2024-11-01");
     // SRIL ada di daftar delisting BEI: fakta resmi itu ikut sebagai tanda (tiket 38).
     expect(sril.alasan.map((a) => a.kind).sort()).toEqual(["daftar_bei", "ekuitas_negatif", "laporan_hilang", "suspensi"]);
-    expect(sril.alarmBerbunyi).toEqual([{ id: ALARM_BAWAAN[0].id, name: "Saham mau pailit" }]);
+    expect(sril.alarmBerbunyi).toEqual([{ id: ALARM_BAWAAN[0].id, name: "Waspada suspensi" }]);
     expect(sril.alasan.filter((a) => a.kind !== "daftar_bei").every((a) => a.sumber.startsWith("Sectors /v2/"))).toBe(true);
     expect(sril.kelasB.status).toBe("nonaktif");
     const bbca = hasil.saham[1];

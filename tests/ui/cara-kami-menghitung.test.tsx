@@ -23,8 +23,9 @@ describe("/cara-kami-menghitung", () => {
     expect(screen.getByTestId("stat-tertangkap")).toHaveTextContent(
       `delisting ${s.delisting.hits}/${s.delisting.total} · berpotensi delisting ${s.watchlist.hits}/${s.watchlist.total}`,
     );
-    expect(screen.getByTestId("stat-lebih-awal")).toHaveTextContent(`${s.leadAvg} bln`);
-    expect(screen.getByTestId("stat-lebih-awal")).toHaveTextContent(`median ${s.leadMedian} bln`);
+    expect(screen.getByTestId("stat-lebih-awal")).toHaveTextContent(`${s.leadMedian} bln`);
+    // Angka desimal ditulis dengan koma di layar (7,56), bukan titik.
+    expect(screen.getByTestId("stat-lebih-awal")).toHaveTextContent(`rata-rata ${String(s.leadAvg).replace(".", ",")} bln`);
     expect(screen.getByTestId("stat-alarm-palsu")).toHaveTextContent(`${s.falseAlarms}/${s.controls}`);
     expect(screen.getByTestId("stat-dilewati")).toHaveTextContent(String(s.skipped.length));
     for (const k of s.skipped) expect(screen.getByTestId("stat-dilewati")).toHaveTextContent(k);

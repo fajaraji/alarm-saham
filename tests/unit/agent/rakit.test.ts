@@ -18,7 +18,7 @@ const CONTOH: { kalimat: string; rule: Rule; alasan: string }[] = [
   {
     kalimat: "aku mau alarm buat saham yang mau pailit",
     rule: {
-      name: "Saham mau pailit",
+      name: "Waspada suspensi",
       combine: "any",
       blocks: [
         { kind: "suspensi", threshold: "longgar" },

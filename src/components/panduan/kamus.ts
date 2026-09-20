@@ -148,9 +148,9 @@ export const KAMUS: readonly EntriKamus[] = [
     id: "lebih_awal",
     istilah: "Lebih awal",
     definisi:
-      "Berapa bulan alarm sudah berbunyi sebelum kejadian target (suspensi yang berujung dihapus dari bursa, atau suspensi yang membuat saham berpotensi delisting).",
+      "Berapa bulan alarm sudah berbunyi sebelum hari sahamnya berhenti diperdagangkan, yaitu hari terakhir kamu masih bisa menjual.",
     perumpamaan: "Seperti alarm asap yang berbunyi beberapa menit sebelum api membesar: waktu itulah gunanya alarm.",
-    catatan: "Dihitung dalam bulan utuh; kejadian sebelum 2021 tidak ikut rata-rata karena data laporan baru mulai 2020.",
+    catatan: "Dihitung dalam bulan utuh; kejadian sebelum 2021 tidak ikut rata-rata karena data laporan baru mulai 2020. Jeda sehari-dua karena lonjakan harga tidak dihitung sebagai berhenti diperdagangkan.",
     lihat: [RAKIT, METODOLOGI],
   },
   {
