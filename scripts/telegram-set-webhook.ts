@@ -21,8 +21,25 @@ if (!/^https:\/\//.test(dasar)) {
   process.exit(1);
 }
 
-const url = `${dasar}/api/telegram/webhook`;
-const api = new Api(token);
-const hasil = await api.setWebhook(url, { secret_token: secret, drop_pending_updates: true, allowed_updates: ["message"] });
-const info = await api.getWebhookInfo();
-console.log(JSON.stringify({ setWebhook: hasil, url: info.url, pending: info.pending_update_count, lastError: info.last_error_message ?? null }, null, 2));
+// Dibungkus fungsi, bukan await tingkat atas: tsx mengompilasi berkas .ts di
+// paket CommonJS ini ke CJS, dan di sana await tingkat atas adalah galat build
+// (ketahuan saat skrip ini pertama kali benar-benar dijalankan, 20 Sep 2026).
+async function main(): Promise<void> {
+  const url = `${dasar}/api/telegram/webhook`;
+  const api = new Api(token as string);
+  const hasil = await api.setWebhook(url, { secret_token: secret as string, drop_pending_updates: true, allowed_updates: ["message"] });
+  const info = await api.getWebhookInfo();
+  console.log(
+    JSON.stringify(
+      { setWebhook: hasil, url: info.url, pending: info.pending_update_count, lastError: info.last_error_message ?? null },
+      null,
+      2,
+    ),
+  );
+}
+
+main().catch((err: unknown) => {
+  // Pesan galat Telegram bisa memuat token di URL-nya; hanya pesannya dicetak.
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exitCode = 1;
+});
