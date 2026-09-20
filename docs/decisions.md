@@ -313,3 +313,13 @@ Audit hackathon menemukan dua kesalahan yang membuat klaim produk lebih besar da
 Sisa tangkapan hampir seluruhnya satu pola yang bisa dicek siapa pun: laporan tahunan tidak masuk 30 April, BEI menyuspensi akhir Juni (ZBRA, ALTO, SWAT, PMMP). Karena rata-rata ditarik naik tiga emiten yang berhenti melapor bertahun-tahun (FIMP 42, BIMA 33, DPNS 18), **median yang dipajang sebagai angka utama**, rata-rata jadi keterangan.
 
 Ikutannya: alarm bawaan berganti nama "Saham mau pailit" → **"Waspada suspensi"** (sebagian besar pemicunya telat lapor, bukan kepailitan); contoh beranda tidak lagi memakai TELE; data contoh `universe-kecil.json` ditambah ZBRA dengan suspensi dan daftar kuartal NYATA supaya mode contoh menunjukkan pola yang benar (1/5 tertangkap, 2 bulan lebih awal) alih-alih 0/4.
+
+## 2026-09-20 — Penyegaran data kelas A dan tanggalnya di layar (tiket 42)
+
+Data kelas A adalah snapshot `pull-universe` (tiket 07) yang berhenti 7 Sep 2026 dan tidak berubah sendiri. Dua akibatnya: saham yang disuspensi minggu ini tidak pernah muncul, dan mulai 28 Okt 2026 blok "laporan hilang" akan berbunyi palsu untuk emiten sehat yang laporan kuartal 2-nya belum kami tarik.
+
+- **Tanggal data terlihat.** `tanggalTarikData()` membaca panggilan API terakhir dari `api_ledger`, dan /putar-ulang, /rakit, serta /pasang menampilkannya. Tidak ada tanggal yang diketik tangan, dan jalur data contoh tetap kosong karena memang tidak punya buku kredit.
+- **Perintah `npm run segarkan`.** Feed suspensi ditarik dengan `end` = hari ini (cache 24 jam, bukan permanen) dan berhenti sesudah dua halaman tanpa baris baru. Daftar kuartal: baris cache permanen emiten dihapus lebih dulu, karena tanpa itu jawaban lama akan dikembalikan selamanya. Urutannya emiten paling basi lebih dulu, jadi `--maks` yang kecil tetap mengenai yang paling berisiko. Mode `--dry` mencetak rencana tanpa satu pun panggilan.
+- **Batas laju.** Sectors membalas HTTP 429 bila panggilan terlalu rapat; provider hanya mengulang 503, jadi skrip memberi jeda 1,5 detik antar emiten dan mengulang 429 dengan tunggu 5, 15, 45 detik. Run pertama berhenti di emiten ke-25 karena ini.
+- **Biaya sebenarnya, 20 Sep 2026:** 98 kredit (3 suspensi + 95 daftar kuartal; sisa menurut ledger produksi 431). Hasilnya 9 baris suspensi baru (data sebelumnya berhenti 4 Sep) dan 9 kuartal baru, termasuk BBRI, ANTM, dan ADRO yang diwanti-wanti audit sebagai bom waktu alarm palsu.
+- **Snapshot lokal tidak ikut disegarkan.** `docs/skor-nyata.json` dan `docs/kredit-ledger.json` tetap dihitung dari `./.pglite` 7 Sep, supaya keduanya bisa direproduksi persis oleh siapa pun tanpa kredit; keduanya memang berlabel tanggal. Selisihnya disebut terang-terangan di README dan halaman metodologi.

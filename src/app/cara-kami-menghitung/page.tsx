@@ -553,6 +553,12 @@ export default function HalamanCaraKamiMenghitung() {
           yang tidak disentuh kode (panggilan ditolak bila sisa di bawah cadangan). Uji ke masa lalu dan halaman ini tidak
           memanggil API sama sekali.
         </p>
+        <p className="mt-2 max-w-[70ch] text-sm text-ink-2" data-testid="kredit-penyegaran">
+          Angka di atas adalah snapshot penarikan universe. Pada 20 September 2026 data di database produksi disegarkan
+          lagi dengan 98 kredit: 3 untuk feed suspensi sampai hari itu, 95 untuk daftar kuartal laporan (emiten yang
+          datanya paling lama tidak diperbarui lebih dulu). Biayanya dihitung dari buku kredit sebelum dan sesudah, bukan
+          ditaksir.
+        </p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-surface">
           <table className="w-full min-w-[640px] border-collapse text-[13px]">
             <thead>
