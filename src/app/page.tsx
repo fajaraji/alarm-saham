@@ -101,9 +101,11 @@ async function cariBukti(sumber: SumberKejadian): Promise<Bukti | null> {
  * /putar-ulang juga, dan dua CTA dengan niat yang sama di satu halaman adalah
  * kegagalan pre-flight taste-skill (Section 4.5).
  *
- * Susunan: hero kotak cari (satu kolom, rata kiri) → contoh (belah teks +
- * linimasa) → baris angka → tiga langkah 1+2 → pita batas. Lima bagian, lima
- * keluarga tata letak.
+ * Susunan (tiket 44): hero kotak cari → ajakan pasang (intinya: dijaga tiap
+ * pagi tanpa membuka apa pun) → contoh nyata (belah teks + linimasa) → "Lihat
+ * buktinya" (angka uji + putar ulang + rakit) → pita batas. Rakit dan uji ke
+ * masa lalu sengaja turun ke bawah: keduanya fitur pengguna mahir dan bukti
+ * bagi juri, bukan alasan orang awam datang ke sini.
  */
 export default async function Beranda() {
   const sumber = await getEventSource();
@@ -166,12 +168,30 @@ export default async function Beranda() {
             ))}
           </datalist>
           <p className="m-0 mt-2 text-[12.5px] text-ink-3">
-            Ketik lalu pilih dari saran. Bisa dicari: {opsi.length} emiten.{" "}
-            <Link href="/cara-kami-menghitung" className="font-semibold text-accent underline">
-              Cara kami menghitung
-            </Link>
+            Ketik lalu pilih dari saran. Bisa dicari: {opsi.length} emiten. Di Telegram, ketik{" "}
+            <code className="rounded bg-surface-2 px-1 py-0.5 font-mono text-[12px] text-ink-2">/cek BBCA</code> ke bot kami.
           </p>
         </form>
+      </section>
+
+      {/* ---------- Bagian 2: pasang dan dijaga, inti produk (tiket 44) ----------
+          Dulu bagian ini ada di paling bawah sebagai kartu ketiga dari "tiga
+          langkah". Yang dicari orang justru ini: dijaga tanpa harus membuka
+          apa pun. Rakit dan angka uji turun ke bagian "Lihat buktinya". */}
+      <section aria-labelledby="jaga" className="mt-14 rounded-xl border border-line bg-surface-2 p-6">
+        <h2 id="jaga" className="m-0 font-display text-[22px] font-bold">
+          Lalu biarkan kami yang menjaganya
+        </h2>
+        <p className="mt-2.5 max-w-[58ch] text-[14.5px] leading-relaxed text-ink-2">
+          Simpan saham yang kamu pegang, dan setiap pagi kami cek ulang ke {contoh ? "data yang ada di server ini" : "data resmi"}.
+          Yang berubah dikirim ke kotak masuk dan ke Telegram, jadi kamu tidak perlu membuka apa pun.
+        </p>
+        <Link
+          href="/pasang"
+          className="mt-4 inline-block rounded-lg bg-accent px-5 py-2.5 text-[14px] font-semibold text-accent-ink no-underline transition-transform hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-px"
+        >
+          Pasang alarm untuk sahammu
+        </Link>
       </section>
 
       {/* ---------- Bagian 2: satu contoh, dengan penjelasan lengkap ---------- */}
@@ -208,23 +228,29 @@ export default async function Beranda() {
         </section>
       ) : null}
 
-      {/* ---------- Bagian 3: satu baris angka terukur ---------- */}
+      {/* ---------- Bagian 4: lihat buktinya (angka + rakit sendiri) ---------- */}
       <section aria-labelledby="angka" className="mt-16 border-t border-line pt-6">
-        <h2 id="angka" className="sr-only">
-          Hasil uji ke masa lalu
+        <h2 id="angka" className="m-0 font-display text-[22px] font-bold">
+          Lihat buktinya
         </h2>
-        <dl className="m-0 grid gap-x-8 gap-y-5 sm:grid-cols-3">
+        <p className="mt-2 max-w-[58ch] text-[14.5px] leading-relaxed text-ink-2">
+          Aturan bawaan diuji ke saham yang benar-benar bermasalah, diukur sampai hari sahamnya berhenti diperdagangkan.
+          Sesudah hari itu sahamnya tidak bisa dilepas lagi, jadi tanda yang datang belakangan tidak dihitung.
+        </p>
+        <dl className="m-0 mt-5 grid gap-x-8 gap-y-5 sm:grid-cols-3">
           <div>
             <dd className="m-0 font-display text-[30px] font-extrabold leading-none tabular-nums text-ink">
-              {skor.perGroup.delisting.hits}/{skor.perGroup.delisting.total}
+              {skor.hits}/{skor.total}
             </dd>
-            <dt className="mt-1.5 text-[13px] text-ink-2">saham dihapus dari bursa yang alarmnya berbunyi lebih dulu</dt>
+            <dt className="mt-1.5 text-[13px] text-ink-2">saham bermasalah yang tandanya terbit lebih dulu</dt>
           </div>
           <div>
             <dd className="m-0 font-display text-[30px] font-extrabold leading-none tabular-nums text-ink">
-              {Math.round(skor.leadMonthsAvg ?? 0)} bln
+              {skor.leadMonthsMedian ?? 0} bln
             </dd>
-            <dt className="mt-1.5 text-[13px] text-ink-2">rata-rata jarak bunyi pertama ke hari kejadian</dt>
+            <dt className="mt-1.5 text-[13px] text-ink-2">
+              jarak khas tanda pertama ke hari saham berhenti diperdagangkan
+            </dt>
           </div>
           <div>
             <dd className="m-0 font-display text-[30px] font-extrabold leading-none tabular-nums text-ink">
@@ -240,51 +266,29 @@ export default async function Beranda() {
           </Link>
           .
         </p>
-      </section>
-
-      {/* ---------- Bagian 4: tiga langkah, 1 besar + 2 bertumpuk ---------- */}
-      <section aria-labelledby="langkah" className="mt-14">
-        <h2 id="langkah" className="m-0 font-display text-[22px] font-bold">
-          Tiga langkah, dan kamu yang menentukan aturannya
-        </h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-[1.25fr_1fr]">
-          {/* Isi dirapatkan ke atas, TIDAK `justify-between`: kartu ini setinggi
-              dua kartu di kanannya, dan menjauhkan judul dari keterangannya
-              meninggalkan lubang kosong di tengah. */}
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <Link
             href="/putar-ulang"
-            className="group rounded-xl border border-line bg-surface-2 p-6 no-underline transition-colors hover:border-accent"
+            className="group rounded-xl border border-line p-5 no-underline transition-colors hover:border-accent"
           >
-            <span className="block font-display text-[21px] font-bold text-ink group-hover:text-accent">
+            <span className="font-display text-[17px] font-bold text-ink group-hover:text-accent">
               Putar ulang satu saham
             </span>
-            <span className="mt-2.5 block max-w-[40ch] text-[14.5px] leading-relaxed text-ink-2">
+            <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-2">
               Geser waktu ke belakang dan lihat tanda apa yang sudah terbit pada tanggal itu, lengkap dengan sumbernya.
             </span>
           </Link>
-          <div className="grid gap-4">
-            <Link
-              href="/rakit"
-              className="group rounded-xl border border-line p-5 no-underline transition-colors hover:border-accent"
-            >
-              <span className="font-display text-[17px] font-bold text-ink group-hover:text-accent">Rakit alarmmu</span>
-              <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-2">
-                Susun syarat dari blok, lalu uji ke emiten yang benar-benar pernah dihapus dari bursa.
-              </span>
-            </Link>
-            <Link
-              href="/pasang"
-              className="group rounded-xl border border-line p-5 no-underline transition-colors hover:border-accent"
-            >
-              <span className="font-display text-[17px] font-bold text-ink group-hover:text-accent">Pasang dan tunggu</span>
-              {/* Klaim sumber WAJIB mengikuti sumber yang benar-benar dipakai server
-                  (aturan lomba (d)); di jalur data contoh yang diperiksa data contoh. */}
-              <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-2">
-                Setiap pagi alarmmu dicek ulang ke {contoh ? "data yang ada di server ini" : "data resmi"}. Yang berubah
-                masuk kotak masuk.
-              </span>
-            </Link>
-          </div>
+          <Link
+            href="/rakit"
+            className="group rounded-xl border border-line p-5 no-underline transition-colors hover:border-accent"
+          >
+            <span className="font-display text-[17px] font-bold text-ink group-hover:text-accent">
+              Rakit aturanmu sendiri
+            </span>
+            <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-2">
+              Susun syarat dari blok, lalu uji sendiri ke saham yang benar-benar pernah dihapus dari bursa.
+            </span>
+          </Link>
         </div>
       </section>
 
