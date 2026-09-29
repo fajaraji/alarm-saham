@@ -23,6 +23,14 @@ async function seret(page: Page, dari: Locator, ke: Locator) {
   await page.waitForTimeout(80);
   await page.mouse.move(x1 + 1, y1 + 1, { steps: 2 });
   await page.mouse.up();
+  // Sesudah seret, dnd-kit memasang peredam klik dan baru mencabutnya lewat
+  // setTimeout 50 ms (lihat src/components/rakit/sensor.ts). Klik yang tiba di
+  // dalam jendela itu ditelan diam-diam. Manusia tidak pernah mengklik secepat
+  // itu sesudah melepas seret, tetapi Playwright bisa: di runner Linux CI klik
+  // berikutnya tiba < 50 ms dan tesnya gagal dengan tombol tercatat [active]
+  // tetapi onClick tidak pernah jalan (CI run 36307294874). Di Windows jeda
+  // antar perintah selalu lebih panjang, jadi bugnya tidak pernah muncul lokal.
+  await page.waitForTimeout(120);
 }
 
 /**
