@@ -5,7 +5,7 @@
 //
 // Alasan usulan blok TIDAK PERNAH dikosongkan penjaga (tiket 15 putaran 5):
 // versi lama menggantinya dengan "[kalimat saran dihapus]" dan penyerang
-// membuktikan kedua alasan bisa hilang sekaligus — panel memasang dua tombol
+// membuktikan kedua alasan bisa hilang sekaligus; panel memasang dua tombol
 // usulan blok tanpa satu pun alasan, yaitu justru nilai jual produk. Sekarang
 // `usulanBlok[].perluTinjau` memasang tanda peringatan di atas alasannya dan
 // teks aslinya tetap tampil supaya pengguna bisa menilainya sendiri.
@@ -117,7 +117,7 @@ export function PanelAi(p: Props) {
           {p.galat}
         </p>
       ) : !d ? (
-        <p className="text-ink-2">{p.adaHasil ? "Klik “Minta diagnosis AI” untuk tahu di mana alarmmu bolong." : TEKS.aiBelum}</p>
+        <p className="text-ink-2">{p.adaHasil ? "Klik “Minta diagnosis AI” untuk melihat celah pada alarm." : TEKS.aiBelum}</p>
       ) : (
         <div className="flex flex-col gap-2">
           <p>{d.ringkasan}</p>
@@ -125,7 +125,7 @@ export function PanelAi(p: Props) {
             <p className="text-xs text-warn" data-testid="tinjau-diagnosis">
               Penjaga menemukan frasa yang menyerupai saran investasi
               {d.kataDisensor.length > 0 ? ` (${d.kataDisensor.join(", ")})` : ""}. Frasa pada ringkasan disamarkan; alasan
-              usulan blok dibiarkan utuh tetapi ditandai supaya bisa kamu nilai sendiri. Alarm Saham hanya alat informasi
+              usulan blok dibiarkan utuh tetapi ditandai untuk dinilai sendiri. Alarm Saham hanya alat informasi
               dan analisis.
             </p>
           ) : null}
@@ -160,7 +160,7 @@ export function PanelAi(p: Props) {
                       className="block text-[11.5px] font-semibold text-warn"
                       data-testid={`tinjau-usulan-${u.kind}`}
                     >
-                      ⚠ Alasan ini perlu kamu nilai sendiri: ada frasa yang menyerupai saran investasi.
+                      ⚠ Alasan ini perlu dinilai sendiri: ada frasa yang menyerupai saran investasi.
                     </span>
                   ) : null}
                   <span className="block text-[11.5px] font-normal text-ink-2">{u.alasan}</span>

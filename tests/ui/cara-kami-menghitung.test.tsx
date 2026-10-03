@@ -17,7 +17,9 @@ describe("/cara-kami-menghitung", () => {
     const s = ringkasSkor(SKOR_NYATA);
 
     expect(screen.getByRole("heading", { level: 1, name: "Cara kami menghitung" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: new RegExp(`snapshot ${SKOR_NYATA.today}`) })).toBeInTheDocument();
+    // Sejak audit-003 tanggal di judul ditulis tanggal awam ("7 Sep 2026"),
+    // bukan ISO; tes ikut memakai fmtTanggal, tetap sekaku sebelumnya.
+    expect(screen.getByRole("heading", { level: 2, name: new RegExp(`snapshot ${fmtTanggal(SKOR_NYATA.today)}`) })).toBeInTheDocument();
 
     expect(screen.getByTestId("stat-tertangkap")).toHaveTextContent(`${s.hits}/${s.total}`);
     expect(screen.getByTestId("stat-tertangkap")).toHaveTextContent(
@@ -112,7 +114,8 @@ describe("/cara-kami-menghitung", () => {
     // Tolok ukurnya disebut dengan kata-kata, bukan nama berkas (tiket 27).
     expect(document.body.textContent).not.toContain(KORPUS_PENJAGA);
     expect(document.body.textContent).toMatch(/kumpulan kalimat uji/);
-    expect(document.body.textContent).toContain(PENJAGA_FRASA.tanggal);
+    // Tanggal pengukuran ditulis awam ("10 Sep 2026"), bukan ISO (audit-003).
+    expect(document.body.textContent).toContain(fmtTanggal(PENJAGA_FRASA.tanggal));
     // Tidak ada klaim bahwa penjaga memblokir semua kalimat beranjuran.
     expect(document.body.textContent).not.toMatch(/memblokir semua kalimat beranjuran(?![^.]*tidak)/i);
     expect(document.body.textContent).toMatch(/tidak<\/strong> mengklaim|tidak\s+mengklaim/i);

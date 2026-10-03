@@ -8,6 +8,20 @@ import { KotakMasuk } from "../../src/components/pasang/KotakMasuk";
 import { botAktif } from "../../src/lib/telegram/status";
 
 vi.mock("@/lib/sumber-situs", () => ({ sumberSitus: async () => ({ nyata: true, jenis: "pglite" }) }));
+// Saran ketik kotak kode /pasang juga dihitung dari sumber kejadian di server;
+// di jsdom ia disuntik supaya tes tidak pernah membuka ./.pglite mesin pengembang.
+vi.mock("@/lib/engine/sumber", () => ({
+  getEventSource: async () => ({
+    jenis: "fixture",
+    keterangan: "fixture tes",
+    db: null,
+    universe: async () => [
+      { symbol: "BBCA", group: "control" },
+      { symbol: "SRIL", group: "delisting", targetEventDate: "2024-11-01" },
+    ],
+    tutup: async () => {},
+  }),
+}));
 
 const { default: HalamanPasang } = await import("../../src/app/pasang/page");
 

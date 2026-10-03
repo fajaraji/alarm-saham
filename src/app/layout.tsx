@@ -43,9 +43,32 @@ const plexMono = localFont({
   display: "swap",
 });
 
+// Alamat publik dipakai untuk `metadataBase`: gambar berbagi (opengraph-image)
+// dan tautan kanonik harus absolut. Di produksi Vercel bisa ditimpa lewat
+// NEXT_PUBLIC_SITUS_URL bila domainnya berubah.
+const SITUS = process.env.NEXT_PUBLIC_SITUS_URL ?? "https://alarm-saham.vercel.app";
+const DESKRIPSI_SITUS =
+  "Rakit alarm saham dari blok syarat, uji ke masa lalu, dan pasang untuk memantau portofolio.";
+
+// Metadata berbagi dipakai saat tautan ditempel ke Telegram atau WhatsApp:
+// tanpa ini kartunya tampil kosong (tanpa judul kaya dan gambar). Gambarnya
+// dirender dari token yang ada lewat src/app/opengraph-image.tsx.
 export const metadata: Metadata = {
+  metadataBase: new URL(SITUS),
   title: "Alarm Saham",
-  description: "Rakit alarm saham dari blok syarat, uji ke masa lalu, dan pasang untuk portofoliomu.",
+  description: DESKRIPSI_SITUS,
+  openGraph: {
+    type: "website",
+    locale: "id_ID",
+    siteName: "Alarm Saham",
+    title: "Alarm Saham",
+    description: DESKRIPSI_SITUS,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Alarm Saham",
+    description: DESKRIPSI_SITUS,
+  },
 };
 
 // Header (langkah 1–2–3, Kamus, tombol Panduan), overlay panduan kunjungan
@@ -60,6 +83,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="id" className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        {/* Tautan lewati-ke-konten: tersembunyi sampai difokus papan tuts, lalu
+            muncul di atas overlay. `<main>` tiap halaman diberi id="konten". */}
+        <a
+          href="#konten"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[var(--z-lewati)] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-[14px] focus:font-semibold focus:text-accent-ink"
+        >
+          Lewati ke konten
+        </a>
         <PanduanProvider>
           <HeaderNav />
           <OverlayPanduan sumberNyata={nyata} />

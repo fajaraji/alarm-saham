@@ -101,7 +101,7 @@ describe("templatePenjelasan", () => {
 
   it("hijau: tidak ada syarat, keterangan kelas B dilewati, disclaimer", () => {
     const t = templatePenjelasan(HIJAU, "2026-09-07");
-    expect(t).toContain("BBCA (aman menurut alarmmu): tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
+    expect(t).toContain("BBCA (aman menurut alarm): tidak ada satu pun syarat yang terpenuhi pada 7 Sep 2026.");
     expect(t).toContain("Data terkini tidak ditarik karena kredit Sectors tim tinggal cadangan.");
     expect(t.endsWith(DISCLAIMER)).toBe(true);
   });
@@ -218,7 +218,7 @@ describe("penjelasanPortofolio: paralel dan berbatas waktu (tiket 37)", () => {
         } finally {
           if (pantau) pantau.aktif--;
         }
-        return langkahProsa("Saham ini aman menurut alarmmu pada 7 Sep 2026.");
+        return langkahProsa("Saham ini aman menurut alarm pada 7 Sep 2026.");
       },
     });
   }

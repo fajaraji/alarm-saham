@@ -8,7 +8,7 @@ import { ADA_PGLITE, buka, harapkanLabelSumber, muatUlang, tutupDialogTautanPert
 
 test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ulang tetap ada", async ({ page }) => {
   await buka(page, "/pasang");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pasang alarmmu");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Pasang alarm");
   await expect(page.getByTestId("disclaimer")).toContainText("bukan saran investasi");
   await expect(page.getByTestId("portofolio-kosong")).toBeVisible();
   await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
@@ -53,7 +53,7 @@ test("tambah BBCA & SRIL → cek sekarang → peta berwarna & pesan → muat ula
   if (!ADA_PGLITE) await expect(pesan).not.toContainText("Sectors /v2/");
   const teks = (await pesan.textContent()) ?? "";
   expect(teks.replace(/filing jual/g, "")).not.toMatch(/\b(beli|jual|rekomendasi)\b/i);
-  await expect(page.getByTestId("pesan-BBCA")).toContainText("aman menurut alarmmu");
+  await expect(page.getByTestId("pesan-BBCA")).toContainText("aman menurut alarm");
 
   // Kotak masuk: bendera SRIL
   await expect(page.getByTestId("kotak-masuk")).toHaveAttribute("data-baru", "1");

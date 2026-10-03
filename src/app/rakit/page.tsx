@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 
 import { NavigasiLangkah } from "@/components/panduan/NavigasiLangkah";
 import { PetunjukLayar } from "@/components/panduan/PetunjukLayar";
@@ -13,22 +14,25 @@ export const metadata: Metadata = {
 // Header, overlay panduan, dan footer disclaimer datang dari layout akar (tiket 13).
 export default function HalamanRakit() {
   return (
-    <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
-      <p className="text-[12px] font-semibold text-ink-3">{TEKS.eyebrow}</p>
+    <main id="konten" className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
+      {/* Eyebrow "Langkah 2 dari 3" dibuang (audit-003 temuan 5): chip bernomor di
+          header sudah menyebut posisi halaman, dan rantai Sebelumnya/Berikutnya
+          mengulanginya lagi di bawah. Tiga kali satu fakta di satu layar =
+          DESIGN.md butir 1. */}
       <h1 className="mb-1.5 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">
         {TEKS.judul}
       </h1>
       <PetunjukLayar
         langkah={[
-          <>
+          <Fragment key="seret">
             <strong>Seret</strong> blok dari kotak kiri ke papan, atau klik <strong>Minta AI rakit</strong>.
-          </>,
-          <>
+          </Fragment>,
+          <Fragment key="gabung">
             Klik <strong>ATAU/DAN</strong> untuk mengubah cara menggabung, klik ambang untuk memperketat.
-          </>,
-          <>
+          </Fragment>,
+          <Fragment key="uji">
             Klik <strong>Uji ke masa lalu</strong> untuk melihat skornya.
-          </>,
+          </Fragment>,
         ]}
       />
 

@@ -1,8 +1,8 @@
-// /putar-ulang?kode=SRIL — server component: muat data emiten dari DB/PGlite/fixture
+// /putar-ulang?kode=SRIL: server component, muat data emiten dari DB/PGlite/fixture
 // (nol panggilan API Sectors), lalu serahkan ke komponen klien untuk slider.
 //
 // Label sumber WAJIB ikut ke bawah (properti `sumberContoh`): pada server tanpa
-// DATABASE_URL dan tanpa ./.pglite, isinya fixture contoh — angka keuangan,
+// DATABASE_URL dan tanpa ./.pglite, isinya fixture contoh: angka keuangan,
 // rasio rights issue, dan filing di sana ilustratif. Sebelumnya halaman ini
 // menyebut semuanya "fakta dari data resmi" tanpa satu pun penanda.
 import { daftarBisaDicari } from "@/lib/putar-ulang/daftar-cari";
@@ -44,7 +44,7 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
   if (mentah && !kode) {
     isi = (
       <div className="pu-empty" data-testid="tidak-ada">
-        <h3>Kode saham harus 2–5 huruf</h3>
+        <h2>Kode saham harus 2 sampai 5 huruf</h2>
         <p>Contoh: SRIL, WIKA, BBCA.</p>
       </div>
     );
@@ -53,12 +53,12 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
     isi =
       emiten.status === "tidak_ada" ? (
         <div className="pu-empty" data-testid="tidak-ada">
-          <h3>{kode} belum ada di data kami</h3>
+          <h2>{kode} belum ada di data kami</h2>
           <p>
             Data yang dipakai server ini memuat {jumlah.total} emiten universe uji ({jumlah.delisting}{" "}
             <Istilah id="delisting">dihapus dari bursa</Istilah>, {jumlah.watchlist}{" "}
             <Istilah id="berpotensi_delisting">berpotensi delisting</Istilah>, {jumlah.control}{" "}
-            <Istilah id="kontrol_sehat">kontrol sehat</Istilah>){contoh ? "" : " ditambah feed suspensi seluruh bursa 2018–2026"}.{" "}
+            <Istilah id="kontrol_sehat">kontrol sehat</Istilah>){contoh ? "" : " ditambah feed suspensi seluruh bursa 2018 sampai 2026"}.{" "}
             {kode} tidak ada di dalamnya. Kami tidak menarik data baru secara otomatis. Setiap penarikan memakai{" "}
             <Istilah id="kredit_sectors">kredit</Istilah> dan diputuskan manusia.
           </p>
@@ -71,10 +71,16 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
 
   return (
     <>
-      <div className="pu-eyebrow">Langkah 1 dari 3</div>
-      <h2 className="pu-h2">
-        Lihat rekamannya: tanda resmi sudah ada sebelum sahamnya <Istilah id="suspensi">berhenti diperdagangkan</Istilah>.
-      </h2>
+      {/* Eyebrow "Langkah 1 dari 3" dibuang (audit-003 temuan 5): posisi halaman
+          sudah disebut chip bernomor di header dan rantai Sebelumnya/Berikutnya,
+          jadi ini kemunculan KETIGA dari fakta yang sama. Kelasnya sekaligus
+          pembawa label huruf kapital berjarak terakhir (temuan 4). */}
+      {/* Judul utama halaman ini naik dari <h2> ke <h1> (audit-003 temuan 6):
+          enam rute lain punya tepat satu <h1>, layar ini satu-satunya yang tidak.
+          Kelas .pu-h2 TIDAK diubah supaya tampilannya benar-benar sama. */}
+      <h1 className="pu-h2">
+        Rekaman sinyal: tanda resmi sudah tercatat sebelum saham <Istilah id="suspensi">berhenti diperdagangkan</Istilah>.
+      </h1>
       {/* Lede jalur data NYATA dibuang: kalimatnya ("fakta resmi dari feed
           Sectors, tidak ada penilaian") hampir kata per kata sama dengan footer
           disclaimer yang tampil di SETIAP halaman. Lede jalur data contoh
@@ -82,16 +88,16 @@ export default async function HalamanPutarUlang({ searchParams }: PageProps<"/pu
           jumlahnya, yang tidak ada di footer. */}
       {contoh ? (
         <p className="pu-lede">
-          Server ini <b>belum terhubung ke database Sectors</b>, jadi yang tampil adalah data contoh ({jumlah.total} emiten)
-          untuk mendemokan cara kerja layar ini. Bentuk datanya meniru feed BEI lewat Sectors, tetapi angkanya ilustratif.
-          Jangan dibaca sebagai fakta tentang emiten yang bersangkutan.
+          Server ini <b>belum terhubung ke database Sectors</b>. Data yang tampil adalah contoh ({jumlah.total} emiten)
+          untuk memperlihatkan cara kerja layar ini. Bentuk datanya meniru feed BEI lewat Sectors, tetapi angkanya
+          ilustratif dan bukan fakta tentang emiten yang bersangkutan.
         </p>
       ) : null}
       <PetunjukLayar
         langkah={[
-          <>Ketik kode saham, lalu pilih dari saran yang muncul.</>,
-          <>Geser slider waktu untuk mundur ke masa lalu.</>,
-          <>Lihat lampu dan tanda yang sudah ada pada tanggal itu.</>,
+          "Masukkan kode saham, lalu pilih satu dari saran yang muncul.",
+          "Geser slider waktu untuk mundur ke masa lalu.",
+          "Lampu dan tanda pada tanggal itu ditampilkan.",
         ]}
       />
       <Pencarian kode={kode} cakupan={{ jumlah: jumlah.total, contoh }} opsi={opsiCari} />

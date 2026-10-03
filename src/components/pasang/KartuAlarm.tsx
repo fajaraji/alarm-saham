@@ -50,8 +50,8 @@ function RingkasAwam({ a }: { a: AlarmJaga }) {
 
 const LABEL_ASAL: Record<AlarmTampil["asal"], string> = {
   bawaan: "Bawaan",
-  lokal: "Buatanmu (browser ini)",
-  server: "Buatanmu (tersimpan)",
+  lokal: "Dibuat pengguna (browser ini)",
+  server: "Dibuat pengguna (tersimpan)",
 };
 
 export function KartuAlarm({ alarms, aktif, onToggle, onHapus }: Props) {

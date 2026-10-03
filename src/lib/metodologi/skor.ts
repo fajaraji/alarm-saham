@@ -103,7 +103,7 @@ export const KREDIT_PEMBUKTIAN: BarisKredit[] = [
 
 /** Tiket 07: penarikan universe 107 emiten (angka nyata dari api_ledger). */
 export const KREDIT_UNIVERSE: BarisKredit[] = [
-  { langkah: "Feed suspensi seluruh bursa (20 halaman × 30)", kredit: 20, catatan: "583 kejadian, 329 emiten, 2018-12-28 – 2026-09-04" },
+  { langkah: "Feed suspensi seluruh bursa (20 halaman × 30)", kredit: 20, catatan: "583 kejadian, 329 emiten, 28 Des 2018 sampai 4 Sep 2026" },
   { langkah: "Screener LQ45 untuk kontrol", kredit: 1, catatan: "+1 percobaan order_by → HTTP 400 (gratis)" },
   { langkah: "Free float seluruh bursa", kredit: 0, catatan: "masih di cache 24 jam dari tiket 04 (dipakai untuk nama emiten)" },
   { langkah: "Tanggal laporan kuartal (dates) 107 emiten", kredit: 101, catatan: "8 emiten 404 tetap ditagih 1 kredit" },

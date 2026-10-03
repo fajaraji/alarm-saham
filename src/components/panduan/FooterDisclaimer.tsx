@@ -1,9 +1,9 @@
-// Footer disclaimer (PLAN.md §2) — dipasang sekali di layout akar sehingga ada
+// Footer disclaimer (PLAN.md §2): dipasang sekali di layout akar sehingga ada
 // di SEMUA halaman. Halaman tidak boleh memasang footer disclaimer sendiri.
 //
 // Kalimat sumber MENGIKUTI sumber data yang benar-benar dipakai server. Dulu ia
 // selalu berbunyi "fakta resmi dari feed Sectors", termasuk pada jalur data
-// contoh — sehingga di layar yang sama lede halaman mengaku data contoh
+// contoh, sehingga di layar yang sama lede halaman mengaku data contoh
 // sementara footer di bawahnya membantahnya. `data-sumber` adalah penanda mesin
 // untuk gerbang e2e (teks "bukan data Sectors nyata" memuat substring "data
 // Sectors nyata", jadi teks saja tidak bisa dijadikan assertion).

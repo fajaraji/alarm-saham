@@ -131,6 +131,37 @@ test("fokus keyboard terlihat pada kotak cari /putar-ulang", async ({ page }) =>
   expect(parseFloat(gaya.outlineWidth)).toBeGreaterThan(0);
 });
 
+test("fokus keyboard terlihat pada kotak kode /pasang", async ({ page }) => {
+  // Sama dengan /putar-ulang (tiket 45): penandanya di wadah field-kode,
+  // bukan di input, supaya outline mengelilingi kotak yang menyatu.
+  await buka(page, "/pasang");
+  await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
+  await page.getByTestId("kotak-kode").focus();
+  const gaya = await page.getByTestId("kotak-kode").evaluate((el) => {
+    const wadah = el.closest('[data-testid="field-kode"]') as HTMLElement;
+    const s = getComputedStyle(wadah);
+    return { fokusDiDalam: wadah.matches(":focus-within"), outlineStyle: s.outlineStyle, outlineWidth: s.outlineWidth };
+  });
+  expect(gaya.fokusDiDalam).toBe(true);
+  expect(gaya.outlineStyle).not.toBe("none");
+  expect(parseFloat(gaya.outlineWidth)).toBeGreaterThan(0);
+});
+
+test("saran ketik kotak kode /pasang terpasang dari data server", async ({ page }) => {
+  await buka(page, "/pasang");
+  await expect(page.getByTestId("label-penyimpanan")).not.toHaveText("memuat…");
+  const input = page.getByTestId("kotak-kode");
+  const daftar = page.getByTestId("saran-emiten");
+  // Input tertaut ke <datalist>, dan daftarnya tidak kosong: minimal satu
+  // emiten yang benar-benar ada di server ini disarankan.
+  await expect(input).toHaveAttribute("list", "saran-portofolio");
+  expect(await daftar.locator("option").count()).toBeGreaterThan(0);
+  // Placeholder menyebut jumlah yang sama dengan panjang daftar, bukan angka
+  // yang dipaku di teks (jalur DB dan jalur data contoh jumlahnya berbeda).
+  const jumlah = await daftar.locator("option").count();
+  await expect(input).toHaveAttribute("placeholder", new RegExp(`\\(${jumlah} emiten\\)`));
+});
+
 test("dialog panduan menjebak fokus (Tab berputar di dalam kartu)", async ({ page }) => {
   await buka(page, "/rakit");
   await page.getByTestId("tombol-panduan").click();

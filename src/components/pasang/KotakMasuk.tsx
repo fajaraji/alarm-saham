@@ -8,7 +8,7 @@ import { KELAS_STATUS, TEKS } from "./teks";
 interface Props {
   pesan: PesanKotakMasuk[];
   onTandaiDibaca: () => void;
-  /** Id portofolio di server — kode untuk perintah /mulai di bot Telegram (tiket 12). */
+  /** Id portofolio di server: kode untuk perintah /mulai di bot Telegram (tiket 12). */
   kodePortofolio?: string | null;
   /**
    * Server melaporkan bot Telegram aktif (tiket 25). Tanpa ini petunjuk /mulai
@@ -49,7 +49,7 @@ export function KotakMasuk({ pesan, onTandaiDibaca, kodePortofolio, telegramAkti
         ) : null}
       </div>
       <p className="mb-2.5 text-[11.5px] leading-snug text-ink-3" data-testid="kotak-cron">
-        Setiap pagi (±06:30 WIB) server mengecek ulang portofoliomu; bendera baru muncul di sini.
+        Setiap pagi (±06:30 WIB) server mengecek ulang portofolio; bendera baru muncul di sini.
         {telegramAktif && kodePortofolio ? (
           <span data-testid="petunjuk-telegram">
             {" "}

@@ -45,7 +45,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/\d+$/);
   await harapkanLabelSumber(page.getByTestId("label-sumber"));
   if (ADA_PGLITE) await expect(page.getByTestId("hasil-uji")).toContainText(/Diuji ke 10\d saham/);
-  await expect(page.getByTestId("kalimat-hasil")).toContainText("Alarmmu");
+  await expect(page.getByTestId("kalimat-hasil")).toContainText("Alarm");
   // Grid semua saham terlipat sejak tiket 21; dibuka lewat papan tuts.
   await page.getByTestId("rincian-kelompok").locator("summary").focus();
   await page.keyboard.press("Enter");
@@ -84,7 +84,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await harapkanLabelSumber(page.getByTestId("label-sumber"));
   await expect(page.getByTestId("kredit-terpakai")).toContainText("kredit Sectors terpakai: 0");
   await expect(page.getByTestId("pesan-SRIL")).toContainText("bukan saran investasi");
-  await expect(page.getByTestId("status-BBCA")).toHaveText("Aman menurut alarmmu");
+  await expect(page.getByTestId("status-BBCA")).toHaveText("Aman menurut alarm");
 
   // Metodologi & kamus tampil
   await page.getByRole("navigation", { name: "Langkah" }).getByRole("link", { name: "Cara kami menghitung" }).click();
@@ -105,7 +105,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   // Hero beranda sejak 2026-09-14 adalah kotak cari saham milik pengguna, bukan
   // tautan "Mulai dari langkah 1": keduanya membawa ke /putar-ulang, dan dua CTA
   // dengan niat yang sama di satu halaman membingungkan.
-  await expect(page.getByRole("search", { name: "Cek saham milikmu" })).toBeVisible();
+  await expect(page.getByRole("search", { name: "Cek saham yang dipantau" })).toBeVisible();
   await expect(page.getByLabel("Kode saham")).toBeVisible();
   await expect(page.getByTestId("disclaimer")).toContainText("bukan saran investasi");
 

@@ -1,16 +1,23 @@
 // Teks awam layar "Pasang" (satu tempat agar tes & komponen sepakat).
+// Catatan audit-003: field `eyebrow` ("Langkah 3 dari 3") DIHAPUS 2026-10-02.
+// Posisi halaman sudah dibawa chip bernomor di header dan rantai Sebelumnya /
+// Berikutnya di bawah; kemunculan ketiganya melanggar DESIGN.md butir 1.
 import type { StatusSaham } from "@/lib/jaga/evaluasi";
 
 export const TEKS = {
-  eyebrow: "Langkah 3 dari 3",
-  judul: "Pasang alarmmu. Sekarang dia yang berjaga.",
+  judul: "Pasang alarm. Sistem yang berjaga.",
   // Lede halaman TIDAK ada di sini: kalimatnya bercabang menurut sumber data
   // server (data Sectors nyata vs data contoh), jadi ia dirakit di
   // src/app/pasang/page.tsx. Salinan tetap di berkas ini dulu mengklaim "data
   // resmi" tanpa syarat dan sudah tidak dipakai siapa pun.
   portofolioJudul: "Saham yang dijaga",
   portofolioSub: "Kode 4 huruf, mis. BBCA. Setiap saham cukup sekali.",
-  placeholderKode: "kode",
+  // Placeholder kotak kode saat daftar saran tersedia; `n` = jumlah emiten yang
+  // benar-benar bisa dicari di server (halaman /pasang mengisinya dari data
+  // server, jadi jumlahnya tidak pernah dipaku di teks komponen).
+  placeholderKode: (n: number) => `ketik kode atau nama, mis. BBCA (${n} emiten)`,
+  // Fallback saat daftar saran kosong: jangan menjanjikan angka apa pun.
+  placeholderKodeTanpaSaran: "kode",
   tombolTambah: "+ Tambah saham",
   tombolCek: "Cek sekarang",
   tombolHapusSemua: "Kosongkan",
@@ -19,7 +26,7 @@ export const TEKS = {
   belumDicek: "Belum dicek. Klik “Cek sekarang”.",
   alarmJudul: "Alarm aktif",
   hapusJudul: (nama: string) => `Hapus alarm “${nama}”?`,
-  hapusTeks: "Alarm ini hilang dari portofolio dan dari tautan rahasiamu, dan tidak bisa dikembalikan.",
+  hapusTeks: "Alarm ini hilang dari portofolio dan dari tautan rahasianya, dan tidak bisa dikembalikan.",
   hapusYa: "Hapus alarm",
   hapusBatal: "Batal",
   hapusSelesai: (nama: string) => `Alarm “${nama}” dihapus.`,
@@ -48,7 +55,7 @@ export const TEKS_TAUTAN = {
   tidakSah: "Tautan ini tidak memuat kunci portofolio yang utuh, jadi tidak dipakai. Coba salin ulang tautannya dari awal sampai akhir.",
   gagalSimpan: "Browser ini tidak mengizinkan penyimpanan, jadi kunci dari tautan tidak bisa dipakai.",
   batal: "Tautan tidak dipakai. Portofolio di browser ini tetap yang tadi.",
-  batalBaru: "Tautan tidak dipakai. Kamu mulai dengan portofolio sendiri.",
+  batalBaru: "Tautan tidak dipakai. Portofolio dimulai dari awal.",
   gagalMuat: (pesan: string) => `Portofolio dari tautan belum bisa dimuat (${pesan}). Muat ulang halaman untuk mencoba lagi.`,
   konfirmasiJudul: "Buka portofolio dari tautan?",
   konfirmasiTeks:
@@ -57,18 +64,18 @@ export const TEKS_TAUTAN = {
   tombolBatal: "Batal, tetap yang sekarang",
   // Browser yang belum punya portofolio juga ditanya (temuan security review
   // 2026-09-19): tautan orang lain yang dipakai diam-diam membuat pengirimnya
-  // ikut melihat dan mengubah semua yang kamu tambahkan sesudahnya.
-  konfirmasiTeksBaru: "Siapa pun yang memegang tautan ini bisa melihat dan mengubah portofolionya. Buka hanya tautan milikmu sendiri.",
+  // ikut melihat dan mengubah semua yang ditambahkan sesudahnya.
+  konfirmasiTeksBaru: "Siapa pun yang memegang tautan ini bisa melihat dan mengubah portofolionya. Buka hanya tautan sendiri.",
   tombolBuka: "Buka portofolio ini",
   tombolBatalBaru: "Batal, mulai portofolio sendiri",
 } as const;
 
-// "Aman menurut alarmmu" (bukan "Aman"): produk tidak menilai emiten, hanya
-// melaporkan apakah alarm yang KAMU rakit berbunyi. Sama dengan kalimat di
+// "Aman menurut alarm" (bukan "Aman"): produk tidak menilai emiten, hanya
+// melaporkan apakah alarm yang dirakit pengguna berbunyi. Sama dengan kalimat di
 // src/lib/jaga/penjelasan.ts.
 export const LABEL_STATUS: Record<StatusSaham, string> = {
   abu: "Belum bisa dinilai",
-  hijau: "Aman menurut alarmmu",
+  hijau: "Aman menurut alarm",
   kuning: "1 tanda",
   merah: "Alarm berbunyi",
 };

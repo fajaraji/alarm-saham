@@ -76,7 +76,7 @@ export function Dialog({ judul, onTutup, children, testId, fokusKembali }: Props
 
   return (
     <div
-      className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
+      className="fixed inset-0 z-[var(--z-overlay)] grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
       onMouseDown={(ev) => {
         if (ev.target === ev.currentTarget) onTutup();
       }}

@@ -24,7 +24,7 @@ test.describe("panduan & kamus", () => {
     expect(await page.evaluate(() => window.localStorage.getItem("alarm-saham:panduan-selesai"))).toBe("1");
 
     await muatUlang(page);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Rakit alarmmu");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Rakit alarm");
     await expect(page.getByRole("dialog")).toHaveCount(0);
 
     await page.getByTestId("tombol-panduan").click();

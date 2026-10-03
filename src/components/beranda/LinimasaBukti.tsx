@@ -16,6 +16,7 @@
 import Link from "next/link";
 
 import type { Kejadian } from "@/lib/putar-ulang/kejadian";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 
 /** Warna hanya mengikuti tingkat kejadian; ia menandai keadaan nyata, bukan hiasan. */
 const WARNA: Record<Kejadian["tingkat"], string> = {
@@ -50,7 +51,7 @@ export function LinimasaBukti({ symbol, namaEmiten, tanda, contoh }: Props) {
         {tanda.map((k) => (
           <li key={k.id} className="flex items-baseline gap-3 border-b border-line px-4 py-2.5 last:border-b-0">
             <time className="w-[88px] shrink-0 font-mono text-[12.5px] text-ink-3" dateTime={k.date}>
-              {k.date}
+              {fmtTanggal(k.date)}
             </time>
             <span className={`text-[13.5px] font-semibold ${WARNA[k.tingkat]}`}>{k.judul}</span>
           </li>

@@ -6,7 +6,7 @@
 import type { HasilSaham } from "@/lib/jaga/evaluasi";
 import { JUDUL_TEMUAN_B, kalimatBlokB } from "@/lib/jaga/kalimat-b";
 import type { Penjelasan } from "@/lib/jaga/penjelasan";
-import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
+import { detailAwam, fmtTanggal } from "@/lib/putar-ulang/ringkas";
 
 import { Istilah } from "@/components/panduan/Istilah";
 import { istilahUntukBlok } from "@/components/panduan/kamus";
@@ -76,7 +76,7 @@ export function PesanPenjelasan({ saham, penjelasan }: Props) {
                       return (
                         <li key={a.kind} data-testid={`alasan-${h.symbol}-${a.kind}`}>
                           <b>{idIstilah ? <Istilah id={idIstilah}>{a.label}</Istilah> : a.label}</b>
-                          {a.threshold ? ` (${a.threshold})` : ""}: {a.detail}
+                          {a.threshold ? ` (${a.threshold})` : ""}: {detailAwam(a.detail)}
                           {a.tanggal ? ` · ${fmtTanggal(a.tanggal)}` : ""} · <span className="font-mono text-[11px]">{a.sumber}</span>
                           {a.alarm.length ? ` · alarm: ${a.alarm.map((x) => x.name).join(", ")}` : ""}
                         </li>

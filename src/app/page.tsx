@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Alarm Saham",
-  description: "Putar ulang tanda resmi sebuah saham, rakit alarmmu sendiri dan uji ke masa lalu, lalu pasang untuk portofoliomu.",
+  description: "Putar ulang tanda resmi sebuah saham, rakit alarm dari blok syarat dan uji ke masa lalu, lalu pasang untuk memantau portofolio.",
 };
 
 /**
@@ -115,15 +115,19 @@ export default async function Beranda() {
   const skor = SKOR_NYATA;
 
   return (
-    <main className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16">
+    <main id="konten" className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16">
       {/* ---------- Bagian 1: hero, kotak cari saham milik pengguna ---------- */}
       <section className="pt-10 lg:pt-16">
+        {/* Dua suntingan salinan dari audit-003 (disetujui pemilik 2026-10-02):
+            kata "sudah" dibuang supaya subteks tepat 20 kata (DESIGN.md butir 5),
+            dan "emiten yang dipantau" menjadi "saham yang dipegang" supaya "pantau"
+            tidak muncul dua kali dalam satu H1. Isinya tidak berubah. */}
         <h1 className="m-0 font-display text-[27px] font-extrabold leading-[1.08] tracking-tight text-balance sm:text-[32px] md:max-w-[22ch] md:text-[40px]">
-          Cek tanda bahaya resmi pada saham milikmu.
+          Pantau sinyal risiko resmi pada saham yang dipegang.
         </h1>
         <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-ink-2">
-          Suspensi, laporan yang berhenti, utang lebih besar dari harta. Lihat yang sudah tercatat untuk sahammu, lengkap
-          dengan tanggal dan sumbernya.
+          Suspensi, laporan yang berhenti, utang lebih besar dari harta. Semua yang tercatat untuk satu emiten,
+          lengkap dengan tanggal dan sumbernya.
         </p>
 
         {/* Form GET biasa: bekerja tanpa JavaScript. Label DI ATAS input, bukan
@@ -134,7 +138,7 @@ export default async function Beranda() {
           action="/putar-ulang"
           method="get"
           role="search"
-          aria-label="Cek saham milikmu"
+          aria-label="Cek saham yang dipantau"
           className="mt-7 max-w-[560px]"
         >
           <label htmlFor="kode-beranda" className="block text-[13px] font-semibold text-ink">
@@ -155,7 +159,7 @@ export default async function Beranda() {
             />
             <button
               type="submit"
-              className="min-h-[46px] shrink-0 rounded-lg bg-accent px-5 text-[14px] font-semibold text-accent-ink transition-transform hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-px"
+              className="min-h-[46px] shrink-0 rounded-lg bg-accent px-5 text-[14px] font-semibold text-accent-ink transition-[transform,opacity] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-px"
             >
               Lihat tandanya
             </button>
@@ -168,8 +172,8 @@ export default async function Beranda() {
             ))}
           </datalist>
           <p className="m-0 mt-2 text-[12.5px] text-ink-3">
-            Ketik lalu pilih dari saran. Bisa dicari: {opsi.length} emiten. Di Telegram, ketik{" "}
-            <code className="rounded bg-surface-2 px-1 py-0.5 font-mono text-[12px] text-ink-2">/cek BBCA</code> ke bot kami.
+            Ketik lalu pilih dari saran. Tersedia {opsi.length} emiten. Di Telegram, ketik{" "}
+            <code className="rounded bg-surface-2 px-1 py-0.5 font-mono text-[12px] text-ink-2">/cek BBCA</code> ke bot.
           </p>
         </form>
       </section>
@@ -180,17 +184,17 @@ export default async function Beranda() {
           apa pun. Rakit dan angka uji turun ke bagian "Lihat buktinya". */}
       <section aria-labelledby="jaga" className="mt-14 rounded-xl border border-line bg-surface-2 p-6">
         <h2 id="jaga" className="m-0 font-display text-[22px] font-bold">
-          Lalu biarkan kami yang menjaganya
+          Lalu biarkan alarm menjaganya
         </h2>
         <p className="mt-2.5 max-w-[58ch] text-[14.5px] leading-relaxed text-ink-2">
-          Simpan saham yang kamu pegang, dan setiap pagi kami cek ulang ke {contoh ? "data yang ada di server ini" : "data resmi"}.
-          Yang berubah dikirim ke kotak masuk dan ke Telegram, jadi kamu tidak perlu membuka apa pun.
+          Saham yang disimpan dicek ulang setiap pagi ke {contoh ? "data yang ada di server ini" : "data resmi"}.
+          Yang berubah dikirim ke kotak masuk dan ke Telegram, tanpa perlu membuka apa pun.
         </p>
         <Link
           href="/pasang"
-          className="mt-4 inline-block rounded-lg bg-accent px-5 py-2.5 text-[14px] font-semibold text-accent-ink no-underline transition-transform hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-px"
+          className="mt-4 inline-block rounded-lg bg-accent px-5 py-2.5 text-[14px] font-semibold text-accent-ink no-underline transition-[transform,opacity] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:translate-y-px"
         >
-          Pasang alarm untuk sahammu
+          Pasang alarm untuk saham yang dipantau
         </Link>
       </section>
 
@@ -221,7 +225,7 @@ export default async function Beranda() {
               )}
             </p>
             <p className="mt-3 max-w-[46ch] text-[14.5px] leading-relaxed text-ink-2">
-              Tanda seperti ini yang bisa kamu jadikan alarm, lalu kamu pasang pada sahammu.
+              Tanda seperti ini yang bisa dijadikan alarm, lalu dipasang pada saham yang dipantau.
             </p>
           </div>
           <LinimasaBukti symbol={bukti.symbol} namaEmiten={bukti.namaEmiten} tanda={bukti.tanda} contoh={contoh} />
@@ -260,7 +264,7 @@ export default async function Beranda() {
           </div>
         </dl>
         <p className="mt-5 text-[12.5px] text-ink-3">
-          Snapshot {skor.today} dari aturan bawaan, dihitung ulang setiap kali tesnya berjalan.{" "}
+          Snapshot {fmtTanggal(skor.today)} dari aturan bawaan, dihitung ulang setiap kali tesnya berjalan.{" "}
           <Link href="/cara-kami-menghitung" className="font-semibold text-accent underline">
             Cara angka ini dihitung
           </Link>
@@ -283,7 +287,7 @@ export default async function Beranda() {
             className="group rounded-xl border border-line p-5 no-underline transition-colors hover:border-accent"
           >
             <span className="font-display text-[17px] font-bold text-ink group-hover:text-accent">
-              Rakit aturanmu sendiri
+              Rakit aturan sendiri
             </span>
             <span className="mt-1.5 block text-[13px] leading-relaxed text-ink-2">
               Susun syarat dari blok, lalu uji sendiri ke saham yang benar-benar pernah dihapus dari bursa.
@@ -302,7 +306,7 @@ export default async function Beranda() {
           {contoh ? (
             <>Server ini memakai data contoh berlabel, lengkap dengan sumbernya.</>
           ) : (
-            <>Yang ada hanya fakta resmi dengan tanggal dan sumbernya.</>
+            <>Yang ditampilkan hanya fakta resmi beserta tanggal dan sumbernya.</>
           )}{" "}
           <Link href="/kamus" className="font-semibold text-accent underline">
             Kamus istilah

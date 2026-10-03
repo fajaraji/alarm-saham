@@ -31,7 +31,7 @@ function angkaId(x: number | null, satuan = ""): string {
 }
 
 function tglAwam(t: string | null | undefined): string {
-  return t ? fmtTanggal(t) : "-";
+  return t ? fmtTanggal(t) : "–";
 }
 
 function tooltipEmiten(r: PerSymbolResult): string {
@@ -124,11 +124,11 @@ function KalimatJawaban({ h }: { h: BacktestResult }) {
     <p className="m-0 mb-3 text-[14px] leading-relaxed text-ink-2" data-testid="kalimat-hasil">
       {totalTertangkap === 0 ? (
         <>
-          Alarmmu tidak berbunyi lebih dulu pada satu pun dari {b(totalKena)} saham kena{palsu}.
+          Alarm tidak berbunyi lebih dulu pada satu pun dari {b(totalKena)} saham kena{palsu}.
         </>
       ) : (
         <>
-          Alarmmu berbunyi lebih dulu pada{" "}
+          Alarm berbunyi lebih dulu pada{" "}
           {kena.map((x, i) => (
             <span key={x.g}>
               {i > 0 ? " dan " : ""}

@@ -16,10 +16,39 @@ export function fmtTanggal(d: string): string {
   return `${hari} ${BULAN_ID[m - 1] ?? d.slice(5, 7)} ${y}`;
 }
 
+/**
+ * Terjemahkan satu string `detail` mesin jadi bahasa layar: tanggal dibaca
+ * orang, istilah mesin (>=, <, =, →, vs, YoY, q4) jadi kata biasa.
+ *
+ * `detail` diproduksi mesin dalam bentuk padat-ISO lalu dibekukan di
+ * docs/skor-nyata.json (bukti reproduksi) dan dibaca regex untuk menarik
+ * tanggal, jadi bentuknya tidak boleh diubah di mesin. Pengubahan ke bentuk
+ * baca orang terjadi di sini, saat tampil (DESIGN.md aturan 8 dan 9). Ini
+ * menyusul jejak `kalimatBlokB` dan `sumberSingkat` yang juga menerjemahkan
+ * keluaran mesin di lapis tampilan. Murni, tanpa I/O.
+ */
+export function detailAwam(d: string): string {
+  return d
+    // Rentang tanggal "2026-08-24–2026-09-06" → "24 Agu 2026 sampai 6 Sep 2026".
+    .replace(/(\d{4}-\d{2}-\d{2})\s*[–—]\s*(\d{4}-\d{2}-\d{2})/g, (_, a, b) => `${fmtTanggal(a)} sampai ${fmtTanggal(b)}`)
+    // Tanggal ISO tunggal → "6 Sep 2026".
+    .replace(/\d{4}-\d{2}-\d{2}/g, (m) => fmtTanggal(m))
+    // Istilah mesin → kata biasa.
+    .replace(/\bYoY\b/g, "dibanding setahun sebelumnya")
+    .replace(/\s*→\s*/g, " menjadi ")
+    .replace(/>=/g, "sekurang-kurangnya")
+    .replace(/<\s*(?=\d)/g, "di bawah ")
+    .replace(/\s*=\s*/g, " sebesar ")
+    .replace(/\bvs\b/g, "dibanding")
+    .replace(/\bq([1-4])\b/gi, "kuartal $1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export const LABEL_GROUP: Record<Group, string> = {
   delisting: "dihapus dari bursa (delisting efektif 10 Nov 2026)",
   watchlist: "berpotensi delisting (disuspensi lebih dari 6 bulan)",
-  control: "kontrol sehat (anggota LQ45 tanpa suspensi 2019–2026)",
+  control: "kontrol sehat (anggota LQ45 tanpa suspensi 2019 sampai 2026)",
 };
 
 /** "Sampai <tanggal>, sudah ada N tanda." */

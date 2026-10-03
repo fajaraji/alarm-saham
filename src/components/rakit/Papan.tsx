@@ -93,7 +93,7 @@ export function Papan(p: Props) {
         <input
           value={p.kalimat}
           onChange={(e) => p.onKalimat(e.target.value)}
-          aria-label="Ceritakan alarm yang kamu mau, AI akan merakitnya"
+          aria-label="Ceritakan alarm yang diinginkan, AI akan merakitnya"
           placeholder={TEKS.placeholderAi}
           maxLength={500}
           disabled={p.sedangRakit}

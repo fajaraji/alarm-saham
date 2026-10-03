@@ -27,6 +27,21 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/rakit" }));
 // Halaman server membaca sumber data lewat `connection()` (hanya ada saat ada
 // permintaan Next). Di jsdom nilainya disuntik: jalur data nyata.
 vi.mock("../../src/lib/sumber-situs", () => ({ sumberSitus: async () => ({ nyata: true, jenis: "pglite" }) }));
+// /pasang juga menyiapkan saran ketik kotak kode dari sumber kejadian; di
+// jsdom sumbernya disuntik supaya tes tidak pernah membuka ./.pglite mesin
+// pengembang (kunci direktorinya eksklusif per proses).
+vi.mock("../../src/lib/engine/sumber", () => ({
+  getEventSource: async () => ({
+    jenis: "fixture",
+    keterangan: "fixture tes",
+    db: null,
+    universe: async () => [
+      { symbol: "BBCA", group: "control" },
+      { symbol: "SRIL", group: "delisting", targetEventDate: "2024-11-01" },
+    ],
+    tutup: async () => {},
+  }),
+}));
 
 function Aplikasi({ children }: { children?: React.ReactNode }) {
   return (

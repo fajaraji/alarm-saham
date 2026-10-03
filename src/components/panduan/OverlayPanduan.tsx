@@ -30,7 +30,7 @@ function tandaiSelesai() {
  * dialog ini dulu tetap menjanjikan data resmi dan jumlah universe nyata,
  * padahal universenya 8 emiten contoh.
  *
- * Angka universe nyata TIDAK ditulis sebagai satu jumlah gabungan di sini —
+ * Angka universe nyata TIDAK ditulis sebagai satu jumlah gabungan di sini,
  * komposisinya (18 + 59 + 30) yang disebut, supaya tidak ada lagi kalimat UI
  * yang memakukan total universe (dijaga tests/unit/copy/cakupan.test.ts).
  */
@@ -43,14 +43,14 @@ export function langkahPanduan(sumberNyata: boolean) {
     {
       judul: "Rakit alarm.",
       teks: sumberNyata
-        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh universe uji: 18 saham yang dihapus dari bursa, 59 yang berpotensi delisting, 30 yang sehat."
-        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: alarmmu dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke universe uji yang kami tarik dari Sectors.",
+        ? "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: aturan ini dijalankan ke seluruh universe uji, yaitu 18 saham yang dihapus dari bursa, 59 yang berpotensi delisting, 30 yang sehat."
+        : "Seret blok syarat dari kotak kiri ke papan alarm (atau minta AI merakit). Klik “Uji ke masa lalu”: aturan ini dijalankan ke seluruh emiten yang ada di data contoh server ini, bukan ke universe uji yang ditarik dari Sectors.",
     },
     {
       judul: "Pasang.",
       teks: sumberNyata
-        ? "Tambahkan saham yang kamu pegang. Alarm mengecek data resmi dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya."
-        : "Tambahkan saham yang kamu pegang. Alarm mengecek data contoh di server ini dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
+        ? "Tambahkan saham yang dipantau. Alarm mengecek data resmi dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya."
+        : "Tambahkan saham yang dipantau. Alarm mengecek data contoh di server ini dan menjelaskan syarat mana yang terpenuhi, tanggalnya, dan sumbernya.",
     },
   ] as const;
 }
@@ -122,7 +122,7 @@ export function OverlayPanduan({ sumberNyata }: PropsOverlayPanduan) {
   // "Saya sudah paham" tidak terjangkau (tiket 41).
   return (
     <div
-      className="fixed inset-0 z-50 grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
+      className="fixed inset-0 z-[var(--z-overlay)] grid justify-items-center overflow-y-auto bg-[rgba(15,20,32,.55)] p-4 sm:p-5"
       data-testid="overlay-panduan"
       data-sumber={sumberNyata ? "db" : "fixture"}
       onMouseDown={(ev) => {
