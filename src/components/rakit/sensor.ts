@@ -2,6 +2,16 @@
 // Sensor penunjuk papan rakit: PointerSensor bawaan dnd-kit, tetapi peredam
 // klik pasca-seret ditutup oleh KLIK ITU SENDIRI — tanpa timer sama sekali.
 //
+// ATURAN YANG KELUAR DARI BERKAS INI: jangan menganimasikan wadah (transform,
+// translate, scale) yang berisi sasaran seret atau sasaran yang diklik lewat
+// koordinat hasil `boundingBox()`. Animasi transform 0,8 detik pada `<main>`
+// /rakit pernah dipasang 2026-10-03 sebagai bagian dari seragamkan sistem
+// visual; tests/e2e/rakit.spec.ts:197 langsung gagal, karena klik kedua jatuh
+// ke tombol yang sudah bergeser. Seluruh peredam di bawah bertumpu pada
+// koordinat yang diukur sesudah pengguna menyentuh layar, jadi ia dan animasi
+// wadah tidak bisa hidup bersama. Karena itu /rakit dan /putar-ulang sengaja
+// TIDAK memakai kelas `.masuk`.
+//
 // MASALAHNYA. Begitu sebuah seret penunjuk aktif, @dnd-kit/core memasang
 //
 //     document.addEventListener("click", stopPropagation, { capture: true })

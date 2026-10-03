@@ -23,7 +23,7 @@ export function FooterDisclaimer({ sumberNyata }: PropsFooterDisclaimer) {
       data-testid="disclaimer"
       data-sumber={sumberNyata ? "db" : "fixture"}
     >
-      <p className="mx-auto max-w-[1200px] px-6 py-4 text-center text-xs text-ink-3">
+      <p className="mx-auto max-w-[1600px] px-6 py-4 text-center text-xs text-ink-3">
         <strong className="text-ink-2">{DISCLAIMER}</strong>{" "}
         {/* Footer ini tampil di SETIAP halaman, jadi setiap kata di sini dibayar
             enam kali. Kalimat cakupan tanggal ("data laporan sejak kuartal 1

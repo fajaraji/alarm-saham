@@ -8,13 +8,14 @@ Dipakai `src/app/layout.tsx` lewat `next/font/local`, bukan `next/font/google`.
 
 | Berkas | Keluarga | Ketebalan | Sumber |
 |---|---|---|---|
-| `bricolage-grotesque-variabel.woff2` | Bricolage Grotesque | 500–800 (huruf variabel, satu berkas) | Google Fonts CSS API v2 |
-| `ibm-plex-sans-variabel.woff2` | IBM Plex Sans | 400–600 (huruf variabel, satu berkas) | Google Fonts CSS API v2 |
+| `inter-variabel.woff2` | Inter | 100–900 (huruf variabel, satu berkas) | Google Fonts CSS API v2 |
 | `ibm-plex-mono-400.woff2` | IBM Plex Mono | 400 | Google Fonts CSS API v2 |
 | `ibm-plex-mono-500.woff2` | IBM Plex Mono | 500 | Google Fonts CSS API v2 |
 
-Bricolage Grotesque dan IBM Plex Sans dilayani Google sebagai satu berkas variabel untuk seluruh rentang ketebalan; permintaan `wght@500;700;800` mengembalikan berkas yang sama tiga kali, jadi yang disimpan satu saja dan rentangnya ditulis di `layout.tsx`.
+Inter dan IBM Plex Mono dilayani Google sebagai satu berkas variabel untuk seluruh rentang ketebalan; permintaan `wght@100;900` mengembalikan berkas yang sama, jadi yang disimpan satu saja dan rentangnya ditulis di `layout.tsx`.
 
-**Lisensi.** Ketiganya SIL Open Font License 1.1, yang mengizinkan penyertaan dan penyebaran ulang berkasnya. Teks lisensinya ikut di folder ini: `OFL-bricolage-grotesque.txt`, `OFL-ibm-plex-sans.txt`, `OFL-ibm-plex-mono.txt`.
+**Riwayat keluarga huruf.** Sebelum 2026-10-03 folder ini juga memuat `bricolage-grotesque-variabel.woff2` (display) dan `ibm-plex-sans-variabel.woff2` (isi). Keduanya dipensiunkan ketika sistem visual memilih Inter untuk display dan isi sekaligus; berkasnya dihapus dari repositori supaya tidak ada huruf mati yang ikut terkirim atau dikira masih dipakai. Mono tetap Plex Mono karena angka dan tanggal berbaris lebih rapi di mono, dan itu alasan fungsional, bukan gaya.
+
+**Lisensi.** Ketiganya SIL Open Font License 1.1, yang mengizinkan penyertaan dan penyebaran ulang berkasnya. Teks lisensinya ikut di folder ini: `OFL-inter.txt`, `OFL-ibm-plex-mono.txt`. Lisensi Bricolage Grotesque dan IBM Plex Sans ikut dihapus bersama berkasnya; keduanya masih tersedia di riwayat git bila diperlukan.
 
 **Kalau perlu memperbarui**, ambil lagi dari `https://fonts.googleapis.com/css2?family=...&display=swap` dengan User-Agent peramban modern (tanpa itu Google mengirim `woff`, bukan `woff2`), lalu simpan berkas dari blok `/* latin */` saja.

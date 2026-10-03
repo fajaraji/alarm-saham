@@ -12,9 +12,18 @@ export const metadata: Metadata = {
 };
 
 // Header, overlay panduan, dan footer disclaimer datang dari layout akar (tiket 13).
+//
+// Halaman ini SENGAJA tidak memakai kelas animasi masuk `.masuk`. Penjelasan
+// lengkapnya di src/components/rakit/sensor.ts: seluruh peredam klik di sana
+// bertumpu pada koordinat yang diukur SESUDAH pengguna menyentuh layar, dan
+// animasi transform 0,8 detik membuat koordinat yang diukur sebelum animasinya
+// tenang menjadi salah. Itu bukan cacat teori: tests/e2e/rakit.spec.ts:197 gagal
+// begitu kelasnya dipasang, karena klik kedua jatuh ke tombol yang sudah
+// bergeser. Aturan yang berlaku: jangan menganimasikan wadah yang berisi sasaran
+// seret.
 export default function HalamanRakit() {
   return (
-    <main id="konten" className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
+    <main id="konten" className="mx-auto w-full max-w-[1600px] flex-1 px-6 pb-16 pt-6">
       {/* Eyebrow "Langkah 2 dari 3" dibuang (audit-003 temuan 5): chip bernomor di
           header sudah menyebut posisi halaman, dan rantai Sebelumnya/Berikutnya
           mengulanginya lagi di bawah. Tiga kali satu fakta di satu layar =

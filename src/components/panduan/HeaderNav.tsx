@@ -13,27 +13,36 @@ export function HeaderNav() {
   const pathname = usePathname() ?? "";
   const aktif = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   return (
-    <header className="sticky top-0 z-10 border-b border-line bg-surface text-ink" data-testid="header">
-      {/* Di ponsel header ini pernah memakan ~460px dari 812px sebelum konten
-          mulai: merek + tagline + empat chip navigasi yang membungkus jadi dua
-          baris + tautan metodologi di baris sendiri + tombol Panduan. Lebih
-          dari separuh layar pertama adalah navigasi, sehingga alatnya terdorong
-          ke bawah lipatan justru di perangkat yang paling sering dipakai.
-          Perbaikannya: tagline disembunyikan di bawah `sm`, navigasi digeser
-          mendatar dalam satu baris alih-alih membungkus, dan paddingnya
-          dirapatkan. Gulir mendatar ada DI DALAM nav, bukan di halaman. */}
-      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6 sm:py-3">
+    <header
+      className="sticky top-0 z-[var(--z-lengket)] px-3 pt-3 text-ink sm:px-6 sm:pt-4"
+      data-testid="header"
+    >
+      {/* Bilah kaca mengambang (sistem visual 2026-10-03, spec "Navigation"):
+          blur 20px, bentuk pil penuh, tepi 1px. Latarnya `--glass-bg` yang
+          mengikuti tema — 5% putih di atas hitam, 55% putih di atas terang —
+          jadi tautan tidak perlu warna sendiri: `text-ink` sudah benar di
+          kedua tema, dan hover memakai `bg-ink/10` yang setara dengan
+          `bg-white/10` milik spec saat temanya gelap. */}
+      <div className="kaca mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-1.5 rounded-3xl px-4 py-2 sm:gap-y-2 sm:rounded-full sm:px-5 sm:py-2.5">
+        {/* Di ponsel header ini pernah memakan ~460px dari 812px sebelum konten
+            mulai: merek + tagline + empat chip navigasi yang membungkus jadi dua
+            baris + tautan metodologi di baris sendiri + tombol Panduan. Lebih
+            dari separuh layar pertama adalah navigasi, sehingga alatnya terdorong
+            ke bawah lipatan justru di perangkat yang paling sering dipakai.
+            Perbaikannya: tagline disembunyikan di bawah `sm`, navigasi digeser
+            mendatar dalam satu baris alih-alih membungkus, dan paddingnya
+            dirapatkan. Gulir mendatar ada DI DALAM nav, bukan di halaman. */}
         {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya), sebelumnya ke
             /putar-ulang, sehingga beranda tidak tertaut dari halaman mana pun. */}
         <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham, beranda">
           <span
             aria-hidden="true"
-            className="grid h-8 w-8 place-items-center rounded-lg bg-accent font-display font-extrabold text-accent-ink"
+            className="grid h-8 w-8 place-items-center rounded-full bg-accent font-display font-bold text-accent-ink"
           >
             !
           </span>
           <span>
-            <span className="block font-display text-lg font-bold leading-tight text-ink">Alarm Saham</span>
+            <span className="block font-display text-lg font-semibold leading-tight text-ink">Alarm Saham</span>
             <small className="hidden text-[11.5px] text-ink-3 sm:block">alarm saham yang bisa dirakit dari blok syarat</small>
           </span>
         </Link>
@@ -48,8 +57,8 @@ export function HeaderNav() {
                 key={l.href}
                 href={l.href}
                 aria-current={kini ? "page" : undefined}
-                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 no-underline ${
-                  kini ? "bg-accent-soft font-semibold text-ink" : "text-ink-2 hover:bg-surface-2"
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 no-underline transition-colors duration-300 ${
+                  kini ? "bg-accent-soft font-semibold text-ink" : "text-ink/80 hover:bg-ink/10"
                 }`}
               >
                 <span
@@ -66,8 +75,8 @@ export function HeaderNav() {
           <Link
             href="/cara-kami-menghitung"
             aria-current={aktif("/cara-kami-menghitung") ? "page" : undefined}
-            className={`flex shrink-0 items-center whitespace-nowrap rounded-lg px-3 py-2 no-underline ${
-              aktif("/cara-kami-menghitung") ? "bg-accent-soft font-semibold text-ink" : "text-ink-2 hover:bg-surface-2"
+            className={`flex shrink-0 items-center whitespace-nowrap rounded-full px-3 py-2 no-underline transition-colors duration-300 ${
+              aktif("/cara-kami-menghitung") ? "bg-accent-soft font-semibold text-ink" : "text-ink/80 hover:bg-ink/10"
             }`}
           >
             Cara kami menghitung

@@ -52,7 +52,21 @@ async function pelanggaranBerat(page: Page): Promise<string[]> {
 
 for (const mode of MODE) {
   test.describe(`axe mode ${mode}`, () => {
-    test.use({ colorScheme: mode });
+    // Pindai pada keadaan akhir, bukan keadaan sementara.
+    //
+    // Sejak sistem visual 2026-10-03 tiap bagian masuk dengan `masuk-naik`
+    // (opasitas 0 -> 1, 0,8 detik; globals.css). Selama animasi itu berjalan,
+    // teks sekundar berada pada opasitas < 1, dan teks abu di atas putih pada
+    // opasitas 0,6 memang terukur di bawah 4,5:1. Itu artefak pengukuran
+    // keadaan transisi, bukan cacat produk: keadaan yang pembaca lihat dan
+    // diami adalah keadaan akhir. Kelas animasi sudah dibungkus
+    // `prefers-reduced-motion: no-preference`, jadi meminta "reduce" di sini
+    // sama dengan mematikan animasinya dan memindai apa yang menetap.
+    //
+    // Ini pengecualian yang disadari dan tercatat di DESIGN.md. Lubang yang
+    // tersisa: elemen yang LEMBAP setelah animasinya selesai tidak lagi
+    // tertangkap di sini; untuk itu `.kaca` dijaga tetap >= 90% opak.
+    test.use({ colorScheme: mode, reducedMotion: "reduce" });
     for (const url of HALAMAN) {
       test(`${url}: 0 pelanggaran serious/critical`, async ({ page }) => {
         await buka(page, url);

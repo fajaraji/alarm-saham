@@ -19,18 +19,15 @@ import { sumberSitus } from "@/lib/sumber-situs";
 // bukan CI, melainkan deploy produksi Vercel yang menjalankan build yang sama.
 //
 // Yang diunduh hanya potongan latin, sama seperti `subsets: ["latin"]` dulu.
-// Bricolage Grotesque dan IBM Plex Sans berupa huruf variabel: satu berkas
-// meliputi seluruh rentang ketebalan, jadi rentangnya ditulis, bukan daftar
-// ketebalan. Rinciannya di src/app/fonts/README.md.
-const bricolage = localFont({
-  src: [{ path: "./fonts/bricolage-grotesque-variabel.woff2", weight: "500 800", style: "normal" }],
-  variable: "--font-bricolage",
-  display: "swap",
-});
-
-const plexSans = localFont({
-  src: [{ path: "./fonts/ibm-plex-sans-variabel.woff2", weight: "400 600", style: "normal" }],
-  variable: "--font-plex-sans",
+// Inter dan IBM Plex Mono: Inter dipakai untuk judul DAN isi (sistem visual
+// 2026-10-03 menetapkan satu keluarga untuk keduanya), IBM Plex Mono tetap
+// dipakai untuk nilai data karena angka dan tanggal berbaris lebih rapi di mono.
+// Keduanya berupa huruf variabel: satu berkas meliputi seluruh rentang
+// ketebalan, jadi rentangnya ditulis, bukan daftar ketebalan.
+// Rinciannya di src/app/fonts/README.md.
+const inter = localFont({
+  src: [{ path: "./fonts/inter-variabel.woff2", weight: "100 900", style: "normal" }],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -81,7 +78,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const { nyata } = await sumberSitus();
   return (
-    <html lang="id" className={`${bricolage.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}>
+    <html lang="id" className={`${inter.variable} ${plexMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {/* Tautan lewati-ke-konten: tersembunyi sampai difokus papan tuts, lalu
             muncul di atas overlay. `<main>` tiap halaman diberi id="konten". */}

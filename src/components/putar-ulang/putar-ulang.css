@@ -27,10 +27,10 @@
   --pu-shadow: var(--shadow);
   /* Sejak audit-003 ketiga alias font menunjuk variabel font AKAR (next/font/local
      di src/app/layout.tsx), bukan salinan next/font/google milik segmen ini.
-     Berkasnya sama persis, jadi tampilannya tidak berubah; yang hilang hanya
-     muatan kedua dan risiko build dari fonts.gstatic.com. */
-  --pu-display: var(--font-bricolage, "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif);
-  --pu-body: var(--font-plex-sans, "IBM Plex Sans", "Segoe UI", system-ui, sans-serif);
+     Sejak 2026-10-03 display dan body sama-sama Inter (sistem visual baru memakai
+     satu keluarga untuk judul dan isi), mono tetap Plex Mono untuk nilai data. */
+  --pu-display: var(--font-inter, "Inter", "Segoe UI", system-ui, sans-serif);
+  --pu-body: var(--font-inter, "Inter", "Segoe UI", system-ui, sans-serif);
   --pu-mono: var(--font-plex-mono, "IBM Plex Mono", Consolas, monospace);
 
   background: var(--pu-bg);
@@ -53,10 +53,18 @@
 }
 
 .pu-main {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 24px 24px 48px;
 }
+
+/* Tidak ada animasi masuk di sini, dan itu disengaja.
+   Halaman ini punya penggeser rentang, grafik, dan beberapa tombol yang diukur
+   koordinatnya oleh tes e2e SEBELUM diklik. Sama seperti /rakit, animasi
+   transform 0,8 detik pada wadahnya membuat koordinat hasil `boundingBox()`
+   menunjuk tempat yang sudah tidak dihuni sasarannya. Menyeragamkan animasi ke
+   sini pernah dicoba 2026-10-03 dan langsung menggagalkan e2e /rakit yang
+   sejenis; pelajarannya dicatat di src/components/rakit/sensor.ts. */
 /* .pu-eyebrow dihapus (audit-003 temuan 4 & 5): ia label huruf kapital berjarak
    terakhir yang tersisa dari R-06, dan eyebrow "Langkah 1 dari 3"-nya pembawa
    fakta yang sudah disebut chip header + rantai bawah. Kelas yang tidak dipakai
@@ -90,7 +98,7 @@
   gap: 10px;
   align-items: flex-start;
   background: var(--pu-accent-soft);
-  border-radius: 10px;
+  border-radius: 16px;
   padding: 10px 12px;
   font-size: 13px;
 }
@@ -116,7 +124,7 @@
   gap: 8px;
   background: var(--pu-surface);
   border: 1px solid var(--pu-line-strong);
-  border-radius: 10px;
+  border-radius: 16px;
   padding: 0 4px 0 12px;
   min-width: 280px;
 }
@@ -153,7 +161,7 @@
 .pu-btn {
   border: 1px solid var(--pu-line-strong);
   background: var(--pu-surface);
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 9px 14px;
   font-weight: 600;
   cursor: pointer;
@@ -206,7 +214,7 @@
 .pu-panel {
   background: var(--pu-surface);
   border: 1px solid var(--pu-line);
-  border-radius: 14px;
+  border-radius: 24px;
   padding: 18px 20px;
 }
 .pu-panel h2 {
@@ -263,7 +271,7 @@
 .pu-chart {
   position: relative;
   background: var(--pu-surface-2);
-  border-radius: 10px;
+  border-radius: 16px;
   overflow: hidden;
 }
 .pu-chart svg {
@@ -339,7 +347,7 @@
   gap: 14px;
   margin-top: 12px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--pu-surface-2);
 }
 .pu-lamp {
@@ -441,7 +449,7 @@
 .pu-lesson {
   margin-top: 14px;
   padding: 14px;
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--pu-accent-soft);
   font-size: 13.5px;
 }
@@ -456,7 +464,7 @@
 .pu-note {
   margin-top: 10px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 16px;
   background: var(--pu-warn-soft);
   color: var(--pu-ink-2);
   font-size: 12.5px;
@@ -465,7 +473,7 @@
 /* tidak ada */
 .pu-empty {
   border: 1px dashed var(--pu-line-strong);
-  border-radius: 14px;
+  border-radius: 24px;
   padding: 22px;
   max-width: 640px;
 }
