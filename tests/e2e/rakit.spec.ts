@@ -54,7 +54,7 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
   // Viewport tinggi agar palet, papan, dan area buang terlihat bersamaan (seret memakai koordinat viewport).
   await page.setViewportSize({ width: 1280, height: 1400 });
   await buka(page, "/rakit");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Rakit alarmmu");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Rakit alarm");
   await expect(page.getByText("Alarm Saham adalah alat informasi dan analisis, bukan saran investasi.")).toBeVisible();
 
   // Klik-untuk-tambah (fallback keyboard/sentuh)
@@ -100,7 +100,7 @@ test("rakit 2 blok → buang satu → seret dari palet → DAN → uji → hasil
     await expect(page.getByTestId("skor-palsu")).toHaveText(/^\d+\/4$/);
   }
   // Tiket 21: jawaban dulu, grid semua saham terlipat. Dibuka seperti pengguna.
-  await expect(page.getByTestId("kalimat-hasil")).toContainText("Alarmmu");
+  await expect(page.getByTestId("kalimat-hasil")).toContainText("Alarm");
   await expect(page.getByTestId("kelompok-delisting")).toBeHidden();
   await page.getByTestId("rincian-kelompok").locator("summary").click();
   await expect(page.getByTestId("kelompok-delisting")).toBeVisible();

@@ -66,7 +66,7 @@ export const EMITEN_DATES_404 = ["COWL", "SUGI", "MABA", "SKYB", "KBRI", "NUSA",
 
 const POLA_KODE = /^[A-Z]{2,5}$/;
 
-/** Normalisasi kode saham dari input pengguna; null bila bukan 2–5 huruf. */
+/** Normalisasi kode saham dari input pengguna; null bila bukan 2 sampai 5 huruf. */
 export function normalKode(masukan: string | null | undefined): string | null {
   const s = (masukan ?? "").trim().toUpperCase().replace(/\.JK$/, "");
   return POLA_KODE.test(s) ? s : null;
@@ -93,7 +93,7 @@ function kodeTidakSah(masukan: string, today: string, contoh = false): EmitenPut
     today,
     events: kosong(""),
     kejadian: [],
-    catatan: ["Kode saham harus 2–5 huruf, mis. SRIL."],
+    catatan: ["Kode saham harus 2 sampai 5 huruf, mis. SRIL."],
     ekuitasTidakDinilai: false,
     sumberContoh: contoh,
   };

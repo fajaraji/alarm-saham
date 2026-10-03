@@ -101,7 +101,7 @@ export async function POST(req: Request): Promise<Response> {
       return galat(
         400,
         "TERLALU_BANYAK_SAHAM",
-        `Data terkini dibatasi ${MAKS_SAHAM_KELAS_B} saham sekali cek (setiap saham memakai kredit Sectors). Kamu mengirim ${symbols.length}.`,
+        `Data terkini dibatasi ${MAKS_SAHAM_KELAS_B} saham sekali cek (setiap saham memakai kredit Sectors). Jumlah yang dikirim ${symbols.length}.`,
       );
     }
   }

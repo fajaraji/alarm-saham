@@ -70,7 +70,8 @@ describe.skipIf(!adaPglite)("jalankanPengecekanHarian (PGlite in-memory)", () =>
     expect(kotak[0].status).toBe("merah");
     expect(kotak[0].judul).toContain("Waspada suspensi");
     expect(kotak[0].teks).toContain(DISCLAIMER);
-    expect(kotak[0].teks).toContain("2024-11-01");
+    expect(kotak[0].teks).toContain("1 Nov 2024");
+    expect(kotak[0].teks).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(kotak[0].baru).toBe(true);
     expect(await muatKotakMasuk(t.db, OWNER_B)).toEqual([]);
     expect(await muatKotakMasuk(t.db, OWNER_C)).toEqual([]);

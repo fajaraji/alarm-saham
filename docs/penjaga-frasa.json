@@ -37,7 +37,7 @@
     "\"akan naik/turun\" tidak disaring: bentrok dengan angka backtest \"jumlah temuan akan naik dari 26 menjadi 41\".",
     "\"alokasi dana\" tidak disaring: bentrok dengan fakta prospektus \"alokasi dana hasil rights issue dipakai untuk melunasi utang bank\".",
     "\"tidak cocok\" tidak disaring: bentrok dengan \"blok insider_jual tidak cocok dipakai untuk kejadian sebelum 2024\".",
-    "Slang bursa dan salah ketik (lego, boncos, nyangkut, juall, bli, hol, cutlos) tidak dikejar — perlombaan yang tidak bisa dimenangkan daftar kata.",
+    "Slang bursa dan salah ketik (lego, boncos, nyangkut, juall, bli, hol, cutlos) tidak dikejar: perlombaan yang tidak bisa dimenangkan daftar kata.",
     "Kode emiten tidak dinormalkan menjadi kata \"saham\", sehingga \"Hindari SRIL\" lewat.",
     "Kata Inggris \"buy\"/\"sell\" telanjang tidak disaring: nilai transactionType di data filing memang \"buy\"/\"sell\"."
   ]

@@ -108,7 +108,7 @@ describe.skipIf(!adaPglite)("muatEmiten (PGlite in-memory)", () => {
 
   it("kode tak dikenal → tidak_ada tanpa kejadian; kode tidak sah → tidak_ada + catatan", async () => {
     expect(await muatEmiten(t.db, "ZZZZ", TODAY)).toMatchObject({ status: "tidak_ada", kejadian: [] });
-    expect(await muatEmiten(t.db, "12", TODAY)).toMatchObject({ status: "tidak_ada", catatan: [expect.stringMatching(/2–5 huruf/)] });
+    expect(await muatEmiten(t.db, "12", TODAY)).toMatchObject({ status: "tidak_ada", catatan: [expect.stringMatching(/2 sampai 5 huruf/)] });
   });
 
   it("muatEmitenDariSumber lewat DB identik dengan muatEmiten; lewat sumber tanpa DB tetap jalan (tanpa pdf_url)", async () => {

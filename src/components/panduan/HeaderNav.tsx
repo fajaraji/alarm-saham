@@ -1,5 +1,5 @@
 "use client";
-// Header bersama semua halaman (mockup): merek, langkah 1–2–3, Kamus, Cara
+// Header bersama semua halaman (mockup): merek, langkah 1-2-3, Kamus, Cara
 // kami menghitung, dan tombol Panduan. `aria-current` mengikuti pathname.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,7 +23,7 @@ export function HeaderNav() {
           mendatar dalam satu baris alih-alih membungkus, dan paddingnya
           dirapatkan. Gulir mendatar ada DI DALAM nav, bukan di halaman. */}
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 sm:px-6 sm:py-3">
-        {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya) — sebelumnya ke
+        {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya), sebelumnya ke
             /putar-ulang, sehingga beranda tidak tertaut dari halaman mana pun. */}
         <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham, beranda">
           <span
@@ -34,7 +34,7 @@ export function HeaderNav() {
           </span>
           <span>
             <span className="block font-display text-lg font-bold leading-tight text-ink">Alarm Saham</span>
-            <small className="hidden text-[11.5px] text-ink-3 sm:block">alarm saham yang bisa kamu rakit sendiri</small>
+            <small className="hidden text-[11.5px] text-ink-3 sm:block">alarm saham yang bisa dirakit dari blok syarat</small>
           </span>
         </Link>
         <nav

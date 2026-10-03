@@ -1,7 +1,7 @@
 // Daftar tanda urut tanggal; yang bertanggal > t diredupkan (data-aktif="false").
 // Catatan "laporan tersedia" dilipat ke <details> agar daftar tanda tetap terbaca.
 import { hanyaTanda, type Kejadian } from "@/lib/putar-ulang/kejadian";
-import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
+import { detailAwam, fmtTanggal } from "@/lib/putar-ulang/ringkas";
 
 export function GarisWaktu({ kejadian, t }: { kejadian: Kejadian[]; t: string }) {
   const tanda = hanyaTanda(kejadian);
@@ -27,7 +27,7 @@ export function GarisWaktu({ kejadian, t }: { kejadian: Kejadian[]; t: string })
               <div>
                 <div className="when">{fmtTanggal(k.date)}</div>
                 <div className="what">{k.judul}</div>
-                <div className="why">{k.rincian}</div>
+                <div className="why">{detailAwam(k.rincian)}</div>
                 <div className="src">
                   Sumber: {k.sumber.nama}
                   {k.sumber.url && (
@@ -47,7 +47,7 @@ export function GarisWaktu({ kejadian, t }: { kejadian: Kejadian[]; t: string })
       {tersedia.length > 0 && (
         <details className="pu-details" data-testid="laporan-tersedia">
           <summary>
-            Laporan keuangan tersedia: {tersedia.length} kuartal ({tersedia[0].date} – {tersedia[tersedia.length - 1].date})
+            Laporan keuangan tersedia: {tersedia.length} kuartal ({fmtTanggal(tersedia[0].date)} sampai {fmtTanggal(tersedia[tersedia.length - 1].date)})
             {" · "}
             {tersedia.filter((k) => k.date <= t).length} sampai tanggal terpilih
           </summary>
@@ -55,7 +55,7 @@ export function GarisWaktu({ kejadian, t }: { kejadian: Kejadian[]; t: string })
           <ul>
             {tersedia.map((k) => (
               <li key={k.id} style={{ opacity: k.date <= t ? 1 : 0.35 }}>
-                {k.judul.replace("Laporan keuangan ", "").replace(" tersedia", "")} · {k.date}
+                {k.judul.replace("Laporan keuangan ", "").replace(" tersedia", "")} · {fmtTanggal(k.date)}
               </li>
             ))}
           </ul>

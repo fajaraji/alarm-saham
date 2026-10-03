@@ -1,7 +1,8 @@
-// Grafik sederhana: pita waktu per jenis kejadian (tidak ada data harga di DB —
+// Grafik sederhana: pita waktu per jenis kejadian (tidak ada data harga di DB,
 // jadi yang digambar adalah kejadian resmi, bukan harga). Titik setelah t diredupkan.
 import type { RentangSlider } from "@/lib/putar-ulang/filter";
 import type { JenisKejadian, Kejadian } from "@/lib/putar-ulang/kejadian";
+import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
 
 const URUTAN_LAJUR: { jenis: JenisKejadian; label: string }[] = [
   { jenis: "suspensi", label: "Suspensi" },
@@ -55,7 +56,7 @@ export function Grafik({
       <svg
         viewBox={`0 0 ${LEBAR} ${tinggi}`}
         role="img"
-        aria-label={`Pita waktu ${kejadian.length} kejadian dalam ${lajur.length} jenis, ${rentang.awal} sampai ${rentang.akhir}; garis penunjuk pada ${t}.`}
+        aria-label={`Pita waktu ${kejadian.length} kejadian dalam ${lajur.length} jenis, ${fmtTanggal(rentang.awal)} sampai ${fmtTanggal(rentang.akhir)}; garis penunjuk pada ${fmtTanggal(t)}.`}
         aria-describedby="garis-waktu-teks"
       >
         {tahun.map((y) => (
@@ -84,7 +85,7 @@ export function Grafik({
                     cy={y}
                     r={k.tingkat === "info" ? 3 : 5}
                   >
-                    <title>{`${k.date}: ${k.judul}`}</title>
+                    <title>{`${fmtTanggal(k.date)}: ${k.judul}`}</title>
                   </circle>
                 ))}
             </g>
@@ -94,7 +95,7 @@ export function Grafik({
           <g>
             <line className="target" x1={x(target)} x2={x(target)} y1={ATAS - 6} y2={tinggi - BAWAH} />
             <text x={Math.min(x(target) + 3, LEBAR - 90)} y={ATAS - 2}>
-              berhenti diperdagangkan {target}
+              berhenti diperdagangkan {fmtTanggal(target)}
             </text>
           </g>
         )}

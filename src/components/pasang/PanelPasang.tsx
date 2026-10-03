@@ -26,6 +26,7 @@ import {
 } from "@/lib/jaga/api";
 import { RuleSchema } from "@/lib/engine/rules";
 import { fmtTanggal } from "@/lib/putar-ulang/ringkas";
+import type { OpsiCari } from "@/lib/putar-ulang/daftar-cari";
 import {
   gabungKotakMasuk,
   hasilTerakhirLokal,
@@ -59,6 +60,14 @@ import { TEKS, TEKS_TAUTAN } from "./teks";
 
 const POLA_KODE = /^[A-Z]{4}$/;
 
+/**
+ * Saran ketik kotak kode memakai `<datalist>` bawaan peramban, sama dengan
+ * kotak cari /putar-ulang (Pencarian.tsx). Bedanya di sini daftarnya datang
+ * lewat prop dari halaman server (`/pasang/page.tsx`), karena komponen ini
+ * adalah komponen klien dan tidak boleh membuka sumber data sendiri.
+ */
+const ID_SARAN = "saran-portofolio";
+
 /** Temuan data terkini yang ditarik dari layar ini: pembeli 14 hari dan jarak dari puncak 90 hari. */
 const BLOK_B_LAYAR: BlokBKind[] = ["ritel_dominan", "jatuh_dari_puncak"];
 
@@ -91,7 +100,7 @@ function alarmBawaanTampil(): AlarmTampil[] {
   return ALARM_BAWAAN.map((a) => ({ ...a, asal: "bawaan" as const }));
 }
 
-export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean }) {
+export function PanelPasang({ telegramAktif = false, opsi = [] }: { telegramAktif?: boolean; opsi?: OpsiCari[] }) {
   const [token, setToken] = useState<string | null>(null);
   const [penyimpanan, setPenyimpanan] = useState<Penyimpanan>("memuat");
   const [symbols, setSymbols] = useState<string[]>([]);
@@ -444,24 +453,53 @@ export function PanelPasang({ telegramAktif = false }: { telegramAktif?: boolean
           </Dialog>
         ) : null}
         <form
-          className="mb-3 flex flex-wrap gap-2"
+          className="mb-3 flex flex-wrap items-center gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             tambah();
           }}
         >
-          <input
-            value={kode}
-            onChange={(e) => setKode(e.target.value.toUpperCase())}
-            maxLength={7}
-            placeholder={TEKS.placeholderKode}
-            aria-label="Kode saham"
-            data-testid="kotak-kode"
-            className="w-28 rounded-lg border border-line-strong bg-bg px-3 py-2 font-mono text-[13px] uppercase"
-          />
-          <button type="submit" data-testid="tombol-tambah" className="rounded-lg border border-line-strong px-3 py-2 text-[13px] font-semibold hover:bg-surface-2">
-            {TEKS.tombolTambah}
-          </button>
+          {/* Kotak kode menyatu (prefix IDX + input + tombol), pola yang sama
+              dengan kotak cari /putar-ulang. Penanda fokus digambar di wadah
+              lewat :focus-within supaya mengelilingi kotak, bukan kotak input
+              saja — `focus:outline-none` di input memindahkan tandanya, tidak
+              menghapusnya. Saran ketik memakai <datalist> bawaan peramban,
+              jadi tetap bekerja tanpa JavaScript tambahan. */}
+          <div
+            data-testid="field-kode"
+            className="flex min-h-[44px] flex-1 items-center gap-2 rounded-[10px] border border-line-strong bg-bg pl-3 pr-1 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
+          >
+            <span className="font-mono text-[12px] text-ink-3">
+              IDX
+            </span>
+            <input
+              value={kode}
+              onChange={(e) => setKode(e.target.value.toUpperCase())}
+              maxLength={7}
+              placeholder={opsi.length ? TEKS.placeholderKode(opsi.length) : TEKS.placeholderKodeTanpaSaran}
+              aria-label="Kode saham"
+              autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              list={ID_SARAN}
+              data-testid="kotak-kode"
+              className="min-w-0 flex-1 border-0 bg-transparent py-2 font-mono text-[15px] uppercase text-ink placeholder:text-ink-3 focus:outline-none"
+            />
+            <datalist id={ID_SARAN} data-testid="saran-emiten">
+              {opsi.map((o) => (
+                <option key={o.symbol} value={o.symbol}>
+                  {o.nama ?? o.symbol}
+                </option>
+              ))}
+            </datalist>
+            <button
+              type="submit"
+              data-testid="tombol-tambah"
+              className="my-1 shrink-0 rounded-lg border border-line-strong bg-surface px-3 py-1.5 text-[13px] font-semibold hover:bg-surface-2"
+            >
+              {TEKS.tombolTambah}
+            </button>
+          </div>
           <button
             type="button"
             data-testid="tombol-cek"

@@ -25,9 +25,13 @@
   --pu-ok: var(--ok);
   --pu-ok-soft: var(--ok-soft);
   --pu-shadow: var(--shadow);
-  --pu-display: var(--font-display, "Bricolage Grotesque"), "Segoe UI", system-ui, sans-serif;
-  --pu-body: var(--font-body, "IBM Plex Sans"), "Segoe UI", system-ui, sans-serif;
-  --pu-mono: var(--font-mono, "IBM Plex Mono"), Consolas, monospace;
+  /* Sejak audit-003 ketiga alias font menunjuk variabel font AKAR (next/font/local
+     di src/app/layout.tsx), bukan salinan next/font/google milik segmen ini.
+     Berkasnya sama persis, jadi tampilannya tidak berubah; yang hilang hanya
+     muatan kedua dan risiko build dari fonts.gstatic.com. */
+  --pu-display: var(--font-bricolage, "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif);
+  --pu-body: var(--font-plex-sans, "IBM Plex Sans", "Segoe UI", system-ui, sans-serif);
+  --pu-mono: var(--font-plex-mono, "IBM Plex Mono", Consolas, monospace);
 
   background: var(--pu-bg);
   color: var(--pu-ink);
@@ -53,13 +57,10 @@
   margin: 0 auto;
   padding: 24px 24px 48px;
 }
-.pu-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--pu-ink-3);
-  font-weight: 600;
-}
+/* .pu-eyebrow dihapus (audit-003 temuan 4 & 5): ia label huruf kapital berjarak
+   terakhir yang tersisa dari R-06, dan eyebrow "Langkah 1 dari 3"-nya pembawa
+   fakta yang sudah disebut chip header + rantai bawah. Kelas yang tidak dipakai
+   siapa pun lebih baik dihapus daripada dibiarkan menggoda dipasang lagi. */
 .pu-h2 {
   font-family: var(--pu-display);
   font-size: 28px;
@@ -208,7 +209,7 @@
   border-radius: 14px;
   padding: 18px 20px;
 }
-.pu-panel h3 {
+.pu-panel h2 {
   font-family: var(--pu-display);
   font-size: 17px;
   margin: 0 0 4px;
@@ -316,6 +317,16 @@
   font-family: var(--pu-mono);
   font-size: 11px;
   color: var(--pu-ink-3);
+}
+/* Label rentang kiri/kanan kini tanggal awam ("31 Agu 2020"), bukan ISO
+   (audit-003 temuan 2). Di layar sempit labelnya dibiarkan membungkus alih-alih
+   memaksa halaman melebar. */
+.pu-slider .lbl span {
+  white-space: normal;
+  max-width: 45%;
+}
+.pu-slider .lbl span:last-child {
+  text-align: right;
 }
 .pu-slider .lbl b {
   color: var(--pu-ink);
@@ -458,7 +469,7 @@
   padding: 22px;
   max-width: 640px;
 }
-.pu-empty h3 {
+.pu-empty h2 {
   font-family: var(--pu-display);
   font-size: 20px;
   margin: 0 0 6px;

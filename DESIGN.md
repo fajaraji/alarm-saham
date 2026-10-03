@@ -62,7 +62,7 @@ Satu motif, diulang secara sadar: **pita berwarna berlabel peran** (KALAU / MAKA
 
 ## Radius, bayangan, spasi
 
-- Radius: satu himpunan kecil (`8px` kontrol, `10px`-`14px` panel dan kartu). Tidak ada elemen berbentuk pil penuh (R-11).
+- Radius: satu himpunan kecil (`8px` kontrol, `10px`-`14px` panel dan kartu) plus satu keluarga bentuk pil penuh untuk **label kecil dan tombol bundar yang berdiri sendiri** (chip daftar istilah, tombol Panduan, label sumber data, badge status, lingkaran angka pada navigasi langkah dan overlay panduan). Kontrol form dan tombol aksi tetap bersudut. R-11 dijaga dengan pengecualian yang tertulis ini, bukan dilanggar diam-diam.
 - Bayangan: satu token `--shadow` dipakai pada panel saja, sebagai penanda elevasi satu tingkat di atas latar. Bukan pada tombol, badge, atau ikon (R-12).
 - Spasi: skala Tailwind bawaan; jarak antar-bagian lebih besar daripada jarak di dalam bagian.
 
@@ -78,9 +78,15 @@ Pemilik dua kali menilai layar "kebanyakan teks, tidak nyaman dipandang" (2026-0
 6. **Catatan dan peringatan hanya bila berlaku** untuk yang sedang dilihat (emiten, portofolio, sumber data). Catatan umum tempatnya di halaman metodologi, bukan di setiap layar.
 7. **Istilah dijelaskan lewat tooltip kamus** (`<Istilah>`), bukan kalimat penjelas di tengah teks.
 8. **Tanpa teks internal di layar**: nama mesin (mis. `ritel_dominan`), nama alat agent, JSON, nama tabel, path berkas, perintah CLI, host atau driver database, dan pesan galat mentah. Sumber tetap disebut (PLAN Q5), tetapi di teks utama cukup nama sumbernya; endpoint lengkap hanya di rincian yang terlipat. Pengecualiannya halaman metodologi: di sana sumber lengkap per blok memang yang dicari pembaca.
-9. **Tanda baca dan huruf**: nol em dash di teks pengguna (R-02); tanpa huruf kapital semua dengan spasi lebar, kecuali pita KALAU/MAKA dan kode emiten (R-06); tanggal untuk pengguna ditulis "6 Sep 2026", bukan ISO.
+9. **Tanda baca dan huruf**: nol em dash di teks pengguna (R-02); tanpa huruf kapital semua dengan spasi lebar, kecuali pita KALAU/MAKA dan kode emiten (R-06); tanggal untuk pengguna ditulis "6 Sep 2026", bukan ISO. Tiga pengecualian yang disadari: sel tabel bukti per emiten di `/cara-kami-menghitung` tetap ISO supaya bisa disalin mesin, `title`/atribut `data-*` penyerta mesin boleh ISO walau tampilannya tanggal awam, dan glif `–` dipakai khusus sebagai penanda nilai kosong di tabel (bukan tanda pisah).
 10. **Diukur, bukan dikira.** Perubahan teks yang besar mencatat jumlah kata di `<main>` dan jarak sampai alat utama di 375×812, sebelum dan sesudah, di pesan commit.
+
+## Skala lapisan
+
+Satu skala bernama di `:root` (`globals.css`): `--z-lengket: 5`, `--z-overlay: 50`, `--z-lewati: 100`. Dipakai lewat `z-[var(--z-…)]` supaya tidak ada angka ajaib yang tersebar; lapisan baru memilih nama yang ada, bukan angka baru.
 
 ## Yang sengaja TIDAK dipakai
 
 Dicatat supaya tidak ada yang menambahkannya nanti dengan niat baik: gradien sebagai perlakuan warna utama, glassmorphism, glow, grid atau blueprint sebagai latar, ikon sparkle/robot/lightning, badge kapsul "AI Powered", jendela terminal palsu, bento grid, dan angka tanpa sumber.
+
+Satu pengecualian yang disadari: `backdrop-blur` dipakai pada bilah daftar isi lengket di `/cara-kami-menghitung` (`bg-bg/95` + `backdrop-blur`). Ini fungsional, bukan perlakuan permukaan: bilah itu menempel di atas tabel yang bergulir, dan tanpa blur labelnya bertabrakan dengan teks di bawahnya. Ia tidak menghitung sebagai glassmorphism karena tidak ada permukaan mengambang yang dibentuknya, hanya satu bilah rata dengan tepi yang jelas.

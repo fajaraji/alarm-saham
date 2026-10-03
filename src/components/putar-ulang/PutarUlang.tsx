@@ -72,10 +72,10 @@ export function PutarUlang({ emiten, dataPer }: Props) {
           {emiten.sumberContoh ? "data contoh (bukan data Sectors nyata)" : "data Sectors nyata"}
           {dataPer ? <span data-testid="data-per"> · ditarik {fmtTanggal(dataPer)}</span> : null}
         </p>
-        <h3>
+        <h2>
           {emiten.companyName ? `${emiten.companyName} (${emiten.symbol})` : emiten.symbol}{" "}
           {emiten.group && <span className={`pu-badge ${emiten.group}`}>{LABEL_GROUP[emiten.group]}</span>}
-        </h3>
+        </h2>
         <p className="pu-sub">
           {LABEL_STATUS[emiten.status]}
           {emiten.targetEventDate && <> · berhenti diperdagangkan: {fmtTanggal(emiten.targetEventDate)}</>}
@@ -94,10 +94,13 @@ export function PutarUlang({ emiten, dataPer }: Props) {
             aria-valuetext={fmtTanggal(t)}
             data-testid="slider"
           />
-          <div className="lbl">
-            <span>{rentang.awal}</span>
+          {/* data-awal/data-akhir = batas rentang dalam ISO untuk mesin (tes e2e
+              menghitung indeks slider dari sini); yang terlihat mata adalah
+              tanggal awam "6 Sep 2026" (audit-003 temuan 2). */}
+          <div className="lbl" data-awal={rentang.awal} data-akhir={rentang.akhir}>
+            <span>{fmtTanggal(rentang.awal)}</span>
             <b data-testid="tanggal-terpilih">{fmtTanggal(t)}</b>
-            <span>{rentang.akhir}</span>
+            <span>{fmtTanggal(rentang.akhir)}</span>
           </div>
         </div>
 
@@ -133,11 +136,11 @@ export function PutarUlang({ emiten, dataPer }: Props) {
       </div>
 
       <div className="pu-panel">
-        <h3>Tanda yang sudah kelihatan sampai tanggal itu</h3>
-        <p className="pu-sub">Yang belum terjadi diredupkan. Sumber data ditulis kecil di bawah tiap tanda.</p>
+        <h2>Sinyal resmi yang tercatat sampai tanggal ini</h2>
+        <p className="pu-sub">Peristiwa setelah tanggal itu diredupkan. Sumber dicetak kecil di bawah setiap tanda.</p>
         <GarisWaktu kejadian={emiten.kejadian} t={t} />
         <div className="pu-lesson" data-testid="pelajaran">
-          <b>Pelajaran dari rekaman ini</b>
+          <b>Catatan sinyal emiten ini</b>
           <ul>
             {barisPelajaran.map((b) => (
               <li key={b}>{b}</li>

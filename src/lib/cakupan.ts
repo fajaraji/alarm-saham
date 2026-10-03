@@ -43,6 +43,6 @@ export function catatanTidakAdaData(symbol: string, { jumlah, contoh }: Cakupan)
 export function catatanHanyaSuspensi(symbol: string, contoh: boolean): string {
   const asal = contoh
     ? "universe data contoh server ini, tetapi muncul di data suspensi contohnya"
-    : "universe uji yang kami tarik, tetapi muncul di feed suspensi bursa (2018–2026)";
+    : "universe uji yang kami tarik, tetapi muncul di feed suspensi bursa (2018 sampai 2026)";
   return `${symbol} tidak termasuk ${asal}. Data laporan, aksi korporasi, keuangan, dan filing tidak kami tarik untuk emiten ini.`;
 }

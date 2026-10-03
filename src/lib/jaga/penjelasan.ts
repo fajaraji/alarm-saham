@@ -12,7 +12,7 @@ import { generateText, type LanguageModel } from "ai";
 import { sensorTeks } from "../agent/guard";
 import { DISCLAIMER, INSTRUKSI_DASAR } from "../agent/instructions";
 import { AiKeyMissingError, hasAiKey, instruksiSistem, opsiProvider, pilihModel, providerDari } from "../agent/model";
-import { fmtTanggal } from "../putar-ulang/ringkas";
+import { detailAwam, fmtTanggal } from "../putar-ulang/ringkas";
 import type { HasilPortofolio, HasilSaham } from "./evaluasi";
 import { kalimatBlokB, kalimatDilewati } from "./kalimat-b";
 
@@ -35,7 +35,7 @@ Tugasmu: MERAPIKAN pesan alarm untuk satu saham dalam portofolio pengguna. Kamu 
 
 const LABEL_STATUS: Record<HasilSaham["status"], string> = {
   abu: "belum bisa dinilai",
-  hijau: "aman menurut alarmmu",
+  hijau: "aman menurut alarm",
   kuning: "satu tanda terlihat",
   merah: "alarm berbunyi",
 };
@@ -67,7 +67,7 @@ export function templatePenjelasan(h: HasilSaham, today: string): string {
     const daftar = h.alasan
       .map((a, i) => {
         const tanggal = a.tanggal && a.kelas !== "B" ? `${fmtTanggal(a.tanggal)}, ` : "";
-        return `(${i + 1}) ${a.label}: ${a.detail.replace(/\.$/, "")} (${tanggal}sumber: ${sumberSingkat(a.sumber)})`;
+        return `(${i + 1}) ${a.label}: ${detailAwam(a.detail).replace(/\.$/, "")} (${tanggal}sumber: ${sumberSingkat(a.sumber)})`;
       })
       .join("; ");
     kalimat.push(

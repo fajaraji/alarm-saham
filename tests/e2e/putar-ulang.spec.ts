@@ -16,7 +16,9 @@ test.describe("/putar-ulang", () => {
 
     const wadah = page.getByTestId("putar-ulang");
     await expect(wadah).toHaveAttribute("data-symbol", "SRIL");
-    await expect(page.getByRole("heading", { level: 3, name: /Sri Rejeki Isman/ })).toBeVisible();
+    // Level 2 sejak audit-003: judul halaman naik ke <h1> dan judul panel ikut
+    // naik satu tingkat supaya hierarki judul tidak melompat.
+    await expect(page.getByRole("heading", { level: 2, name: /Sri Rejeki Isman/ })).toBeVisible();
     await harapkanLabelSumber(page.getByTestId("label-sumber"));
 
     const kejadian = page.getByTestId("kejadian");
@@ -158,10 +160,15 @@ test.describe("/putar-ulang", () => {
   });
 });
 
-/** Indeks posisi slider untuk akhir bulan tertentu, dihitung dari label rentang di layar. */
+/**
+ * Indeks posisi slider untuk akhir bulan tertentu, dihitung dari batas rentang
+ * di layar. Batasnya dibaca dari atribut data-awal (ISO) pada .lbl, bukan dari
+ * teks labelnya: sejak audit-003 label yang terlihat adalah tanggal awam
+ * ("31 Agu 2020"), sedangkan mesin tetap menerima ISO lewat atributnya.
+ */
 async function indeksBulan(page: import("@playwright/test").Page, akhirBulan: string): Promise<number> {
-  const awal = await page.locator(".pu-slider .lbl span").first().innerText();
-  const [y0, m0] = awal.split("-").map(Number);
+  const awal = await page.locator(".pu-slider .lbl").getAttribute("data-awal");
+  const [y0, m0] = (awal ?? "").split("-").map(Number);
   const [y1, m1] = akhirBulan.split("-").map(Number);
   return (y1 - y0) * 12 + (m1 - m0);
 }

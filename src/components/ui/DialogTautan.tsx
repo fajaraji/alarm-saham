@@ -12,8 +12,8 @@ import { Dialog } from "./Dialog";
 
 export const TEKS_DIALOG_TAUTAN = {
   judul: "Simpan tautan rahasiamu",
-  penjelasan: "Hanya tautan ini yang bisa membuka portofolio dan alarmmu di perangkat lain; tanpa akun, tautan yang hilang tidak bisa dikirim ulang.",
-  peringatan: "Siapa pun yang memegangnya bisa mengubah portofoliomu, jadi jangan dibagikan.",
+  penjelasan: "Hanya tautan ini yang bisa membuka portofolio dan alarm di perangkat lain; tanpa akun, tautan yang hilang tidak bisa dikirim ulang.",
+  peringatan: "Siapa pun yang memegangnya bisa mengubah portofolio, jadi jangan dibagikan.",
   label: "Tautan rahasia",
   tombolSalin: "Salin tautan",
   tersalin: "Tautan tersalin.",
