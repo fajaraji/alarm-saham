@@ -9,6 +9,7 @@ import { AiKeyMissingError, diagnosis, hasAiKey, pilihSumber } from "@/lib/agent
 // boleh mengekspor apa pun selain handler dan konfigurasi, dan klien butuh
 // tipe yang sama untuk membacanya.
 import { barisNdjson, TIPE_BERTAHAP, type BarisBertahap } from "@/lib/agent/bertahap";
+import { petaGalatLayanan, ringkasGalatLayanan } from "@/lib/agent/galat";
 import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 import { GROUPS, RuleError, RuleSchema, runBacktest, type BacktestResult } from "@/lib/engine";
 
@@ -72,6 +73,13 @@ function petaGalat(err: unknown): { status: number; kode: string; pesan: string;
       kode: "DIAGNOSIS_TANPA_JAWABAN",
       pesan: "Model tidak menghasilkan jawaban terstruktur dalam batas langkah; coba lagi.",
     };
+  }
+  // Galat gateway yang bisa dibaca: status + body "coba lagi" yang samar pernah
+  // menutupi kunci/model yang salah selama berhari-hari (2026-10-04).
+  const layanan = petaGalatLayanan(err);
+  if (layanan) {
+    console.error(`[api/agent/diagnosis] ${ringkasGalatLayanan(err)}`, err);
+    return layanan;
   }
   console.error("[api/agent/diagnosis]", err);
   return { status: 500, kode: "GALAT_INTERNAL", pesan: "Diagnosis gagal; coba lagi sesaat." };
