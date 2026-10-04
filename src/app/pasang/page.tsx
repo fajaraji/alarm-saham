@@ -34,7 +34,7 @@ export default async function HalamanPasang() {
   const universe = await sumber.universe();
   const opsi = await daftarBisaDicari(sumber.db, universe);
   return (
-    <main id="konten" className="mx-auto w-full max-w-[1200px] flex-1 px-6 pb-16 pt-6">
+    <main id="konten" className="masuk mx-auto w-full max-w-[1600px] flex-1 px-6 pb-16 pt-6">
       {/* Eyebrow "Langkah 3 dari 3" dibuang (audit-003 temuan 5), alasan sama
           dengan /rakit: posisinya sudah dibawa chip header dan rantai bawah. */}
       <h1 className="mb-1.5 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">{TEKS.judul}</h1>

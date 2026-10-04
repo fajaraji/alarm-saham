@@ -2,6 +2,7 @@
 import { z } from "zod";
 
 import { AiKeyMissingError, hasAiKey, rakitAturan, RakitError } from "@/lib/agent";
+import { petaGalatLayanan, ringkasGalatLayanan } from "@/lib/agent/galat";
 import { jawabanTerlaluSering, kunciEmber, kunciPemanggil, pagarLaju } from "@/lib/api/pagar";
 
 export const maxDuration = 60;
@@ -51,6 +52,12 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     if (err instanceof AiKeyMissingError) return galat(503, "AI_TIDAK_TERSEDIA", err.message);
     if (err instanceof RakitError) return galat(502, "RAKIT_GAGAL", err.message);
+    // Galat gateway yang bisa dibaca, sama dengan /api/agent/diagnosis.
+    const layanan = petaGalatLayanan(err);
+    if (layanan) {
+      console.error(`[api/agent/rakit] ${ringkasGalatLayanan(err)}`, err);
+      return galat(layanan.status, layanan.kode, layanan.pesan);
+    }
     console.error("[api/agent/rakit]", err);
     return galat(500, "GALAT_INTERNAL", "Perakit blok gagal; coba lagi sesaat.");
   }

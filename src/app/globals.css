@@ -1,23 +1,40 @@
 @import "tailwindcss";
 
-/* Token warna Alarm Saham (rasa visual yang disetujui pemilik).
+/* Token warna Alarm Saham (sistem visual 2026-10-03: monokrom zinc + aksen
+   emerald, permukaan kaca, dan butir halus).
    Terang di :root; gelap lewat prefers-color-scheme dan data-theme="dark".
    Semua pasangan teks/latar di bawah sudah diverifikasi ≥ 4.5:1 (WCAG AA teks
    normal) di KEDUA tema — lihat tests/e2e/aksesibilitas.spec.ts. --ok-ink /
    --crit-ink ada supaya teks di atas bidang --ok/--crit ikut berbalik saat token
-   latarnya berbalik menjadi pastel terang di mode gelap. */
+   latarnya berbalik menjadi pastel terang di mode gelap.
+
+   Pembagian aksen sengaja dipisah dua tema, mengikuti spec:
+   - Tema terang MONOKROM: --accent = zinc-900. Tombol dan tautan terbaca sebagai
+     tinta, bukan sebagai warna merek.
+   - Tema gelap memakai emerald #34D399 persis seperti spec, karena di atas hitam
+     ia lolos kontras (12.5:1) sedangkan di atas putih hanya 1.75:1 dan akan
+     menggagalkan gerbang axe.
+   --accent-hi (emerald) tetap tersedia di kedua tema untuk sorotan di atas
+   permukaan gelap/kaca, tempat nilainya aman. */
 :root {
-  --bg: #f3f5f9;
+  --bg: #f4f4f5;
   --surface: #ffffff;
-  --surface-2: #e9edf4;
-  --line: #d5dbe6;
-  --line-strong: #b9c2d2;
-  --ink: #151c2b;
-  --ink-2: #3f4a5f;
-  --ink-3: #5c6880;
-  --accent: #2c3f9e;
+  --surface-2: #e4e4e7;
+  --line: #d4d4d8;
+  --line-strong: #a1a1aa;
+  --ink: #18181b;
+  --ink-2: #3f3f46;
+  /* Bukan Zinc-500 (#71717a) persis seperti spec. Diukur: #71717a memberi
+     4,83:1 di atas putih TETAPI hanya 4,40:1 di atas latar halaman #f4f4f5 dan
+     3,81:1 di atas --surface-2, jadi ia gagal 4,5:1 di sebagian besar
+     pemakaiannya — bukan pelanggaran tepi, melainkan yang utama. Zinc-600 versi
+     lebih gelap (#62626b) lolos di SEMUA latar yang dipakai (terendah 4,76:1,
+     lihat tests/e2e/aksesibilitas.spec.ts). Selisihnya dari #71717a tidak
+     terlihat pada ukuran 12-13px, dan hierarki tiga tingkat tetap utuh. */
+  --ink-3: #62626b;
+  --accent: #18181b;
   --accent-ink: #ffffff;
-  --accent-soft: #e3e8fb;
+  --accent-soft: #e4e4e7;
   --crit: #b93636;
   --crit-soft: #fbe6e6;
   --crit-ink: #ffffff;
@@ -26,11 +43,18 @@
   --ok: #25794b;
   --ok-soft: #e1f3e8;
   --ok-ink: #ffffff;
-  --b-if: #2c3f9e;
+  --b-if: #18181b;
   --b-cond: #1f6f8b;
   --b-then: #8a5709;
   --b-text: #ffffff;
-  --shadow: 0 1px 2px rgba(21, 28, 43, 0.06), 0 8px 24px rgba(21, 28, 43, 0.08);
+  --shadow: 0 1px 2px rgba(24, 24, 27, 0.06), 0 8px 24px rgba(24, 24, 27, 0.08);
+  /* Permukaan kaca (spec "Glassmorphism"). Nilai di bawah adalah versi tema
+     terang: di atas latar terang, kaca harus menggelapkan sedikit, bukan
+     memutihkan, supaya tepinya tetap terbaca. */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-line: rgba(24, 24, 27, 0.1);
+  --glass-blur: 20px;
+  --grain-opacity: 0;
   /* Skala lapisan bernama: tidak berubah antar tema, jadi cukup di :root.
      Dipakai lewat z-[var(--z-…)] supaya tidak ada angka ajaib yang tersebar. */
   --z-lengket: 5;
@@ -41,57 +65,63 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1420;
-    --surface: #171d2c;
-    --surface-2: #1f2637;
-    --line: #2a3347;
-    --line-strong: #3a455e;
-    --ink: #eef1f7;
-    --ink-2: #b9c2d4;
-    --ink-3: #8590a6;
-    --accent: #8ea0ff;
-    --accent-ink: #0f1420;
-    --accent-soft: #232c4d;
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --surface-2: #18181b;
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.24);
+    --ink: #fafafa;
+    --ink-2: rgba(255, 255, 255, 0.72);
+    --ink-3: rgba(255, 255, 255, 0.56);
+    --accent: #34d399;
+    --accent-ink: #000000;
+    --accent-soft: rgba(52, 211, 153, 0.14);
     --crit: #f08a8a;
     --crit-soft: #3a1f22;
-    --crit-ink: #0f1420;
+    --crit-ink: #000000;
     --warn: #f0b664;
     --warn-soft: #3a2d18;
-    --ok: #7ad0a0;
-    --ok-soft: #173226;
-    --ok-ink: #0f1420;
-    --b-if: #5468d6;
+    --ok: #86efac;
+    --ok-soft: #14301f;
+    --ok-ink: #000000;
+    --b-if: #52525b;
     --b-cond: #1c6a85;
     --b-then: #8a5b12;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-line: rgba(255, 255, 255, 0.1);
+    --grain-opacity: 0.15;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0f1420;
-  --surface: #171d2c;
-  --surface-2: #1f2637;
-  --line: #2a3347;
-  --line-strong: #3a455e;
-  --ink: #eef1f7;
-  --ink-2: #b9c2d4;
-  --ink-3: #8590a6;
-  --accent: #8ea0ff;
-  --accent-ink: #0f1420;
-  --accent-soft: #232c4d;
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #18181b;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.24);
+  --ink: #fafafa;
+  --ink-2: rgba(255, 255, 255, 0.72);
+  --ink-3: rgba(255, 255, 255, 0.56);
+  --accent: #34d399;
+  --accent-ink: #000000;
+  --accent-soft: rgba(52, 211, 153, 0.14);
   --crit: #f08a8a;
   --crit-soft: #3a1f22;
-  --crit-ink: #0f1420;
+  --crit-ink: #000000;
   --warn: #f0b664;
   --warn-soft: #3a2d18;
-  --ok: #7ad0a0;
-  --ok-soft: #173226;
-  --ok-ink: #0f1420;
-  --b-if: #5468d6;
+  --ok: #86efac;
+  --ok-soft: #14301f;
+  --ok-ink: #000000;
+  --b-if: #52525b;
   --b-cond: #1c6a85;
   --b-then: #8a5b12;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  --grain-opacity: 0.15;
   color-scheme: dark;
 }
 
@@ -119,10 +149,27 @@
   --color-b-cond: var(--b-cond);
   --color-b-then: var(--b-then);
   --color-b-text: var(--b-text);
-  --font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
-  --font-sans: var(--font-plex-sans), "Segoe UI", system-ui, sans-serif;
+  --color-glass: var(--glass-bg);
+  --color-glass-line: var(--glass-line);
+  --font-display: var(--font-inter), "Segoe UI", system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Segoe UI", system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), Consolas, monospace;
   --shadow-panel: var(--shadow);
+  /* Radius sistem: 2.5rem untuk pembungkus bagian besar, 1rem-1.5rem untuk
+     kartu di dalamnya (spec "Corner Radius"). */
+  --radius-bagian: 2.5rem;
+  --radius-kartu: 1.5rem;
+  --radius-kartu-kecil: 1rem;
+  /* Radius bawaan Tailwind dinaikkan supaya SELURUH pemakaian `rounded-xl` dan
+     `rounded-lg` yang sudah ada di 45 titik ikut sistem baru tanpa satu per satu
+     disentuh, dan supaya tidak ada sisa 8px/12px lama yang lolos. `md` (6px)
+     dibiarkan kecil: ia hanya dipakai badge dan label mini, tempat radius besar
+     justru merusak bentuk. */
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2rem;
+  --ease-masuk: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -130,7 +177,121 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 14px;
+  font-weight: 400;
   line-height: 1.5;
+}
+
+/* Judul: berat 500-700, tracking -0.05em, leading 1.05 (spec "Typography"). */
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+/* Butir halus (spec "Grain Overlay"). Satu lapisan di dalam bagian yang
+   memakainya, tanpa menangkap klik. Opasitasnya dari token: 0 di tema terang
+   (di atas bidang terang butir 15% justru mengotori teks), 0.15 di tema gelap,
+   tempat butir mencegah banding dan memberi kedalaman analog.
+
+   Sejak 2026-10-03 kelas ini dipasang pada BAGIAN yang membutuhkannya (hero
+   beranda), bukan pada <body>. Sebelumnya ia global dan karenanya ikut tampil di
+   layar kerja seperti /rakit dan /cara-kami-menghitung, padahal DESIGN.md
+   menyatakan butir hanya di beranda: kode dan dokumen berbeda. Sekarang keduanya
+   sepakat. Karena itu `absolute`, bukan `fixed`: ia harus mengikuti bagiannya. */
+.butir {
+  position: relative;
+}
+.butir::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Permukaan kaca (spec "Glassmorphism"): 1px tepi putih 10% + blur.
+   Blur diambil dari token --glass-blur supaya bilah lengket /cara-kami-menghitung
+   yang sudah ada bisa memakai nilai yang sama alih-alih angka sendiri. */
+.kaca {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* Bagian gelap yang berdiri sendiri, seperti hero spec yang tetap gelap walau
+   tema situsnya terang (spec: halaman berpindah dari hero gelap ke bagian
+   terang). Alih-alih menulis ulang setiap warna di dalamnya, kelas ini
+   MENIMPA token di subtree-nya dengan nilai tema gelap. Akibatnya seluruh isi
+   hero tetap memakai token semantik yang sama (text-ink, text-ink-2, --kaca)
+   dan otomatis benar di kedua tema, tanpa satu pun warna gelap yang dipaku di
+   JSX. Kontras pasangan teksnya sama dengan tema gelap, yang sudah dijaga axe. */
+.gelap {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #18181b;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.24);
+  --ink: #fafafa;
+  --ink-2: rgba(255, 255, 255, 0.72);
+  --ink-3: rgba(255, 255, 255, 0.56);
+  --accent: #34d399;
+  --accent-ink: #000000;
+  --accent-soft: rgba(52, 211, 153, 0.14);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-line: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+}
+
+/* Label huruf kapital berjarak lebar (spec "Typography": 700, 10px, 0.2em). */
+.label-huruf {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Teks raksasa di latar hero (spec: 22vw, opasitas 3%, blur). Murni hiasan,
+   karena itu aria-hidden di JSX dan tidak pernah menjadi satu-satunya pembawa
+   informasi. `select-none` supaya tidak ikut tersorot saat orang menyeret teks. */
+.teks-raksasa {
+  font-size: 22vw;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  opacity: 0.03;
+  filter: blur(2px);
+  user-select: none;
+}
+
+/* Masuk lembut (spec "Animations"): geser 20px + pudar, 0.8 detik.
+   Dibungkus `prefers-reduced-motion: no-preference`, jadi pengguna yang meminta
+   gerakan dikurangi tidak menerimanya sama sekali.
+
+   Catatan penting untuk gerbang axe: axe mengukur kontras pada keadaan yang
+   sedang tampil. Elemen yang masih di tengah animasi ini berada pada opasitas
+   < 1, dan teks abu di atas putih pada opasitas 0.5 memang gagal 4.5:1. Itu
+   pengukuran keadaan sementara, bukan pelanggaran produk. Karena itu
+   tests/e2e/aksesibilitas.spec.ts memindai dengan `reducedMotion: "reduce"`,
+   yaitu keadaan akhir yang menetap. Lubang yang tersisa dicatat di DESIGN.md. */
+@keyframes masuk-naik {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .masuk {
+    animation: masuk-naik 0.8s var(--ease-masuk) both;
+  }
 }
 
 /* Kontrol yang hanya hidup lewat JavaScript (seret blok) menjanjikan

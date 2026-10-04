@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function TidakDitemukan() {
   return (
-    <main id="konten" className="mx-auto w-full max-w-[720px] flex-1 px-6 pb-16 pt-10">
+    <main id="konten" className="masuk mx-auto w-full max-w-[720px] flex-1 px-6 pb-16 pt-10">
       <p className="text-[12px] font-semibold text-ink-3">Galat 404</p>
       <h1 className="mb-2 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance sm:text-[32px]">
         Halaman ini tidak ada.

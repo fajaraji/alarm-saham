@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function HalamanKamus() {
   return (
-    <main id="konten" className="mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="kamus">
+    <main id="konten" className="masuk mx-auto w-full max-w-[1000px] flex-1 px-6 pb-16 pt-6" data-testid="kamus">
       <p className="text-[12px] font-semibold text-ink-3">Kamus</p>
       <h1 className="mb-2 mt-1 font-display text-[28px] font-extrabold leading-tight tracking-tight text-balance">
         Istilah yang dipakai, dijelaskan dengan bahasa pasar modal.

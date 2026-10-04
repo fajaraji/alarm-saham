@@ -206,7 +206,12 @@ export default function HalamanCaraKamiMenghitung() {
           paling bernilai di halaman metodologi. Tabel per-kelompok yang paling
           berat (107 baris) memang sudah terlipat sejak awal lewat <details> di
           TabelKelompok, jadi yang kurang tinggal navigasinya. */}
-      <nav aria-label="Daftar isi" data-testid="daftar-isi" className="sticky top-[57px] z-[var(--z-lengket)] -mx-6 mt-6 border-y border-line bg-bg/95 px-6 py-2.5 backdrop-blur">
+      {/* Bilah daftar isi lengket. `top-[57px]` dulu dipaku ke tinggi header
+          lama (bilah rata yang menempel di tepi atas). Sejak header menjadi pil
+          kaca mengambang, jarak itu salah dan bilah ini akan terselip di
+          belakangnya. Sekarang jaraknya ditulis eksplisit sebagai 1,5rem dari
+          tepi atas supaya ia duduk di bawah pil, bukan menempel di bawahnya. */}
+      <nav aria-label="Daftar isi" data-testid="daftar-isi" className="sticky top-6 z-[var(--z-lengket)] -mx-6 mt-6 rounded-kartu-kecil border-y border-line bg-bg/95 px-6 py-2.5 backdrop-blur">
         <ol className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1.5 p-0 text-[12.5px]">
           {DAFTAR_ISI.map((b) => (
             <li key={b.id}>
