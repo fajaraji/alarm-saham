@@ -1,8 +1,11 @@
 "use client";
 // Header bersama semua halaman (mockup): merek, langkah 1-2-3, Kamus, Cara
 // kami menghitung, dan tombol Panduan. `aria-current` mengikuti pathname.
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import logoAlarmSaham from "@/assets/logo-alarm-saham.png";
 
 import { NAV_HEADER } from "./langkah";
 import { TombolPanduan } from "./TombolPanduan";
@@ -35,12 +38,14 @@ export function HeaderNav() {
         {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya), sebelumnya ke
             /putar-ulang, sehingga beranda tidak tertaut dari halaman mana pun. */}
         <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham, beranda">
-          <span
-            aria-hidden="true"
-            className="grid h-8 w-8 place-items-center rounded-full bg-accent font-display font-bold text-accent-ink"
-          >
-            !
-          </span>
+          {/* Logo merek, latar transparan supaya sama benar di tema terang dan
+              gelap. `alt` kosong karena nama mereknya sudah ditulis di sebelahnya
+              dan tautannya punya aria-label sendiri; memberi alt lagi membuat
+              pembaca layar menyebut "Alarm Saham" dua kali. */}
+          {/* `width`/`height` ditulis walau impornya statis: di jsdom (tes UI)
+              impor gambar tidak membawa ukuran, dan next/image menolak render
+              tanpa itu. */}
+          <Image src={logoAlarmSaham} alt="" aria-hidden="true" priority width={32} height={32} className="h-8 w-8 flex-none" />
           <span>
             <span className="block font-display text-lg font-semibold leading-tight text-ink">Alarm Saham</span>
             <small className="hidden text-[11.5px] text-ink-3 sm:block">alarm saham yang bisa dirakit dari blok syarat</small>
