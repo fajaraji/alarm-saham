@@ -37,18 +37,23 @@ export function HeaderNav() {
             dirapatkan. Gulir mendatar ada DI DALAM nav, bukan di halaman. */}
         {/* Merek mengarah ke beranda "/" (sesuai aria-label-nya), sebelumnya ke
             /putar-ulang, sehingga beranda tidak tertaut dari halaman mana pun. */}
-        <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="Alarm Saham, beranda">
+        <Link href="/" className="mr-auto flex items-center gap-2.5 no-underline" aria-label="ALSA (Alarm Saham), beranda">
           {/* Logo merek, latar transparan supaya sama benar di tema terang dan
               gelap. `alt` kosong karena nama mereknya sudah ditulis di sebelahnya
               dan tautannya punya aria-label sendiri; memberi alt lagi membuat
-              pembaca layar menyebut "Alarm Saham" dua kali. */}
+              pembaca layar menyebut nama merek dua kali. */}
           {/* `width`/`height` ditulis walau impornya statis: di jsdom (tes UI)
               impor gambar tidak membawa ukuran, dan next/image menolak render
               tanpa itu. */}
           <Image src={logoAlarmSaham} alt="" aria-hidden="true" priority width={32} height={32} className="h-8 w-8 flex-none" />
+          {/* Nama merek ALSA (keputusan pemilik 6 Okt 2026). Baris kecilnya
+              hanya membuka singkatannya. Dulu baris ini berbunyi "alarm saham
+              yang bisa dirakit dari blok syarat" tepat di bawah nama "Alarm
+              Saham": kata yang sama diulang, dan yang dijual justru fitur
+              rakit, bukan alasan orang datang. */}
           <span>
-            <span className="block font-display text-lg font-semibold leading-tight text-ink">Alarm Saham</span>
-            <small className="hidden text-[11.5px] text-ink-3 sm:block">alarm saham yang bisa dirakit dari blok syarat</small>
+            <span className="block font-display text-lg font-semibold leading-tight tracking-tight text-ink">ALSA</span>
+            <small className="hidden text-[11.5px] text-ink-3 sm:block">Alarm Saham</small>
           </span>
         </Link>
         <nav

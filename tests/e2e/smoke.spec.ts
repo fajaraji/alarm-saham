@@ -98,7 +98,7 @@ test("alur 1→2→3 utuh tanpa console.error", async ({ page }) => {
   await expect(page.getByTestId("kamus-suspensi")).toBeVisible();
 
   // Merek di header mengantar ke beranda; beranda mengarah ke 3 langkah + disclaimer
-  await page.getByRole("link", { name: "Alarm Saham, beranda" }).click();
+  await page.getByRole("link", { name: "ALSA (Alarm Saham), beranda" }).click();
   // Dicocokkan sebagai PATH, bukan URL penuh: spec ini juga dijalankan
   // terhadap URL hidup (E2E_BASE_URL), yang domainnya bukan 127.0.0.1.
   await expect.poll(() => new URL(page.url()).pathname).toBe("/");
