@@ -10,6 +10,14 @@ Alarm Saham lets ordinary Indonesian investors read the warning signs that the s
 
 The app itself is in Indonesian, because its users are Indonesian retail investors. This README is in English.
 
+## Explore the implementation
+
+Start with a historical case to see which facts were available on the date an alarm fired. The backtest documentation explains how those dates enter the calculation.
+
+- [Backtest methodology](docs/mesin-uji.md)
+- [Market-data provenance](docs/data-proof.md)
+- [Test guide](TEST.md)
+
 ## For judges: 60 seconds
 
 - **Problem:** official warning signs (trading suspensions, quarterly reports that stop arriving, negative equity, dilutive rights issues) are published by the Indonesia Stock Exchange (IDX) long before a stock is delisted. Retail investors rarely read them in time.

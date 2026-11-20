@@ -1,6 +1,6 @@
 # Berkas huruf yang ikut di repositori
 
-Dipakai `src/app/layout.tsx` lewat `next/font/local`, bukan `next/font/google`.
+[Layout aplikasi](../layout.tsx) memuat Inter untuk teks dan IBM Plex Mono untuk angka melalui `next/font/local`. Lisensi font disertakan di [OFL Inter](OFL-inter.txt) dan [OFL IBM Plex Mono](OFL-ibm-plex-mono.txt).
 
 **Kenapa disimpan di sini.** Dengan `next/font/google`, setiap `next build` mengunduh berkas huruf dari `fonts.gstatic.com`. Satu gangguan jaringan sesaat menggagalkan build dengan pesan yang menyesatkan (`Can't resolve '@vercel/turbopack-next/internal/font/google/font'`), padahal kodenya tidak berubah: itu terjadi pada CI run 36595679661 (30 Sep 2026) untuk commit yang lulus dua kali sebelumnya. Yang paling berisiko bukan CI, melainkan deploy produksi Vercel, karena ia menjalankan build yang sama. Sekarang build tidak menyentuh jaringan sama sekali, dan siapa pun bisa menyalin repositori ini lalu membangunnya tanpa internet.
 
